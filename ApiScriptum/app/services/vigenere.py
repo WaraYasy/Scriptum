@@ -1,7 +1,7 @@
 """
 SERVICIOS VIGENÈRE
 SCRIPTUM - Servicio de cifrado Vigenère  
-Autore: Arantxa - Wara
+Autoras: Arantxa - Wara
 
 Este módulo proporciona funcionalidades para cifrar y descifrar texto
 utilizando el algoritmo de cifrado Vigenère, incluyendo la capacidad
