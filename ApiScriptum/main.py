@@ -1,11 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import health
 from app.config import settings
 
 app = FastAPI(
-    title="Scriptum API",
-    description="API para el proyecto Scriptum",
+    title="Scriptum",
+    description="API para la app Scriptum",
     version="1.0.0"
 )
 
@@ -25,6 +25,70 @@ app.include_router(health.router, tags=["Health"])
 async def root():
     return {
         "message": "Bienvenido a Scriptum API",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.post("/vigenere/cifrar/texto")
+async def vigenere_cifrar(text: str, key: str):
+    return {
+        "message": "Cifrado Vigenère",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.get("/vigenere/decifrar/texto")
+async def vigenere_decifrar():
+    return {
+        "message": "Decifrado Vigenère",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.post("/vigenere/cifrar/file")
+async def vigenere_cifrar_file(file: UploadFile, key: str):
+    return {
+        "message": "Cifrado Vigenère de archivo",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.get("/vigenere/decifrar/file")
+async def vigenere_decifrar_file():
+    return {
+        "message": "Decifrado Vigenère de archivo",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.post("/aes/cifrar/texto")
+async def aes_cifrar(text: str, key: str, longitud: int):
+    return {
+        "message": "Cifrado AES",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.get("/aes/decifrar/texto")
+async def aes_decifrar():
+    return {
+        "message": "Decifrado AES",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.post("/aes/cifrar/file")
+async def aes_cifrar_file(file: UploadFile, key: str, longitud: int):
+    return {
+        "message": "Cifrado AES de archivo",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.get("/aes/decifrar/file")
+async def aes_decifrar_file():
+    return {
+        "message": "Decifrado AES de archivo",
         "version": "1.0.0",
         "docs": "/docs"
     }

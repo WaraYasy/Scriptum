@@ -24,7 +24,110 @@ ApiScriptum/
         └── __init__.py
 ```
 
-## Instalación
+## Guía para Colaboradores
+
+Si ya tienes el proyecto en tu ordenador y quieres desplegarlo localmente para probarlo o colaborar, sigue estos pasos:
+
+### 1. Verificar requisitos previos
+
+Asegúrate de tener instalado:
+- Python 3.8 o superior: `python3 --version` o `python --version`
+- pip: `pip --version`
+
+### 2. Configurar el entorno de desarrollo
+
+**Paso 1: Navegar a la carpeta del proyecto**
+```bash
+cd ruta/al/proyecto/ApiScriptum
+```
+
+**Paso 2: Crear entorno virtual**
+```bash
+python3 -m venv venv
+```
+o en Windows:
+```bash
+python -m venv venv
+```
+
+**Paso 3: Activar el entorno virtual**
+
+- **macOS/Linux:**
+```bash
+source venv/bin/activate
+```
+
+- **Windows (PowerShell):**
+```bash
+venv\Scripts\Activate.ps1
+```
+
+- **Windows (CMD):**
+```bash
+venv\Scripts\activate.bat
+```
+
+Cuando esté activado, verás `(venv)` al inicio de tu terminal.
+
+**Paso 4: Instalar dependencias**
+```bash
+pip install -r requirements.txt
+```
+
+**Paso 5: Configurar variables de entorno (opcional)**
+```bash
+cp .env.example .env
+```
+Edita el archivo `.env` si necesitas cambiar alguna configuración.
+
+### 3. Ejecutar el proyecto
+
+**Iniciar el servidor de desarrollo:**
+```bash
+python main.py
+```
+
+El servidor arrancará en `http://localhost:8000` con auto-reload activado (los cambios se reflejarán automáticamente).
+
+### 4. Probar la API
+
+Una vez que el servidor esté corriendo:
+
+1. **Abrir la documentación interactiva:** http://localhost:8000/docs
+2. **Probar endpoints:** Usa Swagger UI para probar los endpoints directamente desde el navegador
+3. **Ver documentación alternativa:** http://localhost:8000/redoc
+4. **Health check:** http://localhost:8000/health
+
+### 5. Detener el servidor
+
+Presiona `CTRL+C` en la terminal donde está corriendo el servidor.
+
+### 6. Desactivar el entorno virtual
+
+Cuando termines de trabajar:
+```bash
+deactivate
+```
+
+### Comandos útiles para colaboradores
+
+```bash
+# Ver todas las dependencias instaladas
+pip list
+
+# Actualizar una dependencia específica
+pip install --upgrade nombre-paquete
+
+# Congelar dependencias después de instalar nuevas
+pip freeze > requirements.txt
+
+# Limpiar archivos cache de Python
+find . -type d -name __pycache__ -exec rm -rf {} +
+```
+
+## Instalación (alternativa sin colaboración)
+
+Si simplemente quieres instalar y probar el proyecto:
 
 1. Crear un entorno virtual:
 ```bash
