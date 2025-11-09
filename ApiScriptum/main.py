@@ -1,12 +1,33 @@
+"""
+SCRIPTUM API - Main Application
+API de cifrado y descifrado con múltiples algoritmos
+"""
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import health
+import uvicorn
+
+from app.routers import health, vigenere
 from app.config import settings
 
 app = FastAPI(
-    title="Scriptum",
-    description="API para la app Scriptum",
-    version="1.0.0"
+    title="Scriptum API",
+    description="""
+    API de cifrado y descifrado para la aplicación Scriptum.
+
+    **Algoritmos disponibles:**
+    - Vigenère: Cifrado clásico polialfabético
+    - AES: Cifrado simétrico moderno (próximamente)
+
+    **Características:**
+    - Cifrado/descifrado de texto
+    - Cifrado/descifrado de archivos .txt
+    - Descarga de archivos procesados
+    """,
+    version="1.0.0",
+    contact={
+        "name": "Scriptum Team",
+        "email": "scriptum@example.com"
+    }
 )
 
 # Configuración de CORS
@@ -20,81 +41,68 @@ app.add_middleware(
 
 # Incluir routers
 app.include_router(health.router, tags=["Health"])
+app.include_router(vigenere.router)
 
 @app.get("/")
 async def root():
+    """Endpoint raíz con información de la API"""
     return {
         "message": "Bienvenido a Scriptum API",
         "version": "1.0.0",
-        "docs": "/docs"
+        "description": "API de cifrado y descifrado",
+        "endpoints": {
+            "docs": "/docs",
+            "redoc": "/redoc",
+            "health": "/health",
+            "vigenere": "/vigenere"
+        }
     }
 
-@app.post("/vigenere/cifrar/texto")
-async def vigenere_cifrar(text: str, key: str):
-    return {
-        "message": "Cifrado Vigenère",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
 
-@app.get("/vigenere/decifrar/texto")
-async def vigenere_decifrar():
-    return {
-        "message": "Decifrado Vigenère",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
-
-@app.post("/vigenere/cifrar/file")
-async def vigenere_cifrar_file(file: UploadFile, key: str):
-    return {
-        "message": "Cifrado Vigenère de archivo",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
-
-@app.get("/vigenere/decifrar/file")
-async def vigenere_decifrar_file():
-    return {
-        "message": "Decifrado Vigenère de archivo",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
+# ============================================================================
+# ENDPOINTS STUB PARA AES (Próximamente)
+# ============================================================================
 
 @app.post("/aes/cifrar/texto")
-async def aes_cifrar(text: str, key: str, longitud: int):
+async def aes_cifrar(text: str, key: str, longitud: int):  # pylint: disable=unused-argument
+    """Endpoint stub para cifrado AES de texto (próximamente)"""
     return {
-        "message": "Cifrado AES",
+        "message": "Cifrado AES (próximamente)",
         "version": "1.0.0",
         "docs": "/docs"
     }
+
 
 @app.get("/aes/decifrar/texto")
 async def aes_decifrar():
+    """Endpoint stub para descifrado AES de texto (próximamente)"""
     return {
-        "message": "Decifrado AES",
+        "message": "Descifrado AES (próximamente)",
         "version": "1.0.0",
         "docs": "/docs"
     }
 
+
 @app.post("/aes/cifrar/file")
-async def aes_cifrar_file(file: UploadFile, key: str, longitud: int):
+async def aes_cifrar_file(file: UploadFile, key: str, longitud: int):  # pylint: disable=unused-argument
+    """Endpoint stub para cifrado AES de archivos (próximamente)"""
     return {
-        "message": "Cifrado AES de archivo",
+        "message": "Cifrado AES de archivo (próximamente)",
         "version": "1.0.0",
         "docs": "/docs"
     }
+
 
 @app.get("/aes/decifrar/file")
 async def aes_decifrar_file():
+    """Endpoint stub para descifrado AES de archivos (próximamente)"""
     return {
-        "message": "Decifrado AES de archivo",
+        "message": "Decifrado AES de archivo (próximamente)",
         "version": "1.0.0",
         "docs": "/docs"
     }
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
