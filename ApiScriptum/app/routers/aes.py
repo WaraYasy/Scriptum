@@ -20,7 +20,8 @@ from app.services.aes import (
     cifrar_texto,
     descifrar_texto,
     cifrar_archivo,
-    descifrar_archivo
+    descifrar_archivo,
+    SMALL_FILE_THRESHOLD
 )
 
 # ============================================================================
@@ -226,11 +227,12 @@ async def cifrar_texto_endpoint(request: CifrarTextoAESRequest):
     logger.info("Iniciando cifrado de texto - Tipo: %s, Longitud: %d caracteres", 
                request.tipo_aes, len(request.texto))
     try:
-        # Cifrar texto
+        # Cifrar texto (con salt opcional)
         texto_cifrado, salt = cifrar_texto(
             request.texto,
             request.password,
-            request.tipo_aes
+            request.tipo_aes,
+            request.salt  # Puede ser None
         )
 
         # Calcular tamaños
@@ -339,6 +341,7 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
 async def cifrar_archivo_endpoint(
     file: UploadFile = File(..., description="Archivo a cifrar"),
     password: str = Form(..., min_length=8, description="Password para el cifrado"),
+    salt: str | None = Form(default=None, description="Salt en base64 (opcional)"),
     tipo_aes: TipoAES = Form(default="AES-256", description="Tipo de AES")
 ):
     """
@@ -353,27 +356,63 @@ async def cifrar_archivo_endpoint(
         CifradoAESResponse con el archivo cifrado en base64 y salt
     """
     try:
-        # Validar y leer archivo
-        contenido = await validar_y_leer_archivo(file)
+        # Leer archivo completo para determinar tamaño
+        contenido_temp = await file.read()
+        file_size = len(contenido_temp)
 
-        logger.info("Cifrando archivo: %s (%d bytes) con %s", file.filename, len(contenido), tipo_aes)
+        # Resetear posición del archivo para procesar
+        await file.seek(0)
 
-        # Cifrar archivo
-        archivo_cifrado, salt = cifrar_archivo(
-            contenido,
-            password,
-            tipo_aes
-        )
+        logger.info("Archivo: %s - Tamaño: %d bytes (%d MB)",
+                   file.filename, file_size, file_size // (1024 * 1024))
 
-        # Calcular tamaños
-        tamanio_original = len(contenido)
+        # Decidir método según tamaño
+        if file_size < SMALL_FILE_THRESHOLD:
+            # ARCHIVO PEQUEÑO: Procesar en memoria
+            logger.info("Usando método en memoria (archivo < 10 MB)")
+            contenido = await validar_y_leer_archivo(file)
+
+            archivo_cifrado, salt_resultado = cifrar_archivo(
+                contenido,
+                password,
+                tipo_aes,
+                salt
+            )
+
+            tamanio_original = len(contenido)
+        else:
+            # ARCHIVO GRANDE: Usar streaming
+            logger.info("Usando streaming (archivo >= 10 MB)")
+            from app.services.aes import cifrar_archivo_stream_async
+
+            # Validar extensión antes de procesar
+            extension = '.' + file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+            if extension not in EXTENSIONES_SOPORTADAS:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": f"Extensión no soportada: {extension}",
+                        "extensiones_soportadas": list(EXTENSIONES_SOPORTADAS)
+                    }
+                )
+
+            archivo_cifrado, salt_resultado = await cifrar_archivo_stream_async(
+                file,
+                password,
+                tipo_aes,
+                salt
+            )
+
+            tamanio_original = file_size
+
+        # Calcular tamaño cifrado
         tamanio_cifrado = len(archivo_cifrado.encode('utf-8'))
 
         logger.info("Archivo cifrado exitosamente: %s", file.filename)
 
         return CifradoAESResponse(
             texto_cifrado=archivo_cifrado,
-            salt=salt,
+            salt=salt_resultado,
             tipo_aes=tipo_aes,
             tamanio_original_bytes=tamanio_original,
             tamanio_cifrado_bytes=tamanio_cifrado

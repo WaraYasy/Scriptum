@@ -39,6 +39,10 @@ class CifrarTextoAESRequest(BaseModel):
         max_length=1000,
         description="Password para derivar la clave (mínimo 8 caracteres)"
     )
+    salt: str | None = Field(
+        default=None,
+        description="Salt en base64 (opcional). Si no se proporciona, se genera uno automáticamente"
+    )
     tipo_aes: TipoAES = Field(
         default="AES-256",
         description="Tipo de cifrado AES: AES-128, AES-192 o AES-256"
@@ -50,6 +54,12 @@ class CifrarTextoAESRequest(BaseModel):
                 {
                     "texto": "Este es un mensaje secreto",
                     "password": "mi_password_seguro_123",
+                    "tipo_aes": "AES-256"
+                },
+                {
+                    "texto": "Mensaje con salt personalizado",
+                    "password": "mi_password_seguro_123",
+                    "salt": "cmFuZG9tc2FsdDEyMzQ1Ng==",
                     "tipo_aes": "AES-256"
                 }
             ]
