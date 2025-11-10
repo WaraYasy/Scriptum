@@ -7,9 +7,18 @@ from pydantic import BaseModel, Field
 
 class CifrarTextoRequest(BaseModel):
     """Request para cifrar texto con Vigenère"""
-    #Definición de los campos del request, con validaciones básicas
-    texto: str = Field(..., min_length=1, description="Texto a cifrar")
-    clave: str = Field(..., min_length=1, description="Clave para el cifrado (solo letras)")
+    texto: str = Field(
+        ...,
+        min_length=1,
+        max_length=1_000_000,  # Límite 1 MB para prevenir DoS
+        description="Texto a cifrar (máximo 1 MB)"
+    )
+    clave: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,  # Claves razonablemente largas
+        description="Clave para el cifrado (solo letras, máximo 1000 caracteres)"
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -25,8 +34,18 @@ class CifrarTextoRequest(BaseModel):
 
 class DescifrarTextoRequest(BaseModel):
     """Request para descifrar texto con Vigenère"""
-    texto_cifrado: str = Field(..., min_length=1, description="Texto cifrado a descifrar")
-    clave: str = Field(..., min_length=1, description="Clave para el descifrado (solo letras)")
+    texto_cifrado: str = Field(
+        ...,
+        min_length=1,
+        max_length=1_000_000,  # Límite 1 MB para prevenir DoS
+        description="Texto cifrado a descifrar (máximo 1 MB)"
+    )
+    clave: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="Clave para el descifrado (solo letras, máximo 1000 caracteres)"
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -102,7 +121,6 @@ class ArchivoResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Response para errores"""
-    #Definición de los campos del response, con descripciones
     error: str = Field(..., description="Mensaje de error")
     detalle: str = Field(None, description="Detalles adicionales del error")
 

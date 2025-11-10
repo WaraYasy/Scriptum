@@ -193,65 +193,15 @@ def ajustar_clave(clave: str, longitud: int) -> str:
 
 
 # ============================================================================
-# CAPA 3: UTILIDADES PARA ARCHIVOS (OPCIONAL)
+# CAPA 3: UTILIDADES PARA ARCHIVOS
 # ============================================================================
 
-async def cifrar_vigenere_file(file, clave: str) -> str:
-    """Cifra el contenido de un archivo de texto.
-
-    Lee un archivo .txt y devuelve el contenido cifrado con Vigenère.
-
-    Args:
-        file: Objeto UploadFile de FastAPI.
-        clave (str): Clave para el cifrado.
-
-    Returns:
-        str: Contenido cifrado del archivo.
-
-    Raises:
-        ValueError: Si el archivo no es .txt o la clave es inválida.
-    """
-    # Validar extensión del archivo
-    if not file.filename.endswith('.txt'):
-        raise ValueError("El archivo debe ser un archivo de texto con extensión .txt")
-
-    # Leer contenido del archivo (async para FastAPI)
-    contenido_bytes = await file.read()
-    contenido = contenido_bytes.decode('utf-8')
-
-    # Cifrar y retornar el contenido
-    texto_cifrado = cifrar_vigenere(contenido, clave)
-
-    return texto_cifrado
-
-
-async def descifrar_vigenere_file(file, clave: str) -> str:
-    """Descifra el contenido de un archivo de texto.
-
-    Lee un archivo .txt cifrado y devuelve el contenido descifrado con Vigenère.
-
-    Args:
-        file: Objeto UploadFile de FastAPI.
-        clave (str): Clave para el descifrado.
-
-    Returns:
-        str: Contenido descifrado del archivo.
-
-    Raises:
-        ValueError: Si el archivo no es .txt o la clave es inválida.
-    """
-    # Validar extensión del archivo
-    if not file.filename.endswith('.txt'):
-        raise ValueError("El archivo debe ser un archivo de texto con extensión .txt")
-
-    # Leer contenido del archivo (async para FastAPI)
-    contenido_bytes = await file.read()
-    contenido = contenido_bytes.decode('utf-8')
-
-    # Descifrar y retornar el contenido
-    texto_descifrado = descifrar_vigenere(contenido, clave)
-
-    return texto_descifrado
+# NOTA: Las funciones cifrar_vigenere_file y descifrar_vigenere_file han sido
+# eliminadas para reducir duplicación. Ahora se manejan directamente en el router
+# usando las funciones puras cifrar_vigenere() y descifrar_vigenere().
+#
+# Esto simplifica el código y evita tener lógica de archivos en los servicios,
+# que deben ser funciones puras sin efectos secundarios.
 
 
 def grabar_fichero(nombre_fichero: str, contenido: str) -> str:
