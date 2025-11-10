@@ -1,0 +1,40 @@
+# ============================================================================
+# DOCKER COMPOSE - Scriptum API
+# Configuración para despliegue fácil
+# ============================================================================
+
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scriptum-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173","http://localhost:8080"]
+    volumes:
+      # Persistir logs (opcional)
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - scriptum-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  scriptum-network:
+    driver: bridge
+
+# Opcional: Para producción, puedes descomentar esto y usar variables de entorno desde .env
+# services:
+#   api:
+#     env_file:
+#       - .env

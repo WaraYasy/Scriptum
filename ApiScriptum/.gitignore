@@ -57,4 +57,5 @@ htmlcov/
 # FastAPI
 .pytest_cache/
 
-
+# Archivos de despliegue específicos de otras plataformas
+render.yaml
