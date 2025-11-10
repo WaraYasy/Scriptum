@@ -8,15 +8,39 @@ import os
 # Añadir directorio padre al path para importar servicios
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.services.vigenere import cifrar_vigenere
+from app.services.vigenere import validar_y_formatear_clave
+
+
+def cifrar_preservando_no_alfabeticos(texto: str, clave: str) -> str:
+    """
+    Cifra texto preservando caracteres no alfabéticos (números, espacios, saltos de línea, etc.)
+    Similar a como lo hace el endpoint /descifrar/file/large
+    """
+    clave_limpia = validar_y_formatear_clave(clave)
+    resultado = []
+    posicion_clave = 0
+
+    for char in texto:
+        if char.isalpha():
+            # Cifrar solo letras
+            base = ord('A')
+            char_index = ord(char.upper()) - base
+            key_index = ord(clave_limpia[posicion_clave]) - base
+            cifrado_index = (char_index + key_index) % 26
+            resultado.append(chr(base + cifrado_index))
+            posicion_clave = (posicion_clave + 1) % len(clave_limpia)
+        else:
+            # Preservar caracteres no alfabéticos
+            resultado.append(char)
+
+    return ''.join(resultado)
 
 
 def crear_archivo_con_magic_header():
     """Crea un archivo cifrado con Magic Header para Canary Check"""
-    
-    # Contenido original con Magic Header
-    contenido = """MAGICv1
-Este es un mensaje secreto cifrado con Vigenère.
+
+    # Contenido original con Magic Header (un solo \n después de MAGICV1)
+    contenido = "MAGICV1\n" + """Este es un mensaje secreto cifrado con Vigenère.
 El profesor quiere que demostremos que podemos:
 1. Procesar archivos grandes con streaming
 2. Hacer canary check (validar clave antes de descifrar todo)
@@ -30,9 +54,9 @@ Este archivo se usa para probar el endpoint /descifrar/file/large
     print(f"  Creando archivo de prueba...")
     print(f"   Contenido original: {len(contenido)} caracteres")
     print(f"   Clave: {clave}")
-    
-    # Cifrar
-    texto_cifrado = cifrar_vigenere(contenido, clave)
+
+    # Cifrar preservando números y saltos de línea
+    texto_cifrado = cifrar_preservando_no_alfabeticos(contenido, clave)
     
     # Guardar
     nombre_archivo = "archivo_prueba_magic.txt"
@@ -45,20 +69,27 @@ Este archivo se usa para probar el endpoint /descifrar/file/large
     print(f"   curl -X POST 'http://localhost:8000/vigenere/descifrar/file/large' \\")
     print(f"     -F 'file=@{nombre_archivo}' \\")
     print(f"     -F 'clave={clave}' \\")
-    print(f"     -F 'magic_header=MAGICv1\\n'")
+    print(f"     -F 'magic_header=MAGICV1\\n'")
     print()
 
 
 def crear_archivo_grande():
     """Crea un archivo grande para probar límites"""
-    
+
     # Crear archivo de 10 MB (para pruebas rápidas)
     tamanio_mb = 10
-    contenido_base = "MAGICv1\n" + "A" * 1000  # 1KB de 'A'
-    
-    # Repetir para llegar al tamaño deseado
-    repeticiones = (tamanio_mb * 1024 * 1024) // len(contenido_base)
-    contenido = contenido_base * repeticiones
+
+    # Magic Header al inicio + contenido repetido para llenar
+    magic_header = "MAGICV1\n"
+    bloque_relleno = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" * 40  # ~1KB por bloque
+
+    # Calcular cuántos bloques necesitamos (restando el header)
+    tamanio_objetivo = tamanio_mb * 1024 * 1024
+    tamanio_restante = tamanio_objetivo - len(magic_header)
+    repeticiones = tamanio_restante // len(bloque_relleno)
+
+    # Construir contenido: Magic Header UNA SOLA VEZ + relleno repetido
+    contenido = magic_header + (bloque_relleno * repeticiones)
     
     clave = "BIGFILE"
     
@@ -66,9 +97,9 @@ def crear_archivo_grande():
     print(f"   Tamaño objetivo: {tamanio_mb} MB")
     print(f"   Clave: {clave}")
     print(f"   ⏳ Esto puede tardar un poco...")
-    
-    # Cifrar
-    texto_cifrado = cifrar_vigenere(contenido, clave)
+
+    # Cifrar preservando números y saltos de línea
+    texto_cifrado = cifrar_preservando_no_alfabeticos(contenido, clave)
     
     # Guardar
     nombre_archivo = f"archivo_grande_{tamanio_mb}mb.txt"
