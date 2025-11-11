@@ -2,12 +2,16 @@
 SCRIPTUM API - Main Application
 API de cifrado y descifrado con múltiples algoritmos
 """
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from app.routers import health, vigenere
+from app.routers import health, vigenere, aes
 from app.config import settings
+from app.logging_config import setup_logging
+
+# Inicializar logging
+setup_logging()
 
 app = FastAPI(
     title="Scriptum API",
@@ -16,7 +20,7 @@ app = FastAPI(
 
     **Algoritmos disponibles:**
     - Vigenère: Cifrado clásico polialfabético
-    - AES: Cifrado simétrico moderno (próximamente)
+    - AES: Cifrado simétrico moderno (AES-128, AES-192, AES-256)
 
     **Características:**
     - Cifrado/descifrado de texto
@@ -42,6 +46,7 @@ app.add_middleware(
 # Incluir routers
 app.include_router(health.router, tags=["Health"])
 app.include_router(vigenere.router)
+app.include_router(aes.router)
 
 @app.get("/")
 async def root():
@@ -54,58 +59,17 @@ async def root():
             "docs": "/docs",
             "redoc": "/redoc",
             "health": "/health",
-            "vigenere": "/vigenere"
+            "vigenere": "/vigenere",
+            "aes": "/aes"
         }
     }
 
-
-# ============================================================================
-# ENDPOINTS STUB PARA AES (Próximamente)
-# ============================================================================
-
-@app.post("/aes/cifrar/texto")
-async def aes_cifrar(text: str, key: str, longitud: int):  # pylint: disable=unused-argument
-    """Endpoint stub para cifrado AES de texto (próximamente)"""
-    return {
-        "message": "Cifrado AES (próximamente)",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
-
-
-@app.get("/aes/decifrar/texto")
-async def aes_decifrar():
-    """Endpoint stub para descifrado AES de texto (próximamente)"""
-    return {
-        "message": "Descifrado AES (próximamente)",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
-
-
-@app.post("/aes/cifrar/file")
-async def aes_cifrar_file(file: UploadFile, key: str, longitud: int):  # pylint: disable=unused-argument
-    """Endpoint stub para cifrado AES de archivos (próximamente)"""
-    return {
-        "message": "Cifrado AES de archivo (próximamente)",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
-
-
-@app.get("/aes/decifrar/file")
-async def aes_decifrar_file():
-    """Endpoint stub para descifrado AES de archivos (próximamente)"""
-    return {
-        "message": "Decifrado AES de archivo (próximamente)",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
-
 if __name__ == "__main__":
+    import os
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=True
     )
