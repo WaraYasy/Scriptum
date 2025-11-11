@@ -18,7 +18,7 @@
     <!-- MenuBar -->
     <MenuBar styleClass="menu-bar">
         <Menu text="Archivo">
-            <MenuItem fx:id="menuThemeToggle" text="Cambiar a Modo Claro" />
+            <MenuItem fx:id="menuThemeToggle" text="Cambiar a Modo Oscuro" />
         </Menu>
         <Menu text="Ayuda">
             <MenuItem fx:id="menuAbout" text="Acerca de" />
