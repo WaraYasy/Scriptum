@@ -44,8 +44,8 @@ ENV/
 *~
 .DS_Store
 
-# Logs
-logs/
+# Logs (var/logs/)
+var/logs/
 *.log
 
 # Environment variables

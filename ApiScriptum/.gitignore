@@ -15,7 +15,7 @@ lib/
 lib64/
 parts/
 sdist/
-var/
+# var/ is used for our app logs, so we don't ignore it here
 wheels/
 *.egg-info/
 .installed.cfg
@@ -44,6 +44,10 @@ ENV/
 
 # Logs
 *.log
+
+# Logs en var/logs/ (solo archivos .log, mantener .gitkeep y README.md)
+var/logs/scriptum.log
+var/logs/scriptum-debug.log
 
 # OS
 .DS_Store

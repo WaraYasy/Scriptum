@@ -18,7 +18,7 @@ services:
       - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173","http://localhost:8080"]
     volumes:
       # Persistir logs (opcional)
-      - ./logs:/app/logs
+      - ./var/logs:/app/var/logs
     restart: unless-stopped
     networks:
       - scriptum-network
