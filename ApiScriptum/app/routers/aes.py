@@ -81,7 +81,7 @@ def manejar_error(e: Exception, operacion: str) -> HTTPException:
         )
 
     # Error inesperado
-    logger.error("Error interno al %s: %s", operacion, str(e), exc_info=True)
+    logger.exception("Error interno al %s", operacion)
     return HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail={"error": f"Error interno al {operacion}"}
@@ -772,7 +772,7 @@ async def descifrar_archivo_paquete_endpoint(
         )
 
     except ValueError as e:
-        logger.error("Error al extraer/descifrar paquete: %s", str(e))
+        logger.exception("Error al extraer/descifrar paquete")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": f"Paquete inválido o corrupto: {str(e)}"}

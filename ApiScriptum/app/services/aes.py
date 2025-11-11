@@ -332,7 +332,7 @@ def desempaquetar_datos_cifrados(
         paquete = base64.b64decode(paquete_base64)
         logger.debug("Paquete decodificado de base64 - Tamaño total: %d bytes", len(paquete))
     except Exception as e:
-        logger.error("Error al decodificar paquete base64: %s", str(e))
+        logger.exception("Error al decodificar paquete base64")
         raise ValueError("El paquete no es base64 v�lido.") from e
 
     # Validar tama�o m�nimo (12 bytes nonce + 16 bytes tag = 28 bytes m�nimo)
@@ -429,7 +429,7 @@ def cifrar_texto(
             salt_bytes = desempaquetar_salt(salt_base64)
             logger.info("Usando salt proporcionado por el cliente")
         except ValueError as e:
-            logger.error("Salt inválido proporcionado: %s", str(e))
+            logger.exception("Salt inválido proporcionado al cifrar texto")
             raise ValueError("El salt proporcionado no es base64 válido") from e
     else:
         logger.info("Generando salt automáticamente")
@@ -536,7 +536,7 @@ def cifrar_archivo(
             salt_bytes = desempaquetar_salt(salt_base64)
             logger.info("Usando salt proporcionado por el cliente")
         except ValueError as e:
-            logger.error("Salt inválido proporcionado: %s", str(e))
+            logger.exception("Salt inválido proporcionado al cifrar archivo")
             raise ValueError("El salt proporcionado no es base64 válido") from e
     else:
         logger.info("Generando salt automáticamente")
@@ -846,12 +846,14 @@ def crear_paquete_archivo_cifrado(
         if len(salt_bytes) != SALT_SIZE:
             raise ValueError(f"Salt debe tener {SALT_SIZE} bytes, tiene {len(salt_bytes)}")
     except Exception as e:
+        logger.exception("Error al decodificar salt en crear_paquete_archivo_cifrado")
         raise ValueError(f"Salt inválido: {e}")
 
     # Decodificar contenido cifrado de base64
     try:
         contenido_bytes = base64.b64decode(contenido_cifrado)
     except Exception as e:
+        logger.exception("Error al decodificar contenido cifrado en crear_paquete_archivo_cifrado")
         raise ValueError(f"Contenido cifrado inválido: {e}")
 
     # Convertir strings a bytes
@@ -929,6 +931,7 @@ def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
         # Decodificar de base64
         paquete_bytes = base64.b64decode(paquete_base64)
     except Exception as e:
+        logger.exception("Error al decodificar paquete base64 en extraer_paquete_archivo_cifrado")
         raise ValueError(f"Paquete base64 inválido: {e}")
 
     # Verificar tamaño mínimo (header sin nombre ni mime)
@@ -980,6 +983,7 @@ def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
     try:
         nombre_original = nombre_bytes.decode('utf-8')
     except UnicodeDecodeError as e:
+        logger.exception("Error al decodificar nombre de archivo en extraer_paquete")
         raise ValueError(f"Nombre de archivo no es UTF-8 válido: {e}")
 
     # Longitud del MIME
@@ -996,6 +1000,7 @@ def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
     try:
         mime_type = mime_bytes.decode('utf-8')
     except UnicodeDecodeError as e:
+        logger.exception("Error al decodificar MIME type en extraer_paquete")
         raise ValueError(f"MIME type no es UTF-8 válido: {e}")
 
     # BODY (contenido cifrado)
