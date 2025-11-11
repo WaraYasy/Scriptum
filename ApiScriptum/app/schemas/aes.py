@@ -127,6 +127,16 @@ class DescifrarArchivoAESRequest(BaseModel):
     )
 
 
+class DescifrarArchivoPaqueteAESRequest(BaseModel):
+    """Request para descifrar archivo usando paquete único"""
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=1000,
+        description="Password usado para cifrar el archivo"
+    )
+
+
 # ============================================================================
 # RESPONSE SCHEMAS - CIFRADO
 # ============================================================================
@@ -163,6 +173,49 @@ class CifradoAESResponse(BaseModel):
                     "tipo_aes": "AES-256",
                     "tamanio_original_bytes": 1024,
                     "tamanio_cifrado_bytes": 1152
+                }
+            ]
+        }
+    }
+
+
+class CifradoAESArchivoPaqueteResponse(BaseModel):
+    """Response para cifrado de archivo con paquete único (TODO EN UNO)"""
+    paquete: str = Field(
+        ...,
+        description="""
+        Paquete único en base64 que contiene TODO:
+        - Archivo cifrado
+        - Salt para descifrar
+        - Tipo de AES usado
+        - Nombre original del archivo
+        - MIME type del archivo
+
+        El usuario solo necesita guardar este campo.
+        Para descifrar, envía el paquete + password al endpoint de descifrado.
+        """
+    )
+    tamanio_paquete_bytes: int = Field(
+        ...,
+        description="Tamaño del paquete completo en bytes (antes de base64)"
+    )
+    info: dict = Field(
+        ...,
+        description="Información sobre el archivo (nombre, tipo, tamaño original)"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "paquete": "U0NSSVBUVU0BAwAQcmFuZG9tc2FsdDEyMzQ1NgAIZm90by5qcGcACmltYWdlL2pwZWdVMkZzZEdWa1gxOTRZbU14TWpNNE56UkZibU55...",
+                    "tamanio_paquete_bytes": 256078,
+                    "info": {
+                        "nombre_original": "foto.jpg",
+                        "mime_type": "image/jpeg",
+                        "tamanio_original_bytes": 245678,
+                        "tipo_aes": "AES-256"
+                    }
                 }
             ]
         }

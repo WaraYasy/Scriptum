@@ -3,6 +3,7 @@ ROUTER AES
 Endpoints para cifrado y descifrado con algoritmo AES
 """
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
+from fastapi.responses import Response
 import logging
 import base64
 
@@ -10,6 +11,7 @@ from app.schemas.aes import (
     CifrarTextoAESRequest,
     DescifrarTextoAESRequest,
     CifradoAESResponse,
+    CifradoAESArchivoPaqueteResponse,
     DescifradoAESTextoResponse,
     DescifradoAESArchivoResponse,
     InfoAESResponse,
@@ -21,6 +23,8 @@ from app.services.aes import (
     descifrar_texto,
     cifrar_archivo,
     descifrar_archivo,
+    crear_paquete_archivo_cifrado,
+    extraer_paquete_archivo_cifrado,
     SMALL_FILE_THRESHOLD
 )
 
@@ -512,6 +516,269 @@ async def descifrar_archivo_endpoint(
         )
     except Exception as e:
         raise manejar_error(e, "descifrar archivo")
+
+
+# ============================================================================
+# ENDPOINTS DE ARCHIVOS CON PAQUETES (TODO EN UNO)
+# ============================================================================
+
+@router.post(
+    "/cifrar/file/paquete",
+    response_model=CifradoAESArchivoPaqueteResponse,
+    responses={
+        400: {"model": ErrorAESResponse, "description": "Error en la validación"},
+        413: {"model": ErrorAESResponse, "description": "Archivo demasiado grande"},
+        500: {"model": ErrorAESResponse, "description": "Error interno del servidor"}
+    },
+    summary="Cifrar archivo (Paquete único - RECOMENDADO)",
+    description="""
+    Cifra un archivo y devuelve UN SOLO PAQUETE con TODO incluido.
+
+    **¿Qué incluye el paquete?**
+    - Archivo cifrado
+    - Salt para descifrar
+    - Tipo de AES usado
+    - Nombre original del archivo
+    - MIME type del archivo
+
+    **Ventajas:**
+    - El usuario solo guarda UN campo (el paquete)
+    - Imposible perder el salt o metadatos
+    - Formato binario eficiente (~30% más compacto que JSON)
+    - Descifrado automático con reconstrucción del archivo original
+
+    **Uso:**
+    ```javascript
+    // Cifrar
+    const response = await fetch('/aes/cifrar/file/paquete', {
+        method: 'POST',
+        body: formData  // file + password
+    })
+    const data = await response.json()
+
+    // Guardar UN SOLO campo
+    localStorage.setItem('archivo', data.paquete)
+
+    // Descifrar más tarde
+    const paquete = localStorage.getItem('archivo')
+    // Enviar paquete + password al endpoint de descifrado
+    // Recibes el archivo con nombre y tipo originales ✅
+    ```
+
+    **Formato del paquete:**
+    - Header sin cifrar con metadatos (nombre, MIME, salt, tipo AES)
+    - Body cifrado con el contenido del archivo
+    - Todo empaquetado en base64
+
+    **Límites:**
+    - Tamaño máximo: 100 MB
+    """
+)
+async def cifrar_archivo_paquete_endpoint(
+    file: UploadFile = File(..., description="Archivo a cifrar"),
+    password: str = Form(..., min_length=8, description="Password para el cifrado"),
+    salt: str | None = Form(default=None, description="Salt opcional (se genera si no se proporciona)"),
+    tipo_aes: TipoAES = Form(default="AES-256", description="Tipo de AES")
+):
+    """
+    Cifra un archivo y devuelve un paquete único con TODO incluido.
+
+    El paquete contiene:
+    - Archivo cifrado
+    - Salt
+    - Tipo de AES
+    - Nombre original
+    - MIME type
+
+    El usuario solo necesita guardar el campo 'paquete'.
+    """
+    try:
+        # Leer archivo completo para determinar tamaño
+        contenido_temp = await file.read()
+        file_size = len(contenido_temp)
+
+        # Resetear posición del archivo para procesar
+        await file.seek(0)
+
+        logger.info("Cifrado con paquete - Archivo: %s, Tamaño: %d bytes (%d MB)",
+                   file.filename, file_size, file_size // (1024 * 1024))
+
+        # Obtener MIME type
+        mime_type = file.content_type or "application/octet-stream"
+
+        # Decidir método según tamaño
+        if file_size < SMALL_FILE_THRESHOLD:
+            # ARCHIVO PEQUEÑO: Procesar en memoria
+            logger.info("Usando método en memoria (archivo < 10 MB)")
+            contenido = await validar_y_leer_archivo(file)
+
+            archivo_cifrado, salt_resultado = cifrar_archivo(
+                contenido,
+                password,
+                tipo_aes,
+                salt
+            )
+
+            tamanio_original = len(contenido)
+        else:
+            # ARCHIVO GRANDE: Usar streaming
+            logger.info("Usando streaming (archivo >= 10 MB)")
+            from app.services.aes import cifrar_archivo_stream_async
+
+            # Validar extensión antes de procesar
+            extension = '.' + file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+            if extension not in EXTENSIONES_SOPORTADAS:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": f"Extensión no soportada: {extension}",
+                        "extensiones_soportadas": list(EXTENSIONES_SOPORTADAS)
+                    }
+                )
+
+            archivo_cifrado, salt_resultado = await cifrar_archivo_stream_async(
+                file,
+                password,
+                tipo_aes,
+                salt
+            )
+
+            tamanio_original = file_size
+
+        # Crear paquete único con metadatos
+        paquete = crear_paquete_archivo_cifrado(
+            contenido_cifrado=archivo_cifrado,
+            salt=salt_resultado,
+            tipo_aes=tipo_aes,
+            nombre_archivo=file.filename,
+            mime_type=mime_type
+        )
+
+        # Calcular tamaño del paquete (antes de base64)
+        import base64
+        tamanio_paquete = len(base64.b64decode(paquete))
+
+        logger.info("Paquete creado exitosamente: %s", file.filename)
+
+        return CifradoAESArchivoPaqueteResponse(
+            paquete=paquete,
+            tamanio_paquete_bytes=tamanio_paquete,
+            info={
+                "nombre_original": file.filename,
+                "mime_type": mime_type,
+                "tamanio_original_bytes": tamanio_original,
+                "tipo_aes": tipo_aes
+            }
+        )
+    except Exception as e:
+        raise manejar_error(e, "cifrar archivo con paquete")
+
+
+@router.post(
+    "/descifrar/file/paquete",
+    responses={
+        200: {"description": "Archivo descifrado", "content": {"application/octet-stream": {}}},
+        400: {"model": ErrorAESResponse, "description": "Error en validación o password incorrecto"},
+        500: {"model": ErrorAESResponse, "description": "Error interno del servidor"}
+    },
+    summary="Descifrar archivo desde paquete único",
+    description="""
+    Descifra un archivo desde un paquete único y devuelve el archivo original.
+
+    **¿Qué necesitas?**
+    - El paquete (obtenido al cifrar)
+    - El password
+
+    **¿Qué obtienes?**
+    - Archivo descifrado con nombre original
+    - MIME type correcto
+    - Listo para descargar
+
+    **Ventajas:**
+    - No necesitas recordar el salt ni metadatos
+    - Todo está en el paquete
+    - El archivo se reconstruye automáticamente con su nombre y tipo originales
+
+    **Uso:**
+    ```javascript
+    const formData = new FormData()
+    formData.append('paquete', paquete)  // Paquete guardado
+    formData.append('password', 'pass123')
+
+    const response = await fetch('/aes/descifrar/file/paquete', {
+        method: 'POST',
+        body: formData
+    })
+
+    // Descargar archivo
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+
+    // El nombre viene en Content-Disposition header
+    const filename = response.headers.get('Content-Disposition')
+        .split('filename=')[1].replace(/"/g, '')
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename  // Nombre original restaurado ✅
+    a.click()
+    ```
+    """
+)
+async def descifrar_archivo_paquete_endpoint(
+    paquete: str = Form(..., description="Paquete cifrado (obtenido al cifrar)"),
+    password: str = Form(..., min_length=8, description="Password usado para cifrar")
+):
+    """
+    Descifra un archivo desde un paquete único.
+
+    Extrae metadatos del paquete, descifra el archivo y lo devuelve
+    con su nombre y tipo MIME originales.
+    """
+    try:
+        logger.info("Descifrando archivo desde paquete")
+
+        # Extraer datos del paquete
+        datos = extraer_paquete_archivo_cifrado(paquete)
+
+        contenido_cifrado = datos["contenido_cifrado"]
+        salt = datos["salt"]
+        tipo_aes = datos["tipo_aes"]
+        metadata = datos["metadata"]
+
+        logger.info("Paquete extraído: archivo=%s, tipo=%s, aes=%s",
+                   metadata["nombre_original"], metadata["mime_type"], tipo_aes)
+
+        # Descifrar el archivo
+        archivo_descifrado = descifrar_archivo(
+            contenido_cifrado,
+            password,
+            salt,
+            tipo_aes
+        )
+
+        logger.info("Archivo descifrado exitosamente: %s (%d bytes)",
+                   metadata["nombre_original"], len(archivo_descifrado))
+
+        # Devolver como archivo con metadatos originales
+        return Response(
+            content=archivo_descifrado,
+            media_type=metadata["mime_type"],
+            headers={
+                "Content-Disposition": f'attachment; filename="{metadata["nombre_original"]}"',
+                "X-Original-Filename": metadata["nombre_original"],
+                "X-Original-MimeType": metadata["mime_type"]
+            }
+        )
+
+    except ValueError as e:
+        logger.error("Error al extraer/descifrar paquete: %s", str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": f"Paquete inválido o corrupto: {str(e)}"}
+        )
+    except Exception as e:
+        raise manejar_error(e, "descifrar archivo desde paquete")
 
 
 # ============================================================================

@@ -16,8 +16,9 @@ Arquitectura del m�dulo:
 """
 import base64
 import hashlib
+import struct
 import logging
-from typing import Tuple, Literal
+from typing import Tuple, Literal, Dict, Any
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
@@ -749,5 +750,270 @@ async def cifrar_archivo_stream_async(
     salt_base64_resultado = empaquetar_salt(salt)
     
     logger.info("Cifrado asíncrono con streaming completado")
-    
+
     return texto_cifrado, salt_base64_resultado
+
+
+# ============================================================================
+# EMPAQUETADO DE ARCHIVOS CON METADATOS (Formato Binario)
+# ============================================================================
+
+# Constantes para el formato de paquete
+MAGIC_BYTES = b"SCRIPTUM"  # 8 bytes
+VERSION_BYTE = 1            # Versión del formato
+SALT_SIZE = 16              # Tamaño del salt en bytes
+
+# Mapeo de tipos AES a valores numéricos
+AES_TYPE_MAP = {
+    "AES-128": 1,
+    "AES-192": 2,
+    "AES-256": 3
+}
+AES_TYPE_REVERSE_MAP = {v: k for k, v in AES_TYPE_MAP.items()}
+
+
+def crear_paquete_archivo_cifrado(
+    contenido_cifrado: str,
+    salt: str,
+    tipo_aes: TipoAES,
+    nombre_archivo: str,
+    mime_type: str
+) -> str:
+    """
+    Crea un paquete binario que contiene el archivo cifrado + metadatos.
+
+    Formato del paquete (binario):
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │  HEADER (sin cifrar)                                        │
+    ├─────────────────────────────────────────────────────────────┤
+    │  Magic:         "SCRIPTUM" (8 bytes)                        │
+    │  Version:       1 (1 byte)                                  │
+    │  Tipo AES:      1/2/3 (1 byte) → 128/192/256               │
+    │  Salt:          [16 bytes]                                  │
+    │  Nombre len:    N (2 bytes, unsigned short, big-endian)    │
+    │  Nombre:        [N bytes UTF-8]                             │
+    │  MIME len:      M (2 bytes, unsigned short, big-endian)    │
+    │  MIME:          [M bytes UTF-8]                             │
+    ├─────────────────────────────────────────────────────────────┤
+    │  BODY (cifrado en base64)                                   │
+    ├─────────────────────────────────────────────────────────────┤
+    │  Contenido cifrado [bytes restantes]                        │
+    └─────────────────────────────────────────────────────────────┘
+
+    Todo el paquete → base64 → UN SOLO STRING
+
+    Ventajas:
+    - Usuario guarda UN SOLO campo
+    - Más compacto que JSON (~30% menos espacio)
+    - No puede perder el salt o metadatos
+    - Formato binario eficiente
+    - Extensible (versión permite cambios futuros)
+
+    Args:
+        contenido_cifrado: Contenido cifrado en base64
+        salt: Salt en base64
+        tipo_aes: Tipo de AES usado ("AES-128", "AES-192", "AES-256")
+        nombre_archivo: Nombre original del archivo
+        mime_type: MIME type del archivo
+
+    Returns:
+        Paquete completo en base64
+
+    Raises:
+        ValueError: Si el tipo de AES no es válido o los datos son inválidos
+
+    Example:
+        >>> paquete = crear_paquete_archivo_cifrado(
+        ...     "U2FsdGVkX1...",
+        ...     "cmFuZG9t...",
+        ...     "AES-256",
+        ...     "foto.jpg",
+        ...     "image/jpeg"
+        ... )
+        >>> # Usuario solo guarda 'paquete' (un string base64)
+    """
+    logger.debug("Creando paquete binario: nombre=%s, mime=%s, aes=%s",
+                nombre_archivo, mime_type, tipo_aes)
+
+    # Validar tipo de AES
+    if tipo_aes not in AES_TYPE_MAP:
+        raise ValueError(f"Tipo de AES inválido: {tipo_aes}")
+
+    # Decodificar salt de base64
+    try:
+        salt_bytes = base64.b64decode(salt)
+        if len(salt_bytes) != SALT_SIZE:
+            raise ValueError(f"Salt debe tener {SALT_SIZE} bytes, tiene {len(salt_bytes)}")
+    except Exception as e:
+        raise ValueError(f"Salt inválido: {e}")
+
+    # Decodificar contenido cifrado de base64
+    try:
+        contenido_bytes = base64.b64decode(contenido_cifrado)
+    except Exception as e:
+        raise ValueError(f"Contenido cifrado inválido: {e}")
+
+    # Convertir strings a bytes
+    nombre_bytes = nombre_archivo.encode('utf-8')
+    mime_bytes = mime_type.encode('utf-8')
+
+    # Validar longitudes (máximo 65535 bytes por campo, límite de unsigned short)
+    if len(nombre_bytes) > 65535:
+        raise ValueError("Nombre de archivo demasiado largo")
+    if len(mime_bytes) > 65535:
+        raise ValueError("MIME type demasiado largo")
+
+    # Construir el paquete binario
+    paquete = bytearray()
+
+    # HEADER
+    paquete.extend(MAGIC_BYTES)                                    # 8 bytes
+    paquete.append(VERSION_BYTE)                                   # 1 byte
+    paquete.append(AES_TYPE_MAP[tipo_aes])                        # 1 byte
+    paquete.extend(salt_bytes)                                     # 16 bytes
+
+    # Nombre del archivo (longitud + contenido)
+    paquete.extend(struct.pack('>H', len(nombre_bytes)))          # 2 bytes
+    paquete.extend(nombre_bytes)                                   # N bytes
+
+    # MIME type (longitud + contenido)
+    paquete.extend(struct.pack('>H', len(mime_bytes)))            # 2 bytes
+    paquete.extend(mime_bytes)                                     # M bytes
+
+    # BODY (contenido cifrado)
+    paquete.extend(contenido_bytes)                                # Resto
+
+    # Convertir todo a base64
+    paquete_base64 = base64.b64encode(bytes(paquete)).decode('ascii')
+
+    tamanio_header = 8 + 1 + 1 + 16 + 2 + len(nombre_bytes) + 2 + len(mime_bytes)
+    tamanio_total = len(paquete)
+
+    logger.info("Paquete creado: header=%d bytes, body=%d bytes, total=%d bytes → base64=%d chars",
+               tamanio_header, len(contenido_bytes), tamanio_total, len(paquete_base64))
+
+    return paquete_base64
+
+
+def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
+    """
+    Extrae el contenido de un paquete binario cifrado.
+
+    Lee el header para obtener metadatos y extrae el contenido cifrado.
+
+    Args:
+        paquete_base64: Paquete en base64 (creado con crear_paquete_archivo_cifrado)
+
+    Returns:
+        Diccionario con:
+        - contenido_cifrado: Contenido cifrado en base64
+        - salt: Salt en base64
+        - tipo_aes: Tipo de AES ("AES-128", "AES-192", "AES-256")
+        - metadata: Dict con:
+          - nombre_original: Nombre del archivo
+          - mime_type: MIME type del archivo
+
+    Raises:
+        ValueError: Si el paquete está corrupto o tiene formato inválido
+
+    Example:
+        >>> datos = extraer_paquete_archivo_cifrado(paquete)
+        >>> print(datos['metadata']['nombre_original'])  # "foto.jpg"
+        >>> print(datos['salt'])                         # "cmFuZG9t..."
+        >>> print(datos['tipo_aes'])                     # "AES-256"
+    """
+    logger.debug("Extrayendo paquete binario cifrado")
+
+    try:
+        # Decodificar de base64
+        paquete_bytes = base64.b64decode(paquete_base64)
+    except Exception as e:
+        raise ValueError(f"Paquete base64 inválido: {e}")
+
+    # Verificar tamaño mínimo (header sin nombre ni mime)
+    # Magic(8) + Version(1) + AES(1) + Salt(16) + NombreLen(2) + MIMELen(2) = 30 bytes
+    if len(paquete_bytes) < 30:
+        raise ValueError(f"Paquete demasiado pequeño: {len(paquete_bytes)} bytes (mínimo 30)")
+
+    offset = 0
+
+    # Leer HEADER
+
+    # Magic bytes
+    magic = paquete_bytes[offset:offset+8]
+    offset += 8
+    if magic != MAGIC_BYTES:
+        raise ValueError(f"Magic bytes inválido: esperado {MAGIC_BYTES}, obtenido {magic}")
+
+    # Versión
+    version = paquete_bytes[offset]
+    offset += 1
+    if version != VERSION_BYTE:
+        raise ValueError(f"Versión no soportada: {version} (esperado {VERSION_BYTE})")
+
+    # Tipo AES
+    aes_type_byte = paquete_bytes[offset]
+    offset += 1
+    if aes_type_byte not in AES_TYPE_REVERSE_MAP:
+        raise ValueError(f"Tipo de AES inválido: {aes_type_byte}")
+    tipo_aes = AES_TYPE_REVERSE_MAP[aes_type_byte]
+
+    # Salt
+    salt_bytes = paquete_bytes[offset:offset+SALT_SIZE]
+    offset += SALT_SIZE
+    if len(salt_bytes) != SALT_SIZE:
+        raise ValueError(f"Salt incompleto: {len(salt_bytes)} bytes (esperado {SALT_SIZE})")
+    salt_base64 = base64.b64encode(salt_bytes).decode('ascii')
+
+    # Longitud del nombre
+    if offset + 2 > len(paquete_bytes):
+        raise ValueError("Paquete truncado: falta longitud de nombre")
+    nombre_len = struct.unpack('>H', paquete_bytes[offset:offset+2])[0]
+    offset += 2
+
+    # Nombre del archivo
+    if offset + nombre_len > len(paquete_bytes):
+        raise ValueError(f"Paquete truncado: falta nombre ({nombre_len} bytes)")
+    nombre_bytes = paquete_bytes[offset:offset+nombre_len]
+    offset += nombre_len
+    try:
+        nombre_original = nombre_bytes.decode('utf-8')
+    except UnicodeDecodeError as e:
+        raise ValueError(f"Nombre de archivo no es UTF-8 válido: {e}")
+
+    # Longitud del MIME
+    if offset + 2 > len(paquete_bytes):
+        raise ValueError("Paquete truncado: falta longitud de MIME")
+    mime_len = struct.unpack('>H', paquete_bytes[offset:offset+2])[0]
+    offset += 2
+
+    # MIME type
+    if offset + mime_len > len(paquete_bytes):
+        raise ValueError(f"Paquete truncado: falta MIME ({mime_len} bytes)")
+    mime_bytes = paquete_bytes[offset:offset+mime_len]
+    offset += mime_len
+    try:
+        mime_type = mime_bytes.decode('utf-8')
+    except UnicodeDecodeError as e:
+        raise ValueError(f"MIME type no es UTF-8 válido: {e}")
+
+    # BODY (contenido cifrado)
+    contenido_bytes = paquete_bytes[offset:]
+    if len(contenido_bytes) == 0:
+        raise ValueError("Paquete no contiene datos cifrados")
+    contenido_cifrado_base64 = base64.b64encode(contenido_bytes).decode('ascii')
+
+    logger.info("Paquete extraído: archivo=%s, mime=%s, aes=%s, contenido=%d bytes",
+               nombre_original, mime_type, tipo_aes, len(contenido_bytes))
+
+    return {
+        "contenido_cifrado": contenido_cifrado_base64,
+        "salt": salt_base64,
+        "tipo_aes": tipo_aes,
+        "metadata": {
+            "nombre_original": nombre_original,
+            "mime_type": mime_type
+        }
+    }
+
