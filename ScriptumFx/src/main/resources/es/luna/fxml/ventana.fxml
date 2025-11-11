@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="root" styleClass="root" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.luna.VentanaController">
+<VBox fx:id="root" styleClass="root" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.luna.controller.VentanaController">
     <!-- MenuBar -->
     <MenuBar styleClass="menu-bar">
         <Menu text="Archivo">

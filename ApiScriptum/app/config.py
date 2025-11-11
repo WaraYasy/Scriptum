@@ -11,8 +11,13 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
 
-    # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # CORS - Permitir acceso desde JavaFX desktop app
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080",
+        "*"  # Permitir todas las origins para aplicaciones de escritorio
+    ]
 
     # Logging
     LOG_DIR: Path = Path(__file__).parent.parent / "var" / "logs"

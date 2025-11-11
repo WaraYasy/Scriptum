@@ -1,4 +1,4 @@
-package es.luna;
+package es.luna.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
