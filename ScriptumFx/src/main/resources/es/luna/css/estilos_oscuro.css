@@ -1,0 +1,430 @@
+/* ===================================
+   MODO OSCURO
+   =================================== */
+
+/* Contenedor principal - Interfaz gubernamental con detalles dorados */
+.root {
+    -fx-background-color: #1a1612;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+/* ===================================
+   MENU BAR
+   =================================== */
+
+/* MenuBar principal */
+.menu-bar {
+    -fx-background-color: #0f0d0a;
+    -fx-border-color: #3a3028;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 0;
+}
+
+/* Menús en la barra */
+.menu-bar > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-padding: 8 12 8 12;
+}
+
+.menu-bar > .container > .menu-button:hover {
+    -fx-background-color: #2a2118;
+}
+
+.menu-bar > .container > .menu-button > .label {
+    -fx-text-fill: #c9b591;
+    -fx-font-size: 13px;
+}
+
+.menu-bar > .container > .menu-button:hover > .label {
+    -fx-text-fill: #d4af37;
+}
+
+/* Menú especial de "Cerrar" */
+.close-menu {
+    -fx-background-color: transparent;
+}
+
+.close-menu:hover {
+    -fx-background-color: rgba(139, 0, 0, 0.3);
+}
+
+.close-menu .label {
+    -fx-text-fill: #d97706;
+}
+
+.close-menu:hover .label {
+    -fx-text-fill: #ff8c00;
+}
+
+/* Popup de contexto del menú */
+.context-menu {
+    -fx-background-color: #221c18;
+    -fx-border-color: #4a4038;
+    -fx-border-width: 1px;
+    -fx-background-radius: 4px;
+    -fx-padding: 4;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, 0, 0, 4);
+}
+
+/* Items del menú */
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 8 16 8 16;
+}
+
+.menu-item:hover {
+    -fx-background-color: #2a2320;
+}
+
+.menu-item .label {
+    -fx-text-fill: #c9b591;
+    -fx-font-size: 13px;
+}
+
+.menu-item:hover .label {
+    -fx-text-fill: #d4af37;
+}
+
+/* ===================================
+   TIPOGRAF�A Y TEXTOS
+   =================================== */
+
+/* T�tulos de secci�n */
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #d4af37;
+    -fx-letter-spacing: 0.5px;
+}
+
+/* Etiquetas de clasificaci�n de seguridad */
+.advanced-settings-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: #8b7355;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 1.5px;
+}
+
+/* Descripciones y texto auxiliar */
+.field-description {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6b5d54;
+    -fx-font-style: normal;
+}
+
+/* Labels generales */
+.label {
+    -fx-text-fill: #c9b591;
+}
+
+/* ===================================
+   BOTONES
+   =================================== */
+
+/* Botones primarios - Acci�n principal */
+.btn-primary {
+    -fx-background-color: #2a2118;
+    -fx-text-fill: #d4af37;
+    -fx-font-weight: 500;
+    -fx-font-size: 13px;
+    -fx-border-color: #8b7355;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #3a3128;
+    -fx-border-color: #a89068;
+    -fx-text-fill: #e6c353;
+}
+
+.btn-primary:pressed {
+    -fx-background-color: #1a1108;
+    -fx-border-color: #8b7355;
+}
+
+/* Botones secundarios - Acciones auxiliares */
+.btn-secondary {
+    -fx-background-color: #2e2620;
+    -fx-text-fill: #b8a78e;
+    -fx-font-weight: 500;
+    -fx-font-size: 13px;
+    -fx-border-color: #4a4038;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 7 14 7 14;
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #3e3630;
+    -fx-border-color: #5a5048;
+    -fx-text-fill: #c9b591;
+}
+
+.btn-secondary:pressed {
+    -fx-background-color: #1e1610;
+    -fx-border-color: #4a4038;
+}
+
+/* ===================================
+   CONTENEDORES
+   =================================== */
+
+/* Panel de configuraci�n principal */
+.settings-panel {
+    -fx-padding: 24;
+    -fx-background-color: #221c18;
+    -fx-background-radius: 6px;
+    -fx-border-color: #4a4038;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 12, 0, 0, 4);
+}
+
+/* Panel de informaci�n y avisos */
+.description-panel {
+    -fx-background-color: #2a2320;
+    -fx-padding: 12 16 12 16;
+    -fx-background-radius: 4px;
+    -fx-border-color: #8b7355;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+}
+
+.description-panel .label {
+    -fx-text-fill: #9d8b6f;
+    -fx-font-size: 12px;
+}
+
+/* ===================================
+   �REAS DE TEXTO
+   =================================== */
+
+/* TextArea - Mensajes interceptados y encriptados */
+.text-area {
+    -fx-background-color: #0f0d0a;
+    -fx-text-fill: #c9b591;
+    -fx-border-color: #3a3028;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-padding: 12;
+}
+
+.text-area:focused {
+    -fx-border-color: #8b7355;
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(139, 115, 85, 0.3), 8, 0, 0, 0);
+}
+
+.text-area .content {
+    -fx-background-color: #0f0d0a;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: #0f0d0a;
+}
+
+.text-area .scroll-pane .viewport {
+    -fx-background-color: #0f0d0a;
+}
+
+.text-area .scroll-bar:vertical,
+.text-area .scroll-bar:horizontal {
+    -fx-background-color: #0f0d0a;
+}
+
+.text-area .scroll-bar .thumb {
+    -fx-background-color: #3a3028;
+    -fx-background-radius: 4px;
+}
+
+.text-area .scroll-bar .thumb:hover {
+    -fx-background-color: #4a4038;
+}
+
+/* ===================================
+   CAMPOS DE ENTRADA
+   =================================== */
+
+/* TextField - Claves y par�metros */
+.text-field {
+    -fx-background-color: #0f0d0a;
+    -fx-text-fill: #d4af37;
+    -fx-border-color: #3a3028;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-padding: 6 10 6 10;
+    -fx-prompt-text-fill: #6b5d54;
+}
+
+.text-field:focused {
+    -fx-border-color: #8b7355;
+    -fx-border-width: 2px;
+    -fx-effect: dropshadow(gaussian, rgba(139, 115, 85, 0.3), 8, 0, 0, 0);
+}
+
+/* ===================================
+   COMBOBOX
+   =================================== */
+
+/* ComboBox - Selector de m�todos y modos */
+.combo-box {
+    -fx-background-color: #0f0d0a;
+    -fx-border-color: #3a3028;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.combo-box:focused {
+    -fx-border-color: #8b7355;
+    -fx-border-width: 2px;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c9b591;
+    -fx-padding: 6 10 6 10;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #8b7355;
+}
+
+.combo-box:hover .arrow {
+    -fx-background-color: #a89068;
+}
+
+/* ComboBox popup */
+.combo-box-popup .list-view {
+    -fx-background-color: #221c18;
+    -fx-border-color: #4a4038;
+    -fx-border-width: 1px;
+    -fx-background-radius: 4px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 10, 0, 0, 4);
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c9b591;
+    -fx-padding: 8 12 8 12;
+}
+
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #2a2320;
+}
+
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: #3a3128;
+    -fx-text-fill: #d4af37;
+}
+
+/* ===================================
+   ELEMENTOS ESPECIALES
+   =================================== */
+
+/* Icono de visibilidad */
+.eye-icon {
+    -fx-cursor: hand;
+    -fx-text-fill: #8b7355;
+    -fx-font-size: 14px;
+}
+
+.eye-icon:hover {
+    -fx-text-fill: #d4af37;
+}
+
+/* Separadores */
+.separator {
+    -fx-padding: 8 0 8 0;
+}
+
+.separator .line {
+    -fx-border-color: #4a4038;
+    -fx-border-width: 0.5px 0 0 0;
+    -fx-opacity: 0.8;
+}
+
+/* ===================================
+   ESTADOS Y FEEDBACK
+   =================================== */
+
+/* Estado de carga o procesamiento */
+.processing {
+    -fx-background-color: rgba(139, 115, 85, 0.1);
+    -fx-border-color: #8b7355;
+}
+
+/* Estado de error */
+.error-state {
+    -fx-border-color: #d97706;
+    -fx-background-color: rgba(217, 119, 6, 0.05);
+}
+
+/* Estado de �xito */
+.success-state {
+    -fx-border-color: #84cc16;
+    -fx-background-color: rgba(132, 204, 22, 0.05);
+}
+
+/* ===================================
+   SCROLLBAR GLOBAL
+   =================================== */
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #3a3028;
+    -fx-background-radius: 4px;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #4a4038;
+}
+
+.scroll-bar .thumb:pressed {
+    -fx-background-color: #5a5048;
+}
+
+.scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* ===================================
+   EFECTOS ADICIONALES DORADOS
+   =================================== */
+
+/* Acento dorado para elementos importantes */
+.gold-accent {
+    -fx-border-color: #d4af37;
+    -fx-effect: dropshadow(gaussian, rgba(212, 175, 55, 0.2), 6, 0, 0, 0);
+}
+
+/* Texto destacado en dorado */
+.gold-text {
+    -fx-text-fill: #d4af37;
+    -fx-font-weight: 600;
+}
