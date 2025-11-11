@@ -76,7 +76,7 @@ public class VigenereService {
 
         // Realizar petición asíncrona
         return apiClient.postAsync(
-                BASE_ENDPOINT + "/cifrar-texto",
+                BASE_ENDPOINT + "/cifrar/texto",
                 request,
                 VigenereCifradoResponse.class
         ).whenComplete((response, error) -> {
@@ -116,7 +116,7 @@ public class VigenereService {
 
         // Realizar petición asíncrona
         return apiClient.postAsync(
-                BASE_ENDPOINT + "/descifrar-texto",
+                BASE_ENDPOINT + "/descifrar/texto",
                 request,
                 VigenereDescifradoResponse.class
         ).whenComplete((response, error) -> {

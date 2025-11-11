@@ -1,5 +1,7 @@
 package es.luna.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Response DTO para operación de descifrado AES.
  * Corresponde al schema DescifradoAESTextoResponse de la API.
@@ -11,12 +13,15 @@ package es.luna.model;
 public class AesDescifradoResponse {
 
     /** Texto descifrado original */
+    @SerializedName("texto_descifrado")
     private String textoDescifrado;
 
     /** Tipo de AES usado */
+    @SerializedName("tipo_aes")
     private String tipoAes;
 
     /** Tamaño del texto descifrado en bytes */
+    @SerializedName("tamanio_bytes")
     private int tamanioBytes;
 
     /**

@@ -80,7 +80,7 @@ public class AesService {
 
         // Realizar petición asíncrona
         return apiClient.postAsync(
-                BASE_ENDPOINT + "/cifrar-texto",
+                BASE_ENDPOINT + "/cifrar/texto",
                 request,
                 AesCifradoResponse.class
         ).whenComplete((response, error) -> {
@@ -144,7 +144,7 @@ public class AesService {
 
         // Realizar petición asíncrona
         return apiClient.postAsync(
-                BASE_ENDPOINT + "/descifrar-texto",
+                BASE_ENDPOINT + "/descifrar/texto",
                 request,
                 AesDescifradoResponse.class
         ).whenComplete((response, error) -> {

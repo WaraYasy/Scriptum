@@ -47,6 +47,7 @@ public class ApiClient {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(DEFAULT_TIMEOUT)
+                .version(HttpClient.Version.HTTP_1_1)  // Forzar HTTP/1.1, no HTTP/2
                 .build();
         this.gson = new GsonBuilder()
                 .setPrettyPrinting()
@@ -67,10 +68,12 @@ public class ApiClient {
     public <T> CompletableFuture<T> postAsync(String endpoint, Object requestBody, Class<T> responseClass) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                logger.debug("POST {} - Request: {}", endpoint, requestBody);
-
                 // Serializar el request body a JSON
                 String jsonBody = gson.toJson(requestBody);
+
+                logger.debug("POST {} - Request Object: {}", endpoint, requestBody);
+                logger.debug("POST {} - JSON Body: {}", endpoint, jsonBody);
+                logger.debug("POST {} - Body size: {} bytes", endpoint, jsonBody.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
 
                 // Construir la petición HTTP
                 HttpRequest request = HttpRequest.newBuilder()
@@ -78,8 +81,10 @@ public class ApiClient {
                         .timeout(DEFAULT_TIMEOUT)
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody, java.nio.charset.StandardCharsets.UTF_8))
                         .build();
+
+                logger.debug("POST {} - Sending request to: {}", endpoint, request.uri());
 
                 // Enviar la petición
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());

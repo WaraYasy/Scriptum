@@ -1,5 +1,7 @@
 package es.luna.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Response DTO para errores de la API.
  * Corresponde al schema ErrorResponse de la API.
@@ -11,9 +13,11 @@ package es.luna.model;
 public class ApiErrorResponse {
 
     /** Mensaje de error */
+    @SerializedName("error")
     private String error;
 
     /** Detalles adicionales del error */
+    @SerializedName("detalle")
     private String detalle;
 
     /**

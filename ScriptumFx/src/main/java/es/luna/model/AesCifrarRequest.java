@@ -1,5 +1,7 @@
 package es.luna.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Request DTO para cifrar texto con AES.
  * Corresponde al schema CifrarTextoAESRequest de la API.
@@ -11,15 +13,19 @@ package es.luna.model;
 public class AesCifrarRequest {
 
     /** Texto a cifrar */
+    @SerializedName("texto")
     private String texto;
 
     /** Password para derivar la clave */
+    @SerializedName("password")
     private String password;
 
     /** Salt en base64 (opcional) */
+    @SerializedName("salt")
     private String salt;
 
     /** Tipo de cifrado AES (AES-128, AES-192, AES-256) */
+    @SerializedName("tipo_aes")
     private String tipoAes;
 
     /**

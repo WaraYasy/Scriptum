@@ -1,5 +1,7 @@
 package es.luna.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Response DTO para operación de descifrado Vigenère.
  * Corresponde al schema DescifradoResponse de la API.
@@ -11,9 +13,11 @@ package es.luna.model;
 public class VigenereDescifradoResponse {
 
     /** Texto descifrado resultante */
+    @SerializedName("texto_descifrado")
     private String textoDescifrado;
 
     /** Clave utilizada (formateada) */
+    @SerializedName("clave_usada")
     private String claveUsada;
 
     /**

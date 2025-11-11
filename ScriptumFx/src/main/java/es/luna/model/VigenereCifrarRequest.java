@@ -1,5 +1,7 @@
 package es.luna.model;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Request DTO para cifrar texto con Vigenère.
  * Corresponde al schema CifrarTextoRequest de la API.
@@ -11,9 +13,11 @@ package es.luna.model;
 public class VigenereCifrarRequest {
 
     /** Texto a cifrar */
+    @SerializedName("texto")
     private String texto;
 
     /** Clave para el cifrado */
+    @SerializedName("clave")
     private String clave;
 
     /**
