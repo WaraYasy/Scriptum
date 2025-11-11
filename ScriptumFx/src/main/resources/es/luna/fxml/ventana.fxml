@@ -10,10 +10,11 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox styleClass="root" stylesheets="@../css/estilos_claro.css" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:id="root" styleClass="root" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.luna.VentanaController">
     <!-- MenuBar -->
     <MenuBar styleClass="menu-bar">
         <Menu text="Archivo">
@@ -41,7 +42,7 @@
         <!-- Entrada -->
         <VBox spacing="10" HBox.hgrow="ALWAYS">
             <Label styleClass="section-title" text="Entrada" />
-            <HBox alignment="CENTER_LEFT" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="35">
                 <Label text="Introduce el texto que quieras encriptar o" />
                 <Button styleClass="btn-primary" text="Sube tu archivo" />
             </HBox>
@@ -52,59 +53,56 @@
         <!-- Salida -->
         <VBox spacing="10" HBox.hgrow="ALWAYS">
             <Label styleClass="section-title" text="Salida" />
-            <Label text="Resultado de la encriptación" />
-            <TextArea editable="false" prefHeight="200" promptText="Your encrypted text will appear here..." VBox.vgrow="ALWAYS">
-               <opaqueInsets>
-                  <Insets />
-               </opaqueInsets></TextArea>
+            <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="35">
+                <Label text="Resultado de la encriptación" />
+            </HBox>
+            <TextArea editable="false" prefHeight="200" promptText="Your encrypted text will appear here..." VBox.vgrow="ALWAYS" />
             <HBox spacing="10">
                 <Button styleClass="btn-secondary" text="📋 Copy" />
                 <Button styleClass="btn-secondary" text="⬇ Descargar archivo" />
-               <opaqueInsets>
-                  <Insets />
-               </opaqueInsets>
             </HBox>
         </VBox>
     </HBox>
 
-    <!-- Ajustes de encriptado -->
-    <VBox spacing="15" styleClass="settings-panel">
-        <Label styleClass="section-title" text="Ajustes de encriptado" />
-        <Label text="Elige el modo de encriptado y el método de encriptación" />
+    <!-- Ajustes de encriptado (Desplegable) -->
+    <TitledPane text="⚙ Ajustes de encriptado" expanded="false" collapsible="true">
+        <VBox spacing="15" style="-fx-padding: 24;">
+            <Label text="Elige el modo de encriptado y el método de encriptación" />
 
-        <HBox spacing="20">
-            <!-- Modo -->
-            <VBox spacing="5" HBox.hgrow="ALWAYS">
-                <Label text="Modo" />
-                <ComboBox prefWidth="250" promptText="🔒 Encriptado" />
-            </VBox>
+            <HBox spacing="20">
+                <!-- Modo -->
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Modo" />
+                    <ComboBox prefWidth="250" promptText="🔒 Encriptado" />
+                </VBox>
 
-            <!-- Metodo de encriptado -->
-            <VBox spacing="5" HBox.hgrow="ALWAYS">
-                <Label text="Método de encriptado" />
-                <ComboBox prefWidth="250" promptText="Vigenère" />
-            </VBox>
-        </HBox>
-
-        <!-- Descripción del metodo -->
-        <HBox styleClass="description-panel">
-            <Label text="Vigenère: Usa una clave repetida para desplazar letras con patrones variables" wrapText="true" />
-        </HBox>
-
-        <!-- Ajustes avanzados -->
-        <Separator />
-        <Label styleClass="advanced-settings-label" text="AJUSTES AVANZADOS" />
-
-        <VBox spacing="5">
-            <HBox alignment="CENTER_LEFT" spacing="5">
-                <Label text="Clave de encriptado" />
-                <Label styleClass="eye-icon" text="👁" />
+                <!-- Metodo de encriptado -->
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Método de encriptado" />
+                    <ComboBox prefWidth="250" promptText="Vigenère" />
+                </VBox>
             </HBox>
-            <TextField prefWidth="150" text="3" />
-            <Label styleClass="field-description" text="Descripción de la clave" />
-        </VBox>
 
-        <Button styleClass="btn-primary" text="Clave aleatoria" />
-    </VBox>
+            <!-- Descripción del metodo -->
+            <HBox styleClass="description-panel">
+                <Label text="Vigenère: Usa una clave repetida para desplazar letras con patrones variables" wrapText="true" />
+            </HBox>
+
+            <!-- Ajustes avanzados -->
+            <Separator />
+            <Label styleClass="advanced-settings-label" text="AJUSTES AVANZADOS" />
+
+            <VBox spacing="5">
+                <HBox alignment="CENTER_LEFT" spacing="5">
+                    <Label text="Clave de encriptado" />
+                    <Label styleClass="eye-icon" text="👁" />
+                </HBox>
+                <TextField prefWidth="150" text="3" />
+                <Label styleClass="field-description" text="Descripción de la clave" />
+            </VBox>
+
+            <Button styleClass="btn-primary" text="Clave aleatoria" />
+        </VBox>
+    </TitledPane>
     </VBox>
 </VBox>

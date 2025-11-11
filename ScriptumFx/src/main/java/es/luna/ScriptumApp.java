@@ -47,7 +47,7 @@ public class ScriptumApp extends Application {
 
             // Tamaños mínimos
             primaryStage.setMinWidth(1000);
-            primaryStage.setMinHeight(700);
+            primaryStage.setMinHeight(800);
 
             // Centrar la ventana en la pantalla
             primaryStage.centerOnScreen();

@@ -428,3 +428,74 @@
     -fx-text-fill: #8b6914;
     -fx-font-weight: 600;
 }
+
+/* ===================================
+   TITLED PANE (Panel Desplegable)
+   =================================== */
+
+/* TitledPane principal */
+.titled-pane {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d4c9bb;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 12, 0, 0, 4);
+}
+
+/* Título del TitledPane */
+.titled-pane > .title {
+    -fx-background-color: #f5e6d3;
+    -fx-background-radius: 6px 6px 0 0;
+    -fx-padding: 12 16 12 16;
+    -fx-border-color: #d4c9bb;
+    -fx-border-width: 0 0 1px 0;
+}
+
+/* Texto del título */
+.titled-pane > .title > .text {
+    -fx-fill: #8b6914;
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 0.5px;
+}
+
+/* Flecha del TitledPane */
+.titled-pane > .title > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 8 0 0;
+}
+
+.titled-pane > .title > .arrow-button > .arrow {
+    -fx-background-color: #8b6914;
+    -fx-padding: 4;
+    -fx-shape: "M 0 0 L 4 4 L 8 0 Z";
+}
+
+/* Hover en el título */
+.titled-pane > .title:hover {
+    -fx-background-color: #ead9c3;
+    -fx-cursor: hand;
+}
+
+.titled-pane > .title:hover > .text {
+    -fx-fill: #6b4d0e;
+}
+
+.titled-pane > .title:hover > .arrow-button > .arrow {
+    -fx-background-color: #6b4d0e;
+}
+
+/* Contenido del TitledPane */
+.titled-pane > .content {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-background-radius: 0 0 6px 6px;
+}
+
+/* TitledPane cuando está colapsado */
+.titled-pane:collapsed > .title {
+    -fx-background-radius: 6px;
+    -fx-border-width: 0;
+}
