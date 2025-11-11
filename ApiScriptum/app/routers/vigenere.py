@@ -440,7 +440,7 @@ async def validar_clave(clave: str = Form(...)):
     **Características:**
     - Límite: 500 MB
     - Canary Check: valida los primeros 1KB antes de procesar todo
-    - Magic Header configurable (default: MAGICv1\\n)
+    - Magic Header configurable (default: MAGICV1\\n todo en mayúsculas)
     - Detección automática de caracteres invisibles en la clave
 
     **Canary Check:** Verifica que la clave sea correcta descifrando
@@ -451,11 +451,11 @@ async def validar_clave(clave: str = Form(...)):
 async def descifrar_archivo_grande(
     file: UploadFile = File(..., description="Archivo .txt cifrado grande"),
     clave: str = Form(..., description="Clave para el descifrado"),
-    magic_header: str = Form(default="MAGICv1\n", description="Header esperado al inicio del archivo descifrado"),
+    magic_header: str = Form(default="MAGICV1\n", description="Header esperado al inicio del archivo descifrado (todo en mayúsculas)"),
     skip_canary: bool = Form(default=False, description="Omitir verificación de canary (no recomendado)")
 ):
     """
-    Descifra archivo grande con validaciones de seguridad
+    Descifra archivo grande con validaciones de seguridad EN STREAMING
 
     Args:
         file: Archivo grande a descifrar
@@ -469,34 +469,36 @@ async def descifrar_archivo_grande(
     try:
         # 1. Validar la clave
         validar_clave_sin_caracteres_invisibles(clave)
-        logger.info(f"Descifrado de archivo grande iniciado - Tamaño: {file.filename}")
+        clave_formateada = validar_y_formatear_clave(clave)
+        logger.info(f"Descifrado de archivo grande iniciado - {file.filename}")
 
-        # 2. Leer y validar archivo (usa MAX_FILE_SIZE por defecto: 500 MB)
-        contenido_bytes = await leer_archivo_seguro(file, max_size=MAX_FILE_SIZE)
-        file_size = len(contenido_bytes)
+        # 2. Validar extensión del archivo
+        if not file.filename.endswith('.txt'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": "Solo se aceptan archivos .txt",
+                    "archivo_recibido": file.filename
+                }
+            )
 
-        # 3. CANARY CHECK - Verificar primeros bytes
+        # 3. CANARY CHECK - Leer solo los primeros bytes para validar
         canary_status = "skipped"
+        posicion_clave = 0
+
         if not skip_canary:
-            canary_bytes = contenido_bytes[:CANARY_SIZE]
+            logger.info("Realizando canary check...")
+            # Leer solo el canary (1 KB)
+            canary_bytes = await file.read(CANARY_SIZE)
+
+            if len(canary_bytes) == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"error": "El archivo está vacío"}
+                )
 
             try:
                 canary_text = canary_bytes.decode('utf-8')
-                canary_descifrado = descifrar_vigenere(canary_text, clave)
-
-                if not canary_descifrado.startswith(magic_header):
-                    logger.warning("Canary check failed - clave incorrecta o formato inválido")
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail={
-                            "error": "Canary check failed: clave incorrecta o formato inválido",
-                            "esperado": f"Archivo debe comenzar con: {repr(magic_header)}",
-                            "recibido": f"{repr(canary_descifrado[:50])}...",
-                            "sugerencia": "Verifica que la clave sea correcta y que el archivo esté cifrado correctamente"
-                        }
-                    )
-                canary_status = "passed"
-                logger.info("Canary check passed")
             except UnicodeDecodeError as exc:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -506,19 +508,125 @@ async def descifrar_archivo_grande(
                     }
                 ) from exc
 
-        # 4. Descifrar archivo completo
-        contenido = contenido_bytes.decode('utf-8')
-        texto_descifrado = descifrar_vigenere(contenido, clave)
+            # Descifrar el canary PRESERVANDO caracteres no alfabéticos (como \n)
+            canary_descifrado_chars = []
+            for char in canary_text:
+                if char.isalpha():
+                    # Descifrar solo letras
+                    base = ord('A')
+                    char_index = ord(char.upper()) - base
+                    key_index = ord(clave_formateada[posicion_clave]) - base
+                    descifrado_index = (char_index - key_index) % 26
+                    canary_descifrado_chars.append(chr(base + descifrado_index))
+                    posicion_clave = (posicion_clave + 1) % len(clave_formateada)
+                else:
+                    # Preservar caracteres no alfabéticos (espacios, \n, etc.)
+                    canary_descifrado_chars.append(char)
 
-        logger.info(f"Archivo grande descifrado exitosamente - {file_size / (1024*1024):.2f} MB")
+            canary_descifrado = ''.join(canary_descifrado_chars)
+
+            # Verificar magic header (normalizar line endings para compatibilidad Windows/Unix)
+            # Normalizar ambos a \n para comparación
+            canary_normalizado = canary_descifrado.replace('\r\n', '\n').replace('\r', '\n')
+            magic_normalizado = magic_header.replace('\r\n', '\n').replace('\r', '\n')
+
+            if not canary_normalizado.startswith(magic_normalizado):
+                logger.warning("Canary check failed - clave incorrecta o formato inválido")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": "Canary check failed: clave incorrecta o formato inválido",
+                        "esperado": f"Archivo debe comenzar con: {repr(magic_normalizado)}",
+                        "recibido": f"{repr(canary_normalizado[:50])}...",
+                        "sugerencia": "Verifica que la clave sea correcta y que el archivo esté cifrado correctamente"
+                    }
+                )
+
+            canary_status = "passed"
+            logger.info("Canary check passed")
+
+        # 4. STREAMING: Procesar el resto del archivo por bloques SIN cargarlo completo en memoria
+        BLOCK_SIZE = 1 * 1024 * 1024  # 1 MB por bloque
+        texto_descifrado_completo = []
+        bytes_procesados = CANARY_SIZE if not skip_canary else 0
+
+        # Si no skip_canary, agregar el canary descifrado al resultado
+        if not skip_canary:
+            texto_descifrado_completo.append(canary_descifrado)
+
+        # Si skipped canary, resetear la posición del archivo
+        if skip_canary:
+            await file.seek(0)
+            posicion_clave = 0  # Resetear posición de clave también
+
+        logger.info("Iniciando descifrado en streaming por bloques...")
+
+        bloque_numero = 0
+        while True:
+            # Leer siguiente bloque EN STREAMING (sin cargar todo en memoria)
+            bloque_bytes = await file.read(BLOCK_SIZE)
+
+            if not bloque_bytes:
+                # Fin del archivo
+                break
+
+            bytes_procesados += len(bloque_bytes)
+            bloque_numero += 1
+
+            # Validar que sea UTF-8 válido
+            try:
+                bloque_texto = bloque_bytes.decode('utf-8')
+            except UnicodeDecodeError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": f"Error de encoding en bloque {bloque_numero}",
+                        "sugerencia": "El archivo contiene caracteres no válidos UTF-8"
+                    }
+                ) from exc
+
+            # Validar tamaño máximo (500 MB)
+            if bytes_procesados > MAX_FILE_SIZE:
+                raise HTTPException(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail={
+                        "error": f"Archivo demasiado grande: {bytes_procesados / (1024*1024):.2f} MB",
+                        "limite": f"{MAX_FILE_SIZE / (1024*1024):.0f} MB"
+                    }
+                )
+
+            # Descifrar bloque manteniendo posición de clave y PRESERVANDO caracteres no alfabéticos
+            texto_descifrado_bloque = []
+            for char in bloque_texto:
+                if char.isalpha():
+                    # Descifrar letras
+                    base = ord('A')
+                    char_index = ord(char.upper()) - base
+                    key_index = ord(clave_formateada[posicion_clave]) - base
+                    descifrado_index = (char_index - key_index) % 26
+                    texto_descifrado_bloque.append(chr(base + descifrado_index))
+                    posicion_clave = (posicion_clave + 1) % len(clave_formateada)
+                else:
+                    # Preservar caracteres no alfabéticos (espacios, \n, etc.)
+                    texto_descifrado_bloque.append(char)
+
+            texto_descifrado_completo.append(''.join(texto_descifrado_bloque))
+
+            # Log de progreso cada 10 bloques (cada 10 MB)
+            if bloque_numero % 10 == 0:
+                logger.info(f"Procesados {bytes_procesados / (1024*1024):.2f} MB en {bloque_numero} bloques")
+
+        texto_descifrado = ''.join(texto_descifrado_completo)
+        logger.info(f"Archivo grande descifrado exitosamente - {bytes_procesados / (1024*1024):.2f} MB en {bloque_numero} bloques")
 
         return {
             "texto_descifrado": texto_descifrado,
-            "clave_usada": ''.join(c.upper() for c in clave if c.isalpha()),
-            "tamanio_archivo_bytes": file_size,
-            "tamanio_archivo_mb": round(file_size / (1024*1024), 2),
+            "clave_usada": clave_formateada,
+            "tamanio_archivo_bytes": bytes_procesados,
+            "tamanio_archivo_mb": round(bytes_procesados / (1024*1024), 2),
+            "bloques_procesados": bloque_numero,
             "canary_check": canary_status,
-            "mensaje": "Archivo descifrado exitosamente"
+            "mensaje": "Archivo descifrado exitosamente en streaming (memoria estable)"
         }
 
     except Exception as e:
