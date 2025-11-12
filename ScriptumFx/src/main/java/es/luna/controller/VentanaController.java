@@ -47,6 +47,11 @@ public class VentanaController {
     // ========== Campos de entrada/salida ==========
     @FXML private TextArea txtEntrada;
     @FXML private TextArea txtSalida;
+    @FXML private Button btnSubirArchivo;
+    @FXML private Button btnVaciarEntrada;
+    @FXML private Button btnCopiar;
+    @FXML private Button btnDescargar;
+    @FXML private Button btnVaciarSalida;
 
     // ========== Configuración de cifrado ==========
     @FXML private ComboBox<String> comboModo;
@@ -586,25 +591,9 @@ public class VentanaController {
      */
     private void mostrarAcercaDe() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Acerca de ScriptumFX");
-        alert.setHeaderText("ScriptumFX - Aplicación de Cifrado");
-        alert.setContentText(
-                """
-                        Versión: 1.0
-                        
-                        Aplicación de cifrado y descifrado de mensajes
-                        utilizando diferentes métodos criptográficos.
-                        
-                        Métodos soportados:
-                        • Vigenère (cifrado clásico)
-                        • AES-128/192/256 (cifrado moderno)
-                        
-                        Autoras:
-                        • Arantxa
-                        • Wara
-                        
-                        © 2025 - Todos los derechos reservados"""
-        );
+        alert.setTitle(Mensajes.obtener("acerca.titulo"));
+        alert.setHeaderText(Mensajes.obtener("acerca.header"));
+        alert.setContentText(Mensajes.obtener("acerca.contenido"));
         alert.showAndWait();
     }
 
@@ -613,12 +602,12 @@ public class VentanaController {
      */
     private void salirAplicacion() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar salida");
-        alert.setHeaderText("¿Desea salir de ScriptumFX?");
-        alert.setContentText("Se perderán los datos no guardados.");
+        alert.setTitle(Mensajes.obtener("salir.titulo"));
+        alert.setHeaderText(Mensajes.obtener("salir.header"));
+        alert.setContentText(Mensajes.obtener("salir.mensaje"));
 
-        ButtonType buttonSalir = new ButtonType("Salir");
-        ButtonType buttonCancelar = new ButtonType("Cancelar");
+        ButtonType buttonSalir = new ButtonType(Mensajes.obtener("salir.boton.salir"));
+        ButtonType buttonCancelar = new ButtonType(Mensajes.obtener("salir.boton.cancelar"));
         alert.getButtonTypes().setAll(buttonSalir, buttonCancelar);
 
         Optional<ButtonType> resultado = alert.showAndWait();
@@ -692,10 +681,8 @@ public class VentanaController {
         // Patrón básico de base64: caracteres A-Za-z0-9+/= y longitud múltiplo de 4
         if (!texto.matches("^[A-Za-z0-9+/]+=*$")) {
             mostrarAlerta(
-                "Formato inválido",
-                "El " + nombreCampo + " no tiene formato base64 válido.\n\n" +
-                "Asegúrate de copiar el resultado CIFRADO, no el texto original.\n\n" +
-                "El formato correcto debe contener solo letras, números, +, / y =",
+                Mensajes.obtener("validacion.formato.invalido.titulo"),
+                Mensajes.obtener("validacion.base64.invalido.mensaje", nombreCampo),
                 Alert.AlertType.WARNING
             );
             return true; // Error: formato inválido
@@ -704,9 +691,8 @@ public class VentanaController {
         // Validar longitud (base64 debe ser múltiplo de 4)
         if ((texto.length() % 4) != 0) {
             mostrarAlerta(
-                "Formato inválido",
-                "El " + nombreCampo + " está incompleto o corrupto.\n\n" +
-                "Verifica que hayas copiado el texto completo.",
+                Mensajes.obtener("validacion.formato.invalido.titulo"),
+                Mensajes.obtener("validacion.base64.incompleto.mensaje", nombreCampo),
                 Alert.AlertType.WARNING
             );
             return true; // Error: longitud inválida
@@ -750,41 +736,25 @@ public class VentanaController {
 
             // Mensajes específicos según el tipo de error
             if (mensaje.contains("500") || mensaje.contains("Internal Server Error")) {
-                lblMensajeEstado.setText("✗ Error: Verifica que copiaste el texto cifrado correcto");
+                lblMensajeEstado.setText(Mensajes.obtener("error.descifrar.aes.500.estado"));
                 lblMensajeEstado.setStyle("-fx-text-fill: red;");
                 mostrarAlerta(
-                    "Error al descifrar",
-                        """
-                                No se pudo descifrar el texto. Causas posibles:
-
-                                • Intentaste descifrar texto plano en vez del texto cifrado
-                                • El texto cifrado está corrupto o incompleto
-                                • El formato del texto cifrado o salt es inválido
-
-                                Asegúrate de:
-                                1. Copiar el RESULTADO CIFRADO (base64) al campo de entrada
-                                2. No modificar el texto cifrado manualmente
-                                3. Incluir el salt completo que se generó al cifrar""",
+                    Mensajes.obtener("error.descifrar.aes.titulo"),
+                    Mensajes.obtener("error.descifrar.aes.500.mensaje"),
                     Alert.AlertType.ERROR
                 );
             } else if (mensaje.contains("autenticación") || mensaje.contains("tag")) {
-                lblMensajeEstado.setText("✗ Error: Password o salt incorrectos");
+                lblMensajeEstado.setText(Mensajes.obtener("error.descifrar.aes.auth.estado"));
                 lblMensajeEstado.setStyle("-fx-text-fill: red;");
                 mostrarAlerta(
-                    "Error al descifrar",
-                        """
-                                Password o salt incorrectos.
-
-                                Verifica que:
-                                • El password sea el mismo que usaste al cifrar
-                                • El salt sea exactamente el que se generó al cifrar
-                                • El tipo de AES sea el correcto""",
+                    Mensajes.obtener("error.descifrar.aes.titulo"),
+                    Mensajes.obtener("error.descifrar.aes.mensaje"),
                     Alert.AlertType.ERROR
                 );
             } else {
                 lblMensajeEstado.setText("✗ Error: " + mensaje);
                 lblMensajeEstado.setStyle("-fx-text-fill: red;");
-                mostrarAlerta("Error al descifrar", mensaje, Alert.AlertType.ERROR);
+                mostrarAlerta(Mensajes.obtener("error.descifrar"), mensaje, Alert.AlertType.ERROR);
             }
         });
         return null;
@@ -822,17 +792,13 @@ public class VentanaController {
      */
     private void mostrarAlertaSaltConBotonCopiar(String salt) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Cifrado exitoso");
-        alert.setHeaderText("¡IMPORTANTE! Guarda este SALT");
-        alert.setContentText(
-            "Necesitarás este SALT para poder descifrar el mensaje:\n\n" +
-            salt + "\n\n" +
-            "Sin el salt no podrás recuperar el mensaje original."
-        );
+        alert.setTitle(Mensajes.obtener("dialogo.salt.titulo"));
+        alert.setHeaderText(Mensajes.obtener("dialogo.salt.header"));
+        alert.setContentText(Mensajes.obtener("dialogo.salt.mensaje", salt));
 
         // Crear botón personalizado para copiar
-        ButtonType btnCopiarSalt = new ButtonType("Copiar SALT");
-        ButtonType btnCerrar = new ButtonType("Cerrar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType btnCopiarSalt = new ButtonType(Mensajes.obtener("dialogo.salt.boton.copiar"));
+        ButtonType btnCerrar = new ButtonType(Mensajes.obtener("dialogo.salt.boton.cerrar"), ButtonBar.ButtonData.CANCEL_CLOSE);
 
         alert.getButtonTypes().setAll(btnCopiarSalt, btnCerrar);
 
@@ -847,7 +813,7 @@ public class VentanaController {
             clipboard.setContent(content);
 
             // Mostrar confirmación
-            lblMensajeEstado.setText("✓ SALT copiado al portapapeles");
+            lblMensajeEstado.setText(Mensajes.obtener("estado.salt.copiado"));
             lblMensajeEstado.setStyle("-fx-text-fill: green;");
             logger.info("SALT copiado al portapapeles");
         }

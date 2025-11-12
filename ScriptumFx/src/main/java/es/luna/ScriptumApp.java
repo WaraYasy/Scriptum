@@ -1,5 +1,6 @@
 package es.luna;
 
+import es.luna.util.Mensajes;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -37,6 +38,10 @@ public class ScriptumApp extends Application {
             // Cargar archivo FXML con la definición de la interfaz
             logger.debug("Cargando archivo FXML: fxml/Ventana.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/es/luna/fxml/Ventana.fxml"));
+
+            // Asignar ResourceBundle para internacionalización
+            fxmlLoader.setResources(Mensajes.getResourceBundle());
+            logger.debug("ResourceBundle asignado al FXMLLoader: {}", Mensajes.getLocaleActual());
 
             Scene scene = new Scene(fxmlLoader.load());
             logger.info("Archivo FXML cargado exitosamente");
