@@ -293,6 +293,7 @@ def grabar_fichero(nombre_fichero: str, contenido: str) -> str:
         logger.exception("Error al crear directorio data: %s", directorio_data)
         raise ValueError(f"No se pudo crear el directorio: {e}") from e
 
+
     # Escribir el contenido en el archivo
     logger.debug("Escribiendo contenido en el archivo")
     try:

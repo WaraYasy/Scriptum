@@ -85,7 +85,7 @@ def cifrar_aes(
         >>> nonce, cifrado, tag = cifrar_aes(b"Hola Mundo", clave, "AES-256")
     """
     logger.debug("Iniciando cifrado AES - Tipo: %s", tipo_aes)
-    
+
     # Validar tama�o de clave
     tamanio_esperado = TAMANIOS_CLAVE[tipo_aes]
     if len(clave) != tamanio_esperado:
@@ -137,11 +137,12 @@ def descifrar_aes(
         >>> datos_originales = descifrar_aes(cifrado, clave, nonce, tag, "AES-256")
     """
     logger.debug("Iniciando descifrado AES - Tipo: %s", tipo_aes)
-    
+
     # Validar tama�o de clave
     tamanio_esperado = TAMANIOS_CLAVE[tipo_aes]
     if len(clave) != tamanio_esperado:
-        logger.error("Tamaño de clave inválido en descifrado - Esperado: %d bytes, Recibido: %d bytes", tamanio_esperado, len(clave))
+        logger.error("Tamaño de clave inválido en descifrado - Esperado: %d bytes, Recibido: %d bytes",
+                     tamanio_esperado, len(clave))
         raise ValueError(
             f"La clave para {tipo_aes} debe tener {tamanio_esperado} bytes. "
             f"Se proporcionaron {len(clave)} bytes."
@@ -457,7 +458,7 @@ def descifrar_texto(
         >>> texto_original = descifrar_texto(cifrado, "mi_password", salt, "AES-256")
     """
     logger.info("Iniciando descifrado de texto - Tipo: %s", tipo_aes)
-    
+
     # Validar password
     validar_password(password)
 
@@ -548,7 +549,7 @@ def descifrar_archivo(
         >>>     f.write(contenido_original)
     """
     logger.info("Iniciando descifrado de archivo - Tipo: %s", tipo_aes)
-    
+
     # Validar password
     validar_password(password)
 
@@ -626,7 +627,7 @@ def cifrar_archivo_stream(
         if bytes_leidos % (10 * 1024 * 1024) == 0:
             logger.debug("Progreso de lectura: archivo grande en proceso")
 
-    logger.debug("Archivo leído completamente")   
+    logger.debug("Archivo leído completamente")
     # Cifrar los datos completos
     nonce, datos_cifrados, tag = cifrar_aes(bytes(contenido), clave, tipo_aes)
     # Empaquetar
@@ -956,4 +957,3 @@ def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
             "mime_type": mime_type
         }
     }
-

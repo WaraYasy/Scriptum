@@ -461,7 +461,8 @@ async def validar_clave(clave: str = Form(...)):
 async def descifrar_archivo_grande(
     file: UploadFile = File(..., description="Archivo .txt cifrado grande"),
     clave: str = Form(..., description="Clave para el descifrado"),
-    magic_header: str = Form(default="MAGICV1\n",description="Header esperado al inicio del archivo descifrado (todo en mayúsculas)"),
+    magic_header: str = Form(default="MAGICV1\n",
+                             description="Header esperado al inicio del archivo descifrado (todo en mayúsculas)"),
     skip_canary: bool = Form(default=False, description="Omitir verificación de canary (no recomendado)")
 ):
     """
@@ -640,7 +641,7 @@ async def descifrar_archivo_grande(
                 logger.info("Procesados %.2f MB en %d bloques", bytes_procesados / (1024*1024), bloque_numero)
 
         texto_descifrado = ''.join(texto_descifrado_completo)
-        logger.info("Archivo grande descifrado exitosamente - %.2f MB en %d bloques", 
+        logger.info("Archivo grande descifrado exitosamente - %.2f MB en %d bloques",
                     bytes_procesados / (1024*1024), bloque_numero)
 
         return {
