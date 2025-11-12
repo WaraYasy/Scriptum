@@ -2,8 +2,8 @@
 ROUTER VIGENÈRE
 Endpoints para cifrado y descifrado con algoritmo Vigenère
 """
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
 import logging
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
 
 from app.schemas.vigenere import (
     CifrarTextoRequest,

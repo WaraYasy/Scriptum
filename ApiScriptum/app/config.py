@@ -1,7 +1,11 @@
-from pydantic_settings import BaseSettings
+"""
+SCRIPTUM API 
+Configuración de la aplicación
+Autor: Wara - Arantxa
+"""
 from typing import List
 from pathlib import Path
-
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """
