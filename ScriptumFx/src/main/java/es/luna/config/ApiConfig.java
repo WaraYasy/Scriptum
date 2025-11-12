@@ -45,8 +45,12 @@ public class ApiConfig {
             return apiUrl;
         }
 
-        // Por defecto: localhost
-        return "http://localhost:" + API_PORT;
+        // Por defecto: API en producción (Railway)
+        // Para usar localhost, cambia la siguiente línea o usa variable de entorno SCRIPTUM_API_URL
+        return "https://scriptum-api-production.up.railway.app";
+
+        // Para desarrollo local, descomenta la línea siguiente:
+        // return "http://localhost:" + API_PORT;
     }
 
     /**

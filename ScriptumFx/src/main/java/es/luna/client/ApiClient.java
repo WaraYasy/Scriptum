@@ -165,20 +165,54 @@ public class ApiClient {
      */
     private void handleErrorResponse(HttpResponse<String> response) throws ApiException {
         try {
-            ApiErrorResponse errorResponse = gson.fromJson(response.body(), ApiErrorResponse.class);
-            String errorMsg = errorResponse.getError();
-            String detalle = errorResponse.getDetalle();
+            String responseBody = response.body();
+            String errorMsg = null;
 
-            String fullErrorMsg = errorMsg;
-            if (detalle != null && !detalle.isEmpty()) {
-                fullErrorMsg += " - " + detalle;
+            // Intentar parsear como objeto con estructura FastAPI: {"detail": {"error": "..."}}
+            try {
+                com.google.gson.JsonObject jsonObject = gson.fromJson(responseBody, com.google.gson.JsonObject.class);
+
+                // Caso 1: {"detail": {"error": "mensaje"}}
+                if (jsonObject.has("detail")) {
+                    com.google.gson.JsonElement detailElement = jsonObject.get("detail");
+                    if (detailElement.isJsonObject()) {
+                        com.google.gson.JsonObject detailObj = detailElement.getAsJsonObject();
+                        if (detailObj.has("error")) {
+                            errorMsg = detailObj.get("error").getAsString();
+                        }
+                    } else if (detailElement.isJsonPrimitive()) {
+                        // Caso 2: {"detail": "mensaje"}
+                        errorMsg = detailElement.getAsString();
+                    }
+                }
+
+                // Caso 3: {"error": "mensaje", "detalle": "..."}
+                if (errorMsg == null && jsonObject.has("error")) {
+                    errorMsg = jsonObject.get("error").getAsString();
+                    if (jsonObject.has("detalle")) {
+                        String detalle = jsonObject.get("detalle").getAsString();
+                        if (detalle != null && !detalle.isEmpty()) {
+                            errorMsg += " - " + detalle;
+                        }
+                    }
+                }
+
+            } catch (Exception e) {
+                logger.debug("No se pudo parsear como JSON estructurado, usando cuerpo completo");
             }
 
-            logger.error("Error de API ({}): {}", response.statusCode(), fullErrorMsg);
-            throw new ApiException(fullErrorMsg);
+            // Si no se pudo extraer mensaje, usar el cuerpo completo
+            if (errorMsg == null || errorMsg.isEmpty()) {
+                errorMsg = "Error HTTP " + response.statusCode() + ": " + responseBody;
+            }
 
-        } catch (JsonSyntaxException e) {
-            // Si no se puede parsear como error JSON, lanzar error genérico
+            logger.error("Error de API ({}): {}", response.statusCode(), errorMsg);
+            throw new ApiException(errorMsg);
+
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            // Si falla lo demás, lanzar error genérico
             String errorMsg = "Error HTTP " + response.statusCode() + ": " + response.body();
             logger.error(errorMsg);
             throw new ApiException(errorMsg);
