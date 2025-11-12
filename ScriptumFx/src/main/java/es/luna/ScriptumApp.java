@@ -4,6 +4,7 @@ import es.luna.util.Mensajes;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,16 @@ public class ScriptumApp extends Application {
             // Configurar el stage
             primaryStage.setTitle("ScriptumFX - Cifrado de Mensajes");
             primaryStage.setScene(scene);
+
+            // Configurar icono de la aplicación
+            var iconResource = ScriptumApp.class.getResource("/es/luna/img/ScriptumIcon.png");
+            if (iconResource != null) {
+                Image icon = new Image(iconResource.toExternalForm());
+                primaryStage.getIcons().add(icon);
+                logger.debug("Icono de aplicación cargado correctamente");
+            } else {
+                logger.warn("No se pudo encontrar el icono de la aplicación en: /es/luna/img/ScriptumIcon.png");
+            }
 
             // Tamaños mínimos
             primaryStage.setMinWidth(1000);
