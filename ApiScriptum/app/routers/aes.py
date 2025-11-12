@@ -29,7 +29,7 @@ from app.services.aes import (
     validar_password,
     SMALL_FILE_THRESHOLD
 )
-
+from app.services.aes import cifrar_archivo_stream_async
 # ============================================================================
 # LOGGING
 # ============================================================================
@@ -108,8 +108,19 @@ async def validar_y_leer_archivo(
     """
     logger.debug("Validando archivo")
 
+    # Validar que el archivo tenga nombre
+    if not file.filename:
+        logger.warning("Archivo sin nombre recibido")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "El archivo debe tener un nombre"}
+        )
+
+    # Asignar nombre a variable local para type narrowing
+    filename = file.filename
+
     # Validar extensión
-    extension = '.' + file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    extension = '.' + filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
 
     if extension not in EXTENSIONES_SOPORTADAS:
         logger.warning("Extensión no soportada: %s", extension)
@@ -118,7 +129,7 @@ async def validar_y_leer_archivo(
             detail={
                 "error": f"Extensión de archivo no soportada: {extension}",
                 "extensiones_soportadas": list(EXTENSIONES_SOPORTADAS),
-                "archivo_recibido": file.filename
+                "archivo_recibido": filename
             }
         )
 
@@ -242,8 +253,7 @@ async def cifrar_texto_endpoint(request: CifrarTextoAESRequest):
         # Calcular tamaños
         tamanio_original = len(request.texto.encode('utf-8'))
         tamanio_cifrado = len(texto_cifrado.encode('utf-8'))
-        
-        logger.info("Texto cifrado exitosamente - Original: %d bytes, Cifrado: %d bytes", 
+        logger.info("Texto cifrado exitosamente - Original: %d bytes, Cifrado: %d bytes",
                    tamanio_original, tamanio_cifrado)
 
         return CifradoAESResponse(
@@ -253,6 +263,8 @@ async def cifrar_texto_endpoint(request: CifrarTextoAESRequest):
             tamanio_original_bytes=tamanio_original,
             tamanio_cifrado_bytes=tamanio_cifrado
         )
+    except (ValueError, HTTPException):
+        raise
     except Exception as e:
         manejar_error(e, "cifrar texto")
 
@@ -298,7 +310,7 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
             request.salt,
             request.tipo_aes
         )
-        
+
         tamanio_bytes = len(texto_descifrado.encode('utf-8'))
         logger.info("Texto descifrado exitosamente - Tamaño: %d bytes", tamanio_bytes)
 
@@ -307,6 +319,8 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
             tipo_aes=request.tipo_aes,
             tamanio_bytes=tamanio_bytes
         )
+    except (ValueError, HTTPException):
+        raise
     except Exception as e:
         manejar_error(e, "descifrar texto")
 
@@ -365,8 +379,19 @@ async def cifrar_archivo_endpoint(
         CifradoAESResponse con el archivo cifrado en base64 y salt
     """
     try:
+        # Validar que el archivo tenga nombre
+        if not file.filename:
+            logger.warning("Archivo sin nombre recibido")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "El archivo debe tener un nombre"}
+            )
+
+        # Asignar nombre a variable local para type narrowing
+        filename = file.filename
+
         # Capturar metadata del archivo original
-        nombre_original = file.filename
+        nombre_original = filename
         mime_type = file.content_type or "application/octet-stream"
 
         # Leer archivo completo para determinar tamaño
@@ -377,7 +402,7 @@ async def cifrar_archivo_endpoint(
         await file.seek(0)
 
         logger.info("Archivo: %s - Tamaño: %d bytes (%d MB)",
-                   file.filename, file_size, file_size // (1024 * 1024))
+                   filename, file_size, file_size // (1024 * 1024))
 
         # Decidir método según tamaño
         if file_size < SMALL_FILE_THRESHOLD:
@@ -395,10 +420,9 @@ async def cifrar_archivo_endpoint(
         else:
             # ARCHIVO GRANDE: Usar streaming
             logger.info("Usando streaming (archivo >= 10 MB)")
-            from app.services.aes import cifrar_archivo_stream_async
 
             # Validar extensión antes de procesar
-            extension = '.' + file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+            extension = '.' + filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
             if extension not in EXTENSIONES_SOPORTADAS:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -419,7 +443,7 @@ async def cifrar_archivo_endpoint(
         # Calcular tamaño cifrado
         tamanio_cifrado = len(archivo_cifrado.encode('utf-8'))
 
-        logger.info("Archivo cifrado exitosamente: %s", file.filename)
+        logger.info("Archivo cifrado exitosamente: %s", filename)
 
         return CifradoAESArchivoConMetadataResponse(
             archivo_cifrado=archivo_cifrado,
@@ -430,6 +454,8 @@ async def cifrar_archivo_endpoint(
             tamanio_original_bytes=tamanio_original,
             tamanio_cifrado_bytes=tamanio_cifrado
         )
+    except (ValueError, HTTPException):
+        raise
     except Exception as e:
         manejar_error(e, "cifrar archivo")
 
@@ -490,6 +516,17 @@ async def descifrar_archivo_endpoint(
         DescifradoAESArchivoResponse con el archivo descifrado en base64
     """
     try:
+        # Validar que el archivo tenga nombre
+        if not file.filename:
+            logger.warning("Archivo sin nombre recibido")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "El archivo debe tener un nombre"}
+            )
+
+        # Asignar nombre a variable local para type narrowing
+        filename = file.filename
+
         # Leer archivo cifrado
         contenido_cifrado = await file.read()
 
@@ -502,7 +539,7 @@ async def descifrar_archivo_endpoint(
                 detail={"error": "El archivo cifrado debe ser texto UTF-8"}
             ) from exc
 
-        logger.info("Descifrando archivo: %s con %s", file.filename, tipo_aes)
+        logger.info("Descifrando archivo: %s con %s", filename, tipo_aes)
 
         # Descifrar archivo
         archivo_descifrado = descifrar_archivo(
@@ -515,7 +552,7 @@ async def descifrar_archivo_endpoint(
         # Convertir a base64 para devolver
         archivo_descifrado_base64 = base64.b64encode(archivo_descifrado).decode('utf-8')
 
-        logger.info("Archivo descifrado exitosamente: %s (%d bytes)", file.filename, len(archivo_descifrado))
+        logger.info("Archivo descifrado exitosamente: %s (%d bytes)", filename, len(archivo_descifrado))
 
         return DescifradoAESArchivoResponse(
             archivo_descifrado_base64=archivo_descifrado_base64,
@@ -523,6 +560,8 @@ async def descifrar_archivo_endpoint(
             tamanio_bytes=len(archivo_descifrado),
             mensaje="Archivo descifrado exitosamente. Descarga el contenido desde 'archivo_descifrado_base64'"
         )
+    except (ValueError, HTTPException):
+        raise
     except Exception as e:
         manejar_error(e, "descifrar archivo")
 
@@ -601,6 +640,17 @@ async def cifrar_archivo_paquete_endpoint(
     El usuario solo necesita guardar el campo 'paquete'.
     """
     try:
+        # Validar que el archivo tenga nombre
+        if not file.filename:
+            logger.warning("Archivo sin nombre recibido")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "El archivo debe tener un nombre"}
+            )
+
+        # Asignar nombre a variable local para type narrowing
+        filename = file.filename
+
         # Leer archivo completo para determinar tamaño
         contenido_temp = await file.read()
         file_size = len(contenido_temp)
@@ -609,7 +659,7 @@ async def cifrar_archivo_paquete_endpoint(
         await file.seek(0)
 
         logger.info("Cifrado con paquete - Archivo: %s, Tamaño: %d bytes (%d MB)",
-                   file.filename, file_size, file_size // (1024 * 1024))
+                   filename, file_size, file_size // (1024 * 1024))
 
         # Obtener MIME type
         mime_type = file.content_type or "application/octet-stream"
@@ -630,10 +680,9 @@ async def cifrar_archivo_paquete_endpoint(
         else:
             # ARCHIVO GRANDE: Usar streaming
             logger.info("Usando streaming (archivo >= 10 MB)")
-            from app.services.aes import cifrar_archivo_stream_async
 
             # Validar extensión antes de procesar
-            extension = '.' + file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+            extension = '.' + filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
             if extension not in EXTENSIONES_SOPORTADAS:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -656,7 +705,7 @@ async def cifrar_archivo_paquete_endpoint(
             contenido_cifrado=archivo_cifrado,
             salt=salt_resultado,
             tipo_aes=tipo_aes,
-            nombre_archivo=file.filename,
+            nombre_archivo=filename,
             mime_type=mime_type
         )
 
@@ -664,18 +713,20 @@ async def cifrar_archivo_paquete_endpoint(
 
         tamanio_paquete = len(base64.b64decode(paquete))
 
-        logger.info("Paquete creado exitosamente: %s", file.filename)
+        logger.info("Paquete creado exitosamente: %s", filename)
 
         return CifradoAESArchivoPaqueteResponse(
             paquete=paquete,
             tamanio_paquete_bytes=tamanio_paquete,
             info={
-                "nombre_original": file.filename,
+                "nombre_original": filename,
                 "mime_type": mime_type,
                 "tamanio_original_bytes": tamanio_original,
                 "tipo_aes": tipo_aes
             }
         )
+    except (ValueError, HTTPException):
+        raise
     except Exception as e:
         manejar_error(e, "cifrar archivo con paquete")
 
@@ -783,6 +834,8 @@ async def descifrar_archivo_paquete_endpoint(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": f"Paquete inválido o corrupto: {str(e)}"}
         ) from e
+    except HTTPException:
+        raise
     except Exception as e:
         manejar_error(e, "descifrar archivo desde paquete")
 

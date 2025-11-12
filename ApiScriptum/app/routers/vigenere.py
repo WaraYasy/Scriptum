@@ -78,13 +78,23 @@ async def leer_archivo_seguro(file: UploadFile, max_size: int = MAX_FILE_SIZE) -
     Raises:
         HTTPException: Si el archivo es demasiado grande o inválido
     """
+    # Validar que el archivo tenga nombre
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "El archivo debe tener un nombre"}
+        )
+
+    # Asignar nombre a variable local para type narrowing
+    filename = file.filename
+
     # Validar extensión
-    if not file.filename.endswith('.txt'):
+    if not filename.endswith('.txt'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "error": "Solo se aceptan archivos .txt",
-                "archivo_recibido": file.filename
+                "archivo_recibido": filename
             }
         )
 
@@ -148,14 +158,14 @@ def manejar_error(e: Exception, operacion: str) -> HTTPException:
         return e
 
     if isinstance(e, ValueError):
-        logger.warning(f"Error de validación al {operacion}: {str(e)}")
+        logger.warning("Error de validación al %s: %s", operacion, str(e))
         return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": str(e)}
         )
 
     # Error inesperado - solo logear detalles, no exponerlos
-    logger.error(f"Error interno al {operacion}: {str(e)}", exc_info=True)
+    logger.error("Error interno al %s: %s", operacion, str(e), exc_info=True)
     return HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail={"error": f"Error interno al {operacion}"}
@@ -211,7 +221,7 @@ async def cifrar_texto(request: CifrarTextoRequest):
             texto_original_length=len(request.texto)
         )
     except Exception as e:
-        raise manejar_error(e, "cifrar texto")
+        raise manejar_error(e, "cifrar texto") from e
 
 
 @router.post(
@@ -255,7 +265,7 @@ async def descifrar_texto(request: DescifrarTextoRequest):
             clave_usada=''.join(c.upper() for c in request.clave if c.isalpha())
         )
     except Exception as e:
-        raise manejar_error(e, "descifrar texto")
+        raise manejar_error(e, "descifrar texto") from e
 
 
 # ============================================================================
@@ -317,7 +327,7 @@ async def cifrar_archivo(
             texto_original_length=longitud_original
         )
     except Exception as e:
-        raise manejar_error(e, "cifrar archivo")
+        raise manejar_error(e, "cifrar archivo") from e
 
 
 @router.post(
@@ -371,7 +381,7 @@ async def descifrar_archivo(
             clave_usada=''.join(c.upper() for c in clave if c.isalpha())
         )
     except Exception as e:
-        raise manejar_error(e, "descifrar archivo")
+        raise manejar_error(e, "descifrar archivo") from e
 
 
 # ============================================================================
@@ -408,21 +418,17 @@ async def validar_clave(clave: str = Form(...)):
     Returns:
         Información sobre la clave y advertencias si las hay
     """
-    try:
-        # Reutilizamos la función auxiliar
-        validar_clave_sin_caracteres_invisibles(clave)
+    # Reutilizamos la función auxiliar
+    validar_clave_sin_caracteres_invisibles(clave)
 
-        # Si llegamos aquí, la clave es válida
-        clave_limpia = ''.join(c.upper() for c in clave if c.isalpha())
-        return {
-            "valida": True,
-            "clave_length": len(clave),
-            "clave_limpia": clave_limpia,
-            "mensaje": "Clave válida sin caracteres invisibles"
-        }
-    except HTTPException:
-        # Re-lanzar la excepción de validación
-        raise
+    # Si llegamos aquí, la clave es válida
+    clave_limpia = ''.join(c.upper() for c in clave if c.isalpha())
+    return {
+        "valida": True,
+        "clave_length": len(clave),
+        "clave_limpia": clave_limpia,
+        "mensaje": "Clave válida sin caracteres invisibles"
+    }
 
 
 @router.post(
@@ -451,7 +457,7 @@ async def validar_clave(clave: str = Form(...)):
 async def descifrar_archivo_grande(
     file: UploadFile = File(..., description="Archivo .txt cifrado grande"),
     clave: str = Form(..., description="Clave para el descifrado"),
-    magic_header: str = Form(default="MAGICV1\n", description="Header esperado al inicio del archivo descifrado (todo en mayúsculas)"),
+    magic_header: str = Form(default="MAGICV1\n",description="Header esperado al inicio del archivo descifrado (todo en mayúsculas)"),
     skip_canary: bool = Form(default=False, description="Omitir verificación de canary (no recomendado)")
 ):
     """
@@ -470,20 +476,31 @@ async def descifrar_archivo_grande(
         # 1. Validar la clave
         validar_clave_sin_caracteres_invisibles(clave)
         clave_formateada = validar_y_formatear_clave(clave)
-        logger.info(f"Descifrado de archivo grande iniciado - {file.filename}")
 
-        # 2. Validar extensión del archivo
-        if not file.filename.endswith('.txt'):
+        # 2. Validar que el archivo tenga nombre
+        if not file.filename:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "El archivo debe tener un nombre"}
+            )
+
+        # Asignar nombre a variable local para type narrowing
+        filename = file.filename
+        logger.info("Descifrado de archivo grande iniciado - %s", filename)
+
+        # 3. Validar extensión del archivo
+        if not filename.endswith('.txt'):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
                     "error": "Solo se aceptan archivos .txt",
-                    "archivo_recibido": file.filename
+                    "archivo_recibido": filename
                 }
             )
 
-        # 3. CANARY CHECK - Leer solo los primeros bytes para validar
+        # 4. CANARY CHECK - Leer solo los primeros bytes para validar
         canary_status = "skipped"
+        canary_descifrado = ""  # Inicializar para type safety
         posicion_clave = 0
 
         if not skip_canary:
@@ -545,7 +562,7 @@ async def descifrar_archivo_grande(
             canary_status = "passed"
             logger.info("Canary check passed")
 
-        # 4. STREAMING: Procesar el resto del archivo por bloques SIN cargarlo completo en memoria
+        # 5. STREAMING: Procesar el resto del archivo por bloques SIN cargarlo completo en memoria
         BLOCK_SIZE = 1 * 1024 * 1024  # 1 MB por bloque
         texto_descifrado_completo = []
         bytes_procesados = CANARY_SIZE if not skip_canary else 0
@@ -614,10 +631,11 @@ async def descifrar_archivo_grande(
 
             # Log de progreso cada 10 bloques (cada 10 MB)
             if bloque_numero % 10 == 0:
-                logger.info(f"Procesados {bytes_procesados / (1024*1024):.2f} MB en {bloque_numero} bloques")
+                logger.info("Procesados %.2f MB en %d bloques", bytes_procesados / (1024*1024), bloque_numero)
 
         texto_descifrado = ''.join(texto_descifrado_completo)
-        logger.info(f"Archivo grande descifrado exitosamente - {bytes_procesados / (1024*1024):.2f} MB en {bloque_numero} bloques")
+        logger.info("Archivo grande descifrado exitosamente - %.2f MB en %d bloques", 
+                    bytes_procesados / (1024*1024), bloque_numero)
 
         return {
             "texto_descifrado": texto_descifrado,
@@ -630,4 +648,5 @@ async def descifrar_archivo_grande(
         }
 
     except Exception as e:
-        raise manejar_error(e, "descifrar archivo grande")
+        raise manejar_error(e, "descifrar archivo grande") from e
+   

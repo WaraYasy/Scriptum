@@ -577,7 +577,7 @@ def cifrar_archivo_stream(
     file_stream,
     password: str,
     tipo_aes: TipoAES = "AES-256"
-) -> Tuple[bytearray, str]:
+) -> Tuple[str, str]:
     """
     Cifra un archivo usando streaming (procesa en chunks).
 
@@ -610,7 +610,6 @@ def cifrar_archivo_stream(
 
     # Generar clave (salt se genera automáticamente)
     clave, salt = generar_clave_desde_password(password, tipo_aes, None)
-    
     # Leer archivo en chunks
     logger.debug("Leyendo archivo en chunks")
     contenido = bytearray()
@@ -627,17 +626,13 @@ def cifrar_archivo_stream(
         if bytes_leidos % (10 * 1024 * 1024) == 0:
             logger.debug("Progreso de lectura: archivo grande en proceso")
 
-    logger.debug("Archivo leído completamente")
-    
+    logger.debug("Archivo leído completamente")   
     # Cifrar los datos completos
     nonce, datos_cifrados, tag = cifrar_aes(bytes(contenido), clave, tipo_aes)
-    
     # Empaquetar
     texto_cifrado = empaquetar_datos_cifrados(nonce, datos_cifrados, tag)
     salt_base64_resultado = empaquetar_salt(salt)
-    
     logger.info("Cifrado con streaming completado")
-    
     return texto_cifrado, salt_base64_resultado
 
 
@@ -673,7 +668,6 @@ async def cifrar_archivo_stream_async(
 
     # Generar clave (salt se genera automáticamente)
     clave, salt = generar_clave_desde_password(password, tipo_aes, None)
-    
     # Leer archivo en chunks de manera asíncrona
     logger.debug("Leyendo archivo en chunks de manera asíncrona")
     contenido = bytearray()
@@ -691,14 +685,11 @@ async def cifrar_archivo_stream_async(
             logger.debug("Progreso de lectura: archivo grande en proceso")
 
     logger.debug("Archivo leído completamente")
-    
     # Cifrar los datos completos
     nonce, datos_cifrados, tag = cifrar_aes(bytes(contenido), clave, tipo_aes)
-    
     # Empaquetar
     texto_cifrado = empaquetar_datos_cifrados(nonce, datos_cifrados, tag)
     salt_base64_resultado = empaquetar_salt(salt)
-    
     logger.info("Cifrado asíncrono con streaming completado")
 
     return texto_cifrado, salt_base64_resultado
@@ -796,14 +787,14 @@ def crear_paquete_archivo_cifrado(
             raise ValueError(f"Salt debe tener {SALT_SIZE} bytes, tiene {len(salt_bytes)}")
     except Exception as e:
         logger.exception("Error al decodificar salt en crear_paquete_archivo_cifrado")
-        raise ValueError(f"Salt inválido: {e}")
+        raise ValueError(f"Salt inválido: {e}") from e
 
     # Decodificar contenido cifrado de base64
     try:
         contenido_bytes = base64.b64decode(contenido_cifrado)
     except Exception as e:
         logger.exception("Error al decodificar contenido cifrado en crear_paquete_archivo_cifrado")
-        raise ValueError(f"Contenido cifrado inválido: {e}")
+        raise ValueError(f"Contenido cifrado inválido: {e}") from e
 
     # Convertir strings a bytes
     nombre_bytes = nombre_archivo.encode('utf-8')
@@ -877,7 +868,7 @@ def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
         paquete_bytes = base64.b64decode(paquete_base64)
     except Exception as e:
         logger.exception("Error al decodificar paquete base64 en extraer_paquete_archivo_cifrado")
-        raise ValueError(f"Paquete base64 inválido: {e}")
+        raise ValueError(f"Paquete base64 inválido: {e}") from e
 
     # Verificar tamaño mínimo (header sin nombre ni mime)
     # Magic(8) + Version(1) + AES(1) + Salt(16) + NombreLen(2) + MIMELen(2) = 30 bytes
@@ -929,7 +920,7 @@ def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
         nombre_original = nombre_bytes.decode('utf-8')
     except UnicodeDecodeError as e:
         logger.exception("Error al decodificar nombre de archivo en extraer_paquete")
-        raise ValueError(f"Nombre de archivo no es UTF-8 válido: {e}")
+        raise ValueError(f"Nombre de archivo no es UTF-8 válido: {e}") from e
 
     # Longitud del MIME
     if offset + 2 > len(paquete_bytes):
@@ -946,7 +937,7 @@ def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
         mime_type = mime_bytes.decode('utf-8')
     except UnicodeDecodeError as e:
         logger.exception("Error al decodificar MIME type en extraer_paquete")
-        raise ValueError(f"MIME type no es UTF-8 válido: {e}")
+        raise ValueError(f"MIME type no es UTF-8 válido: {e}") from e
 
     # BODY (contenido cifrado)
     contenido_bytes = paquete_bytes[offset:]
