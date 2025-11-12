@@ -2,7 +2,13 @@
 SCHEMAS VIGENÈRE
 Modelos Pydantic para requests y responses de los endpoints Vigenère
 """
+import logging
 from pydantic import BaseModel, Field
+
+# ============================================================================
+# LOGGING
+# ============================================================================
+logger = logging.getLogger(__name__)
 
 
 class CifrarTextoRequest(BaseModel):

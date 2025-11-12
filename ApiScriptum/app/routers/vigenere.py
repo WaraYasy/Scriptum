@@ -18,10 +18,13 @@ from app.services.vigenere import (
     validar_y_formatear_clave
 )
 
-# Configurar logging
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/vigenere", tags=["Vigenère"])
+
+# ============================================================================
+# LOGGING
+# ============================================================================
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # CONSTANTES Y CONFIGURACIÓN
@@ -115,6 +118,7 @@ async def leer_archivo_seguro(file: UploadFile, max_size: int = MAX_FILE_SIZE) -
     try:
         contenido.decode('utf-8')
     except UnicodeDecodeError as exc:
+        logger.exception("Error al decodificar archivo UTF-8: %s", filename)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": "El archivo no es texto UTF-8 válido"}
@@ -165,7 +169,7 @@ def manejar_error(e: Exception, operacion: str) -> HTTPException:
         )
 
     # Error inesperado - solo logear detalles, no exponerlos
-    logger.error("Error interno al %s: %s", operacion, str(e), exc_info=True)
+    logger.exception("Error interno al %s", operacion)
     return HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail={"error": f"Error interno al {operacion}"}
@@ -517,6 +521,7 @@ async def descifrar_archivo_grande(
             try:
                 canary_text = canary_bytes.decode('utf-8')
             except UnicodeDecodeError as exc:
+                logger.exception("Error al decodificar canary como UTF-8")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={
@@ -594,6 +599,7 @@ async def descifrar_archivo_grande(
             try:
                 bloque_texto = bloque_bytes.decode('utf-8')
             except UnicodeDecodeError as exc:
+                logger.exception("Error al decodificar bloque %d como UTF-8", bloque_numero)
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={
@@ -649,4 +655,3 @@ async def descifrar_archivo_grande(
 
     except Exception as e:
         raise manejar_error(e, "descifrar archivo grande") from e
-   

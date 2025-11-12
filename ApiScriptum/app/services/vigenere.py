@@ -11,9 +11,14 @@ Arquitectura del módulo:
 - Capa 2: Validaciones y sanitización de entradas
 - Capa 3: Utilidades para manejo de archivos (opcional)
 """
+import logging
 import os
 import re
 
+# ============================================================================
+# LOGGING
+# ============================================================================
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # CAPA 1: FUNCIONES PURAS DE CIFRADO/DESCIFRADO
@@ -36,23 +41,33 @@ def cifrar_vigenere(texto: str, clave: str) -> str:
         >>> cifrar_vigenere("HELLO WORLD", "KEY")
         'RIJVSUYVJN'
     """
+    logger.info("Iniciando cifrado Vigenère")
+
     # Validar y formatear entradas
+    logger.debug("Validando y formateando entradas")
     texto_limpio = formatear_texto(texto)
     clave_limpia = validar_y_formatear_clave(clave)
 
     if not texto_limpio:
+        logger.error("El texto no contiene caracteres válidos para cifrar")
         raise ValueError("El texto no contiene caracteres válidos para cifrar.")
+
+    logger.debug("Texto limpio: %d caracteres, Clave limpia: %d caracteres",
+                 len(texto_limpio), len(clave_limpia))
 
     # Ajustar la clave al tamaño del texto
     clave_ajustada = ajustar_clave(clave_limpia, len(texto_limpio))
 
     # Cifrado Vigenère
+    logger.debug("Aplicando cifrado Vigenère")
     texto_cifrado = ""
     for i, letra in enumerate(texto_limpio):
         # Fórmula: C = (P + K) mod 26
         posicion = (ord(letra) - ord('A') + ord(clave_ajustada[i]) - ord('A')) % 26
         letra_cifrada = chr(posicion + ord('A'))
         texto_cifrado += letra_cifrada
+
+    logger.info("Cifrado Vigenère completado exitosamente")
 
     return texto_cifrado
 
@@ -76,19 +91,27 @@ def descifrar_vigenere(texto_cifrado: str, clave: str) -> str:
         >>> descifrar_vigenere("RIJVSUYVJN", "KEY")
         'HELLOWORLD'
     """
+    logger.info("Iniciando descifrado Vigenère")
+
     # Validar y formatear clave
+    logger.debug("Validando y formateando clave")
     clave_limpia = validar_y_formatear_clave(clave)
 
     # Formatear texto cifrado (por si acaso viene con espacios)
     texto_limpio = formatear_texto(texto_cifrado)
 
     if not texto_limpio:
+        logger.error("El texto cifrado no contiene caracteres válidos")
         raise ValueError("El texto cifrado no contiene caracteres válidos.")
+
+    logger.debug("Texto cifrado limpio: %d caracteres, Clave limpia: %d caracteres",
+                 len(texto_limpio), len(clave_limpia))
 
     # Ajustar la clave al tamaño del texto
     clave_ajustada = ajustar_clave(clave_limpia, len(texto_limpio))
 
     # Descifrado Vigenère
+    logger.debug("Aplicando descifrado Vigenère")
     texto_original = ""
     for i, letra in enumerate(texto_limpio):
         # Fórmula: P = (C - K + 26) mod 26
@@ -97,6 +120,8 @@ def descifrar_vigenere(texto_cifrado: str, clave: str) -> str:
         posicion = (num_letra - num_clave + 26) % 26
         letra_original = chr(posicion + ord('A'))
         texto_original += letra_original
+
+    logger.info("Descifrado Vigenère completado exitosamente")
 
     return texto_original
 
@@ -124,14 +149,20 @@ def validar_y_formatear_clave(clave: str) -> str:
         >>> validar_y_formatear_clave("Mi Clave 123")
         'MICLAVE'
     """
+    logger.debug("Validando clave")
+
     if not clave:
+        logger.warning("Intento de validación con clave vacía")
         raise ValueError("La clave no puede estar vacía.")
 
     # Limpiar la clave: solo letras, convertir a mayúsculas
     clave_limpia = ''.join(c.upper() for c in clave if c.isalpha())
 
     if not clave_limpia:
+        logger.warning("Clave no contiene caracteres alfabéticos válidos")
         raise ValueError("La clave debe contener al menos una letra (A-Z).")
+
+    logger.debug("Clave validada correctamente: %d caracteres", len(clave_limpia))
 
     return clave_limpia
 
@@ -180,15 +211,20 @@ def ajustar_clave(clave: str, longitud: int) -> str:
         >>> ajustar_clave("KEY", 10)
         'KEYKEYKEYK'
     """
+    logger.debug("Ajustando clave a longitud: %d", longitud)
+
     if not clave:
+        logger.error("Intento de ajustar clave vacía")
         raise ValueError("La clave no puede estar vacía.")
 
     if longitud <= 0:
+        logger.debug("Longitud solicitada es <= 0, retornando cadena vacía")
         return ""
 
     # Método optimizado: repetir la clave completa y cortar
     repeticiones = (longitud // len(clave)) + 1
     clave_extendida = clave * repeticiones
+    logger.debug("Clave ajustada exitosamente")
     return clave_extendida[:longitud]
 
 
@@ -225,7 +261,10 @@ def grabar_fichero(nombre_fichero: str, contenido: str) -> str:
         - Solo permite nombres de archivo seguros
 
     """
+    logger.info("Iniciando grabación de archivo: %s", nombre_fichero)
+
     # SEGURIDAD: Validar nombre de archivo para prevenir path traversal
+    logger.debug("Sanitizando nombre de archivo")
     nombre_seguro = sanitizar_nombre_archivo(nombre_fichero)
 
     # Obtener directorio del proyecto
@@ -236,19 +275,34 @@ def grabar_fichero(nombre_fichero: str, contenido: str) -> str:
     directorio_data = os.path.join(directorio_proyecto, 'data')
     ruta_archivo = os.path.join(directorio_data, nombre_seguro)
 
+    logger.debug("Ruta del archivo: %s", ruta_archivo)
+
     # Verificación adicional: asegurar que la ruta está dentro de data/
     ruta_absoluta = os.path.abspath(ruta_archivo)
     directorio_data_absoluto = os.path.abspath(directorio_data)
 
     if not ruta_absoluta.startswith(directorio_data_absoluto):
+        logger.error("Intento de path traversal detectado: %s", ruta_absoluta)
         raise ValueError("Intento de path traversal detectado.")
 
     # Crear el directorio data si no existe
-    os.makedirs(directorio_data, exist_ok=True)
+    logger.debug("Verificando/creando directorio data")
+    try:
+        os.makedirs(directorio_data, exist_ok=True)
+    except OSError as e:
+        logger.exception("Error al crear directorio data: %s", directorio_data)
+        raise ValueError(f"No se pudo crear el directorio: {e}") from e
 
     # Escribir el contenido en el archivo
-    with open(ruta_archivo, 'w', encoding='utf-8') as f:
-        f.write(contenido)
+    logger.debug("Escribiendo contenido en el archivo")
+    try:
+        with open(ruta_archivo, 'w', encoding='utf-8') as f:
+            f.write(contenido)
+    except OSError as e:
+        logger.exception("Error al escribir archivo: %s", ruta_archivo)
+        raise ValueError(f"No se pudo escribir el archivo: {e}") from e
+
+    logger.info("Archivo guardado exitosamente: %s", ruta_archivo)
 
     return ruta_archivo
 
@@ -271,20 +325,31 @@ def sanitizar_nombre_archivo(nombre: str) -> str:
         - Bloquea ../ y ..\\ (path traversal)
         - Solo permite caracteres alfanuméricos, guiones, puntos y guiones bajos
     """
+    logger.debug("Sanitizando nombre de archivo")
+
     if not nombre:
+        logger.warning("Intento de sanitizar nombre de archivo vacío")
         raise ValueError("El nombre del archivo no puede estar vacío.")
 
     # Detectar path traversal
     if '..' in nombre or '/' in nombre or '\\' in nombre:
+        logger.warning("Intento de path traversal en nombre de archivo: %s", nombre)
         raise ValueError("El nombre del archivo contiene caracteres no permitidos (../, /, \\).")
 
     # Solo permitir caracteres seguros: letras, números, puntos, guiones, guiones bajos
-    patron_seguro = re.compile(r'^[a-zA-Z0-9._-]+$')
+    try:
+        patron_seguro = re.compile(r'^[a-zA-Z0-9._-]+$')
 
-    if not patron_seguro.match(nombre):
-        raise ValueError(
-            "El nombre del archivo solo puede contener letras, números, "
-            "puntos, guiones y guiones bajos."
-        )
+        if not patron_seguro.match(nombre):
+            logger.warning("Nombre de archivo contiene caracteres no permitidos: %s", nombre)
+            raise ValueError(
+                "El nombre del archivo solo puede contener letras, números, "
+                "puntos, guiones y guiones bajos."
+            )
+    except re.error as e:
+        logger.exception("Error al compilar patrón regex")
+        raise ValueError(f"Error interno al validar nombre de archivo: {e}") from e
+
+    logger.debug("Nombre de archivo sanitizado correctamente")
 
     return nombre
