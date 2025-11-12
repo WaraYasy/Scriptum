@@ -16,7 +16,11 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "*"  # Permite todos los orígenes (Railway, Postman, etc.)
+    ]
 
     # Logging
     LOG_DIR: Path = Path(__file__).parent.parent / "var" / "logs"
