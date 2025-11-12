@@ -1,7 +1,6 @@
 package es.luna.controller;
 
 import es.luna.config.ApiConfig;
-import es.luna.model.*;
 import es.luna.service.AesService;
 import es.luna.service.VigenereService;
 import javafx.application.Platform;
@@ -412,6 +411,10 @@ public class VentanaController {
         String salt = validarSalt();
         if (salt == null) return;
 
+        // Validar que el texto cifrado tenga formato base64
+        if (validarFormatoBase64(textoCifrado, "texto cifrado")) return;
+        if (validarFormatoBase64(salt, "salt")) return;
+
         String tipoAes = comboTipoAes.getValue();
         mostrarCargando(true);
         lblMensajeEstado.setText("Descifrando con " + tipoAes + "...");
@@ -652,6 +655,39 @@ public class VentanaController {
     }
 
     /**
+     * Valida que un texto tenga formato base64 válido.
+     * @param texto el texto a validar
+     * @param nombreCampo nombre del campo para el mensaje de error
+     * @return true si hay error (inválido), false si es válido
+     */
+    private boolean validarFormatoBase64(String texto, String nombreCampo) {
+        // Patrón básico de base64: caracteres A-Za-z0-9+/= y longitud múltiplo de 4
+        if (!texto.matches("^[A-Za-z0-9+/]+=*$")) {
+            mostrarAlerta(
+                "Formato inválido",
+                "El " + nombreCampo + " no tiene formato base64 válido.\n\n" +
+                "Asegúrate de copiar el resultado CIFRADO, no el texto original.\n\n" +
+                "El formato correcto debe contener solo letras, números, +, / y =",
+                Alert.AlertType.WARNING
+            );
+            return true; // Error: formato inválido
+        }
+
+        // Validar longitud (base64 debe ser múltiplo de 4)
+        if ((texto.length() % 4) != 0) {
+            mostrarAlerta(
+                "Formato inválido",
+                "El " + nombreCampo + " está incompleto o corrupto.\n\n" +
+                "Verifica que hayas copiado el texto completo.",
+                Alert.AlertType.WARNING
+            );
+            return true; // Error: longitud inválida
+        }
+
+        return false; // Válido
+    }
+
+    /**
      * Muestra un mensaje de éxito y oculta el indicador de carga.
      */
     private void mostrarExito(String mensaje) {
@@ -682,12 +718,30 @@ public class VentanaController {
     private Void manejarErrorAesDescifrado(Throwable error) {
         Platform.runLater(() -> {
             String mensaje = obtenerMensajeError(error);
-            lblMensajeEstado.setText("✗ Error: " + mensaje);
-            lblMensajeEstado.setStyle("-fx-text-fill: red;");
             mostrarCargando(false);
 
-            // Mensaje más específico para errores de AES
-            if (mensaje.contains("autenticación") || mensaje.contains("tag")) {
+            // Mensajes específicos según el tipo de error
+            if (mensaje.contains("500") || mensaje.contains("Internal Server Error")) {
+                lblMensajeEstado.setText("✗ Error: Verifica que copiaste el texto cifrado correcto");
+                lblMensajeEstado.setStyle("-fx-text-fill: red;");
+                mostrarAlerta(
+                    "Error al descifrar",
+                        """
+                                No se pudo descifrar el texto. Causas posibles:
+
+                                • Intentaste descifrar texto plano en vez del texto cifrado
+                                • El texto cifrado está corrupto o incompleto
+                                • El formato del texto cifrado o salt es inválido
+
+                                Asegúrate de:
+                                1. Copiar el RESULTADO CIFRADO (base64) al campo de entrada
+                                2. No modificar el texto cifrado manualmente
+                                3. Incluir el salt completo que se generó al cifrar""",
+                    Alert.AlertType.ERROR
+                );
+            } else if (mensaje.contains("autenticación") || mensaje.contains("tag")) {
+                lblMensajeEstado.setText("✗ Error: Password o salt incorrectos");
+                lblMensajeEstado.setStyle("-fx-text-fill: red;");
                 mostrarAlerta(
                     "Error al descifrar",
                         """
@@ -700,6 +754,8 @@ public class VentanaController {
                     Alert.AlertType.ERROR
                 );
             } else {
+                lblMensajeEstado.setText("✗ Error: " + mensaje);
+                lblMensajeEstado.setStyle("-fx-text-fill: red;");
                 mostrarAlerta("Error al descifrar", mensaje, Alert.AlertType.ERROR);
             }
         });
