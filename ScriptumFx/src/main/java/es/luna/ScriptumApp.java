@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Clase principal de la aplicación JavaFX ScriptumFX.
- * Se encarga de inicializar y mostrar la ventana principal con su FXML y CSS.
+ * Se encarga de inicializar y mostrar la ventana principal con su FXML.
  *
  * @author Arantxa
  * @version 1.0

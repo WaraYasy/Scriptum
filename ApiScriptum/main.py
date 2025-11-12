@@ -2,9 +2,10 @@
 SCRIPTUM API - Main Application
 API de cifrado y descifrado con múltiples algoritmos
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import logging
 
 from app.routers import health, vigenere, aes
 from app.config import settings
@@ -12,6 +13,7 @@ from app.logging_config import setup_logging
 
 # Inicializar logging
 setup_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Scriptum API",
@@ -33,6 +35,23 @@ app = FastAPI(
         "email": "scriptum@example.com"
     }
 )
+
+# Middleware para logging de requests
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"=== Incoming Request ===")
+    logger.info(f"Method: {request.method}")
+    logger.info(f"URL: {request.url}")
+    logger.info(f"Client: {request.client}")
+    logger.info(f"Headers:")
+    for name, value in request.headers.items():
+        logger.info(f"  {name}: {value}")
+
+    response = await call_next(request)
+
+    logger.info(f"Response Status: {response.status_code}")
+    logger.info(f"======================")
+    return response
 
 # Configuración de CORS
 app.add_middleware(

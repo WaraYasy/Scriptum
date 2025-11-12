@@ -7,6 +7,7 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
@@ -14,7 +15,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="root" styleClass="root" xmlns="http://javafx.com/javafx/24.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.luna.VentanaController">
+<VBox fx:id="root" styleClass="root" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.luna.controller.VentanaController">
     <!-- MenuBar -->
     <MenuBar styleClass="menu-bar">
         <Menu text="Archivo">
@@ -37,71 +38,110 @@
             <Insets bottom="30" left="30" right="30" top="30" />
         </padding>
 
+        <!-- Estado de conexión con la API -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Estado de la API:" />
+            <Label fx:id="lblEstadoApi" text="Verificando..." />
+            <ProgressIndicator fx:id="progressConexion" prefHeight="20" prefWidth="20" visible="false" />
+        </HBox>
+
         <!-- Sección de Entrada y Salida -->
     <HBox spacing="20">
         <!-- Entrada -->
         <VBox spacing="10" HBox.hgrow="ALWAYS">
             <Label styleClass="section-title" text="Entrada" />
             <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="35">
-                <Label text="Introduce el texto que quieras encriptar o" />
-                <Button styleClass="btn-primary" text="Sube tu archivo" />
+                <Label text="Introduce el texto que quieras cifrar o" />
+                <Button fx:id="btnSubirArchivo" styleClass="btn-primary" text="Sube tu archivo" onAction="#onSubirArchivo" />
             </HBox>
-            <TextArea prefHeight="200" promptText="Enter your secret message..." VBox.vgrow="ALWAYS" />
-            <Button styleClass="btn-primary" text="🔄 Vaciar" />
+            <TextArea fx:id="txtEntrada" prefHeight="200" promptText="Escribe tu mensaje aquí..." VBox.vgrow="ALWAYS" />
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button fx:id="btnAccion" styleClass="btn-primary" text="🔒 Cifrar" onAction="#onAccionPrincipal" prefWidth="150" />
+                <Button fx:id="btnVaciarEntrada" styleClass="btn-secondary" text="🔄 Vaciar" onAction="#onVaciarEntrada" />
+            </HBox>
         </VBox>
 
         <!-- Salida -->
         <VBox spacing="10" HBox.hgrow="ALWAYS">
             <Label styleClass="section-title" text="Salida" />
             <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="35">
-                <Label text="Resultado de la encriptación" />
+                <Label fx:id="lblResultado" text="Resultado del cifrado" />
+                <ProgressIndicator fx:id="progressOperacion" prefHeight="25" prefWidth="25" visible="false" />
             </HBox>
-            <TextArea editable="false" prefHeight="200" promptText="Your encrypted text will appear here..." VBox.vgrow="ALWAYS" />
-            <HBox spacing="10">
-                <Button styleClass="btn-secondary" text="📋 Copy" />
-                <Button styleClass="btn-secondary" text="⬇ Descargar archivo" />
+            <TextArea fx:id="txtSalida" editable="false" prefHeight="200" promptText="El texto cifrado aparecerá aquí..." VBox.vgrow="ALWAYS" />
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button fx:id="btnCopiar" styleClass="btn-secondary" text="📋 Copiar" onAction="#onCopiar" />
+                <Button fx:id="btnDescargar" styleClass="btn-secondary" text="⬇ Descargar archivo" onAction="#onDescargar" />
+                <Button fx:id="btnVaciarSalida" styleClass="btn-secondary" text="🗑 Limpiar" onAction="#onVaciarSalida" />
             </HBox>
         </VBox>
     </HBox>
 
     <!-- Ajustes de encriptado (Desplegable) -->
-    <TitledPane text="⚙ Ajustes de encriptado" expanded="false" collapsible="true">
+    <TitledPane text="⚙ Ajustes de cifrado" expanded="true" collapsible="true">
         <VBox spacing="15" style="-fx-padding: 24;">
-            <Label text="Elige el modo de encriptado y el método de encriptación" />
+            <Label text="Elige el modo de cifrado y el método de encriptación" />
 
             <HBox spacing="20">
                 <!-- Modo -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="Modo" />
-                    <ComboBox prefWidth="250" promptText="🔒 Encriptado" />
+                    <ComboBox fx:id="comboModo" prefWidth="250" promptText="Selecciona el modo" onAction="#onModoChanged" />
                 </VBox>
 
                 <!-- Metodo de encriptado -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="Método de encriptado" />
-                    <ComboBox prefWidth="250" promptText="Vigenère" />
+                    <Label text="Método de cifrado" />
+                    <ComboBox fx:id="comboMetodo" prefWidth="250" promptText="Selecciona el método" onAction="#onMetodoChanged" />
                 </VBox>
             </HBox>
 
             <!-- Descripción del metodo -->
             <HBox styleClass="description-panel">
-                <Label text="Vigenère: Usa una clave repetida para desplazar letras con patrones variables" wrapText="true" />
+                <Label fx:id="lblDescripcionMetodo" text="Selecciona un método de cifrado para ver su descripción" wrapText="true" />
             </HBox>
 
             <!-- Ajustes avanzados -->
             <Separator />
             <Label styleClass="advanced-settings-label" text="AJUSTES AVANZADOS" />
 
-            <VBox spacing="5">
+            <!-- Campo de clave (Vigenère) -->
+            <VBox fx:id="vboxClaveVigenere" spacing="5" managed="true" visible="true">
                 <HBox alignment="CENTER_LEFT" spacing="5">
-                    <Label text="Clave de encriptado" />
-                    <Label styleClass="eye-icon" text="👁" />
+                    <Label text="Clave de cifrado" />
                 </HBox>
-                <TextField prefWidth="150" text="3" />
-                <Label styleClass="field-description" text="Descripción de la clave" />
+                <TextField fx:id="txtClaveVigenere" prefWidth="250" promptText="Introduce la clave" />
+                <Label styleClass="field-description" text="Clave alfabética que se usará para el cifrado Vigenère" />
             </VBox>
 
-            <Button styleClass="btn-primary" text="Clave aleatoria" />
+            <!-- Campos para AES -->
+            <VBox fx:id="vboxCamposAes" spacing="15" managed="false" visible="false">
+                <!-- Password -->
+                <VBox spacing="5">
+                    <Label text="Password (mínimo 8 caracteres)" />
+                    <TextField fx:id="txtPasswordAes" prefWidth="250" promptText="Introduce el password" />
+                    <Label styleClass="field-description" text="Password que se usará para derivar la clave AES" />
+                </VBox>
+
+                <!-- Tipo de AES -->
+                <VBox spacing="5">
+                    <Label text="Tipo de AES" />
+                    <ComboBox fx:id="comboTipoAes" prefWidth="250" promptText="Selecciona el tipo" />
+                    <Label styleClass="field-description" text="Nivel de seguridad del cifrado (AES-256 recomendado)" />
+                </VBox>
+
+                <!-- Salt (solo para descifrado) -->
+                <VBox fx:id="vboxSaltAes" spacing="5" managed="false" visible="false">
+                    <Label text="Salt (obtenido al cifrar)" />
+                    <TextField fx:id="txtSaltAes" prefWidth="250" promptText="Pega el salt aquí" />
+                    <Label styleClass="field-description" text="El salt que se generó al cifrar el mensaje" />
+                </VBox>
+            </VBox>
+
+            <!-- Mensaje de estado -->
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label fx:id="lblMensajeEstado" text="" />
+            </HBox>
         </VBox>
     </TitledPane>
     </VBox>
