@@ -450,14 +450,8 @@ public class VentanaController {
                 lblMensajeEstado.setStyle("-fx-text-fill: green;");
                 mostrarCargando(false);
 
-                // Mostrar alert con el salt
-                mostrarAlerta(
-                    "Cifrado exitoso",
-                    "¡IMPORTANTE! Guarda este SALT para poder descifrar el mensaje:\n\n" +
-                    response.getSalt() + "\n\n" +
-                    "Sin el salt no podrás recuperar el mensaje original.",
-                    Alert.AlertType.INFORMATION
-                );
+                // Mostrar alert con el salt y opción de copiar
+                mostrarAlertaSaltConBotonCopiar(response.getSalt());
 
                 logger.info("Cifrado AES exitoso");
             }))
@@ -739,5 +733,41 @@ public class VentanaController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+
+    /**
+     * Muestra una alerta especial para el salt con opción de copiarlo al portapapeles.
+     */
+    private void mostrarAlertaSaltConBotonCopiar(String salt) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Cifrado exitoso");
+        alert.setHeaderText("¡IMPORTANTE! Guarda este SALT");
+        alert.setContentText(
+            "Necesitarás este SALT para poder descifrar el mensaje:\n\n" +
+            salt + "\n\n" +
+            "Sin el salt no podrás recuperar el mensaje original."
+        );
+
+        // Crear botón personalizado para copiar
+        ButtonType btnCopiarSalt = new ButtonType("Copiar SALT");
+        ButtonType btnCerrar = new ButtonType("Cerrar", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(btnCopiarSalt, btnCerrar);
+
+        // Manejar la acción del botón
+        Optional<ButtonType> resultado = alert.showAndWait();
+
+        if (resultado.isPresent() && resultado.get() == btnCopiarSalt) {
+            // Copiar salt al portapapeles
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(salt);
+            clipboard.setContent(content);
+
+            // Mostrar confirmación
+            lblMensajeEstado.setText("✓ SALT copiado al portapapeles");
+            lblMensajeEstado.setStyle("-fx-text-fill: green;");
+            logger.info("SALT copiado al portapapeles");
+        }
     }
 }
