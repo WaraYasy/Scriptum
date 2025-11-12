@@ -2,15 +2,16 @@
 ROUTER AES
 Endpoints para cifrado y descifrado con algoritmo AES
 """
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
-from fastapi.responses import Response
 import logging
 import base64
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
+from fastapi.responses import Response
 
 from app.schemas.aes import (
     CifrarTextoAESRequest,
     DescifrarTextoAESRequest,
     CifradoAESResponse,
+    CifradoAESArchivoConMetadataResponse,
     CifradoAESArchivoPaqueteResponse,
     DescifradoAESTextoResponse,
     DescifradoAESArchivoResponse,
@@ -25,6 +26,7 @@ from app.services.aes import (
     descifrar_archivo,
     crear_paquete_archivo_cifrado,
     extraer_paquete_archivo_cifrado,
+    validar_password,
     SMALL_FILE_THRESHOLD
 )
 
@@ -42,9 +44,8 @@ router = APIRouter(prefix="/aes", tags=["AES"])
 # CONSTANTES Y CONFIGURACIÓN
 # ============================================================================
 
-# Límites de tamaño para archivos
-MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
-MAX_TEXT_SIZE = 10 * 1024 * 1024   # 10 MB para texto
+# Límite de tamaño unificado para texto y archivos
+MAX_SIZE = 100 * 1024 * 1024  # 100 MB
 
 # Extensiones de archivo soportadas
 EXTENSIONES_SOPORTADAS = {
@@ -59,38 +60,38 @@ EXTENSIONES_SOPORTADAS = {
 # FUNCIONES AUXILIARES
 # ============================================================================
 
-def manejar_error(e: Exception, operacion: str) -> HTTPException:
+def manejar_error(e: Exception, operacion: str):
     """
-    Centraliza el manejo de errores.
+    Centraliza el manejo de errores y los convierte a HTTPException.
 
     Args:
         e: Excepción capturada
         operacion: Descripción de la operación
 
-    Returns:
-        HTTPException apropiada según el tipo de error
+    Raises:
+        HTTPException: Siempre lanza HTTPException apropiada según el tipo de error
     """
     if isinstance(e, HTTPException):
-        return e
+        raise e
 
     if isinstance(e, ValueError):
-        logger.warning("Error de validación al %s: %s", operacion, str(e))
-        return HTTPException(
+        logger.warning("Error de validación al %s", operacion)
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": str(e)}
-        )
+        ) from e
 
     # Error inesperado
     logger.exception("Error interno al %s", operacion)
-    return HTTPException(
+    raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail={"error": f"Error interno al {operacion}"}
-    )
+    ) from e
 
 
 async def validar_y_leer_archivo(
     file: UploadFile,
-    max_size: int = MAX_FILE_SIZE
+    max_size: int = MAX_SIZE
 ) -> bytes:
     """
     Valida y lee un archivo de forma segura.
@@ -105,13 +106,13 @@ async def validar_y_leer_archivo(
     Raises:
         HTTPException: Si el archivo es inválido o demasiado grande
     """
-    logger.debug("Validando archivo: %s", file.filename)
-    
+    logger.debug("Validando archivo")
+
     # Validar extensión
     extension = '.' + file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
 
     if extension not in EXTENSIONES_SOPORTADAS:
-        logger.warning("Extensión no soportada: %s para archivo: %s", extension, file.filename)
+        logger.warning("Extensión no soportada: %s", extension)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -127,8 +128,8 @@ async def validar_y_leer_archivo(
 
     # Validar tamaño
     if file_size > max_size:
-        logger.warning("Archivo demasiado grande: %s (%.2f MB) - Límite: %.0f MB", 
-                      file.filename, file_size / (1024*1024), max_size / (1024*1024))
+        logger.warning("Archivo demasiado grande - Límite: %.0f MB",
+                      max_size / (1024*1024))
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail={
@@ -138,13 +139,13 @@ async def validar_y_leer_archivo(
         )
 
     if file_size == 0:
-        logger.warning("Archivo vacío recibido: %s", file.filename)
+        logger.warning("Archivo vacío recibido")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": "El archivo está vacío"}
         )
-    
-    logger.debug("Archivo validado correctamente: %s (%d bytes)", file.filename, file_size)
+
+    logger.debug("Archivo validado correctamente")
 
     return contenido
 
@@ -208,7 +209,7 @@ async def obtener_info_aes():
 
     **¿Cómo funciona?**
     1. El password se convierte en una clave usando PBKDF2 (100,000 iteraciones)
-    2. Se genera un salt aleatorio (necesario para descifrar)
+    2. Se genera un salt aleatorio automáticamente (necesario para descifrar)
     3. Los datos se cifran con AES-GCM
     4. Se genera un tag de autenticación para verificar integridad
 
@@ -216,6 +217,7 @@ async def obtener_info_aes():
     - Guarda el **salt** devuelto, lo necesitas para descifrar
     - Usa un password seguro (mínimo 8 caracteres)
     - El texto cifrado está en formato base64 (fácil de transmitir/guardar)
+    - El salt se genera automáticamente por razones de seguridad
     """
 )
 async def cifrar_texto_endpoint(request: CifrarTextoAESRequest):
@@ -226,17 +228,15 @@ async def cifrar_texto_endpoint(request: CifrarTextoAESRequest):
         request: Objeto con texto, password y tipo de AES
 
     Returns:
-        CifradoAESResponse con el texto cifrado y salt
+        CifradoAESResponse con el texto cifrado y salt generado automáticamente
     """
-    logger.info("Iniciando cifrado de texto - Tipo: %s, Longitud: %d caracteres", 
-               request.tipo_aes, len(request.texto))
+    logger.info("Iniciando cifrado de texto - Tipo: %s", request.tipo_aes)
     try:
-        # Cifrar texto (con salt opcional)
+        # Cifrar texto (salt se genera automáticamente)
         texto_cifrado, salt = cifrar_texto(
             request.texto,
             request.password,
-            request.tipo_aes,
-            request.salt  # Puede ser None
+            request.tipo_aes
         )
 
         # Calcular tamaños
@@ -254,7 +254,7 @@ async def cifrar_texto_endpoint(request: CifrarTextoAESRequest):
             tamanio_cifrado_bytes=tamanio_cifrado
         )
     except Exception as e:
-        raise manejar_error(e, "cifrar texto")
+        manejar_error(e, "cifrar texto")
 
 
 @router.post(
@@ -308,7 +308,7 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
             tamanio_bytes=tamanio_bytes
         )
     except Exception as e:
-        raise manejar_error(e, "descifrar texto")
+        manejar_error(e, "descifrar texto")
 
 
 # ============================================================================
@@ -317,7 +317,7 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
 
 @router.post(
     "/cifrar/file",
-    response_model=CifradoAESResponse,
+    response_model=CifradoAESArchivoConMetadataResponse,
     responses={
         400: {"model": ErrorAESResponse, "description": "Error en la validación"},
         413: {"model": ErrorAESResponse, "description": "Archivo demasiado grande"},
@@ -325,7 +325,7 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
     },
     summary="Cifrar archivo con AES",
     description="""
-    Cifra cualquier tipo de archivo con AES-GCM.
+    Cifra cualquier tipo de archivo con AES-GCM y devuelve metadata completa.
 
     **Archivos soportados:**
     - Documentos: .txt, .pdf, .doc, .docx, .xls, .xlsx
@@ -334,18 +334,23 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
     - Datos: .csv, .json, .xml
 
     **Límites:**
-    - Tamaño máximo: 100 MB
-    - El archivo cifrado se devuelve en base64
+    - Tamaño máximo: 100 MB (texto y archivos)
+
+    **Metadata incluida:**
+    - Nombre original del archivo
+    - Tipo MIME del archivo
+    - Tamaños original y cifrado
 
     **IMPORTANTE:**
     - Guarda el **salt** devuelto, lo necesitas para descifrar
+    - Guarda también el **nombre_original** y **mime_type** para reconstruir el archivo
     - El archivo cifrado está en base64 (cópialo completo)
+    - El salt se genera automáticamente por razones de seguridad
     """
 )
 async def cifrar_archivo_endpoint(
     file: UploadFile = File(..., description="Archivo a cifrar"),
     password: str = Form(..., min_length=8, description="Password para el cifrado"),
-    salt: str | None = Form(default=None, description="Salt en base64 (opcional)"),
     tipo_aes: TipoAES = Form(default="AES-256", description="Tipo de AES")
 ):
     """
@@ -360,6 +365,10 @@ async def cifrar_archivo_endpoint(
         CifradoAESResponse con el archivo cifrado en base64 y salt
     """
     try:
+        # Capturar metadata del archivo original
+        nombre_original = file.filename
+        mime_type = file.content_type or "application/octet-stream"
+
         # Leer archivo completo para determinar tamaño
         contenido_temp = await file.read()
         file_size = len(contenido_temp)
@@ -379,8 +388,7 @@ async def cifrar_archivo_endpoint(
             archivo_cifrado, salt_resultado = cifrar_archivo(
                 contenido,
                 password,
-                tipo_aes,
-                salt
+                tipo_aes
             )
 
             tamanio_original = len(contenido)
@@ -403,8 +411,7 @@ async def cifrar_archivo_endpoint(
             archivo_cifrado, salt_resultado = await cifrar_archivo_stream_async(
                 file,
                 password,
-                tipo_aes,
-                salt
+                tipo_aes
             )
 
             tamanio_original = file_size
@@ -414,15 +421,17 @@ async def cifrar_archivo_endpoint(
 
         logger.info("Archivo cifrado exitosamente: %s", file.filename)
 
-        return CifradoAESResponse(
-            texto_cifrado=archivo_cifrado,
+        return CifradoAESArchivoConMetadataResponse(
+            archivo_cifrado=archivo_cifrado,
             salt=salt_resultado,
             tipo_aes=tipo_aes,
+            nombre_original=nombre_original,
+            mime_type=mime_type,
             tamanio_original_bytes=tamanio_original,
             tamanio_cifrado_bytes=tamanio_cifrado
         )
     except Exception as e:
-        raise manejar_error(e, "cifrar archivo")
+        manejar_error(e, "cifrar archivo")
 
 
 @router.post(
@@ -515,7 +524,7 @@ async def descifrar_archivo_endpoint(
             mensaje="Archivo descifrado exitosamente. Descarga el contenido desde 'archivo_descifrado_base64'"
         )
     except Exception as e:
-        raise manejar_error(e, "descifrar archivo")
+        manejar_error(e, "descifrar archivo")
 
 
 # ============================================================================
@@ -577,7 +586,6 @@ async def descifrar_archivo_endpoint(
 async def cifrar_archivo_paquete_endpoint(
     file: UploadFile = File(..., description="Archivo a cifrar"),
     password: str = Form(..., min_length=8, description="Password para el cifrado"),
-    salt: str | None = Form(default=None, description="Salt opcional (se genera si no se proporciona)"),
     tipo_aes: TipoAES = Form(default="AES-256", description="Tipo de AES")
 ):
     """
@@ -585,7 +593,7 @@ async def cifrar_archivo_paquete_endpoint(
 
     El paquete contiene:
     - Archivo cifrado
-    - Salt
+    - Salt (generado automáticamente)
     - Tipo de AES
     - Nombre original
     - MIME type
@@ -615,8 +623,7 @@ async def cifrar_archivo_paquete_endpoint(
             archivo_cifrado, salt_resultado = cifrar_archivo(
                 contenido,
                 password,
-                tipo_aes,
-                salt
+                tipo_aes
             )
 
             tamanio_original = len(contenido)
@@ -639,8 +646,7 @@ async def cifrar_archivo_paquete_endpoint(
             archivo_cifrado, salt_resultado = await cifrar_archivo_stream_async(
                 file,
                 password,
-                tipo_aes,
-                salt
+                tipo_aes
             )
 
             tamanio_original = file_size
@@ -655,7 +661,7 @@ async def cifrar_archivo_paquete_endpoint(
         )
 
         # Calcular tamaño del paquete (antes de base64)
-        import base64
+
         tamanio_paquete = len(base64.b64decode(paquete))
 
         logger.info("Paquete creado exitosamente: %s", file.filename)
@@ -671,7 +677,7 @@ async def cifrar_archivo_paquete_endpoint(
             }
         )
     except Exception as e:
-        raise manejar_error(e, "cifrar archivo con paquete")
+        manejar_error(e, "cifrar archivo con paquete")
 
 
 @router.post(
@@ -772,13 +778,13 @@ async def descifrar_archivo_paquete_endpoint(
         )
 
     except ValueError as e:
-        logger.exception("Error al extraer/descifrar paquete")
+        logger.warning("Error al extraer/descifrar paquete")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": f"Paquete inválido o corrupto: {str(e)}"}
-        )
+        ) from e
     except Exception as e:
-        raise manejar_error(e, "descifrar archivo desde paquete")
+        manejar_error(e, "descifrar archivo desde paquete")
 
 
 # ============================================================================
@@ -812,12 +818,10 @@ async def validar_password_endpoint(password: str = Form(...)):
     Returns:
         Información sobre la validez del password
     """
-    logger.info("Validando password - Longitud: %d caracteres", len(password))
+    logger.info("Validando password")
     try:
-        from app.services.aes import validar_password
-
         validar_password(password)
-        
+
         logger.info("Password validado correctamente")
 
         return {
@@ -826,8 +830,8 @@ async def validar_password_endpoint(password: str = Form(...)):
             "mensaje": "Password válido y cumple con los requisitos de seguridad"
         }
     except ValueError as e:
-        logger.warning("Password inválido: %s", str(e))
+        logger.warning("Password inválido")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": str(e)}
-        )
+        ) from e

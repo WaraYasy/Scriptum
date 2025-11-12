@@ -1,7 +1,7 @@
 """
 SERVICIOS AES
 SCRIPTUM - Servicio de cifrado AES (Advanced Encryption Standard)
-Autoras: Arantxa - Wara
+Autor: Wara
 
 Este módulo proporciona funcionalidades para cifrar y descifrar texto y archivos
 utilizando el algoritmo de cifrado AES con soporte para:
@@ -84,7 +84,7 @@ def cifrar_aes(
         >>> clave = generar_clave_desde_password("mi_password", "AES-256")
         >>> nonce, cifrado, tag = cifrar_aes(b"Hola Mundo", clave, "AES-256")
     """
-    logger.info("Iniciando cifrado AES - Tipo: %s, Tamaño de datos: %d bytes", tipo_aes, len(datos))
+    logger.debug("Iniciando cifrado AES - Tipo: %s", tipo_aes)
     
     # Validar tama�o de clave
     tamanio_esperado = TAMANIOS_CLAVE[tipo_aes]
@@ -103,8 +103,8 @@ def cifrar_aes(
 
     # Cifrar y obtener tag de autenticaci�n
     datos_cifrados, tag = cipher.encrypt_and_digest(datos)
-    
-    logger.info("Cifrado completado exitosamente - Datos cifrados: %d bytes", len(datos_cifrados))
+
+    logger.debug("Cifrado completado exitosamente")
 
     return nonce, datos_cifrados, tag
 
@@ -136,7 +136,7 @@ def descifrar_aes(
     Example:
         >>> datos_originales = descifrar_aes(cifrado, clave, nonce, tag, "AES-256")
     """
-    logger.info("Iniciando descifrado AES - Tipo: %s, Tamaño de datos cifrados: %d bytes", tipo_aes, len(datos_cifrados))
+    logger.debug("Iniciando descifrado AES - Tipo: %s", tipo_aes)
     
     # Validar tama�o de clave
     tamanio_esperado = TAMANIOS_CLAVE[tipo_aes]
@@ -153,7 +153,7 @@ def descifrar_aes(
     # Descifrar y verificar tag de autenticaci�n
     try:
         datos_descifrados = cipher.decrypt_and_verify(datos_cifrados, tag)
-        logger.info("Descifrado completado exitosamente - Datos descifrados: %d bytes", len(datos_descifrados))
+        logger.debug("Descifrado completado exitosamente")
         return datos_descifrados
     except ValueError as e:
         logger.error("Error al descifrar: clave incorrecta o datos manipulados")
@@ -196,14 +196,14 @@ def generar_clave_desde_password(
         >>> clave2, _ = generar_clave_desde_password("mi_password_seguro", "AES-256", salt)
         >>> assert clave == clave2
     """
-    logger.info("Generando clave desde password - Tipo: %s", tipo_aes)
-    
+    logger.debug("Generando clave desde password - Tipo: %s", tipo_aes)
+
     # Generar salt si no se proporciona
     if salt is None:
         salt = get_random_bytes(16)  # 16 bytes = 128 bits
-        logger.debug("Salt aleatorio generado - Tamaño: 16 bytes")
+        logger.debug("Salt aleatorio generado")
     else:
-        logger.debug("Usando salt proporcionado - Tamaño: %d bytes", len(salt))
+        logger.debug("Usando salt proporcionado")
 
     # Obtener tama�o de clave necesario
     tamanio_clave = TAMANIOS_CLAVE[tipo_aes]
@@ -216,8 +216,8 @@ def generar_clave_desde_password(
         100_000,            # Iteraciones (recomendado minimo)
         dklen=tamanio_clave # Longitud de clave deseada
     )
-    
-    logger.info("Clave generada exitosamente desde password - Tamaño: %d bytes", len(clave))
+
+    logger.debug("Clave generada exitosamente desde password")
 
     return clave, salt
 
@@ -262,17 +262,17 @@ def validar_password(password: str) -> None:
         raise ValueError("El password no puede estar vac�o.")
 
     if len(password) < 8:
-        logger.warning("Password demasiado corto - Longitud: %d caracteres", len(password))
+        logger.warning("Password demasiado corto")
         raise ValueError(
             "El password debe tener al menos 8 caracteres. "
             f"Proporcionado: {len(password)} caracteres."
         )
 
     if len(password) > 1000:
-        logger.warning("Password demasiado largo - Longitud: %d caracteres", len(password))
+        logger.warning("Password demasiado largo")
         raise ValueError(
             "El password es demasiado largo (máximo 1000 caracteres)."
-        ) 
+        )
     logger.debug("Password validado correctamente")
 
 
@@ -330,7 +330,7 @@ def desempaquetar_datos_cifrados(
     try:
         # Decodificar de base64
         paquete = base64.b64decode(paquete_base64)
-        logger.debug("Paquete decodificado de base64 - Tamaño total: %d bytes", len(paquete))
+        logger.debug("Paquete decodificado de base64")
     except Exception as e:
         logger.exception("Error al decodificar paquete base64")
         raise ValueError("El paquete no es base64 v�lido.") from e
@@ -347,9 +347,8 @@ def desempaquetar_datos_cifrados(
     nonce = paquete[:NONCE_SIZE]                # Primeros 12 bytes
     tag = paquete[-16:]                          # �ltimos 16 bytes
     datos_cifrados = paquete[NONCE_SIZE:-16]     # El resto en el medio
-    
-    logger.debug("Datos desempaquetados - Nonce: %d bytes, Cifrado: %d bytes, Tag: %d bytes", 
-                len(nonce), len(datos_cifrados), len(tag))
+
+    logger.debug("Datos desempaquetados correctamente")
 
     return nonce, datos_cifrados, tag
 
@@ -393,8 +392,7 @@ def desempaquetar_salt(salt_base64: str) -> bytes:
 def cifrar_texto(
     texto: str,
     password: str,
-    tipo_aes: TipoAES = "AES-256",
-    salt_base64: str | None = None
+    tipo_aes: TipoAES = "AES-256"
 ) -> Tuple[str, str]:
     """
     Cifra un texto usando un password (funci�n de alto nivel).
@@ -403,39 +401,24 @@ def cifrar_texto(
         texto: Texto a cifrar.
         password: Password para derivar la clave.
         tipo_aes: Tipo de AES a usar.
-        salt_base64: Salt opcional en base64. Si no se proporciona, se genera automáticamente.
 
     Returns:
         Tupla (texto_cifrado_base64, salt_base64):
             - texto_cifrado_base64: Texto cifrado empaquetado en base64
-            - salt_base64: Salt usado (necesario para descifrar)
+            - salt_base64: Salt generado automáticamente (necesario para descifrar)
 
     Example:
-        >>> # Sin salt (se genera automáticamente)
         >>> cifrado, salt = cifrar_texto("Hola Mundo", "mi_password", "AES-256")
-        >>>
-        >>> # Con salt personalizado
-        >>> cifrado, salt = cifrar_texto("Hola Mundo", "mi_password", "AES-256", "cmFuZG9tc2FsdA==")
     """
-    logger.info("Iniciando cifrado de texto - Tipo: %s, Longitud del texto: %d caracteres", tipo_aes, len(texto))
+    logger.info("Iniciando cifrado de texto - Tipo: %s", tipo_aes)
 
     # Validar password
     validar_password(password)
 
-    # Convertir salt de base64 a bytes si se proporcionó
-    salt_bytes = None
-    if salt_base64:
-        try:
-            salt_bytes = desempaquetar_salt(salt_base64)
-            logger.info("Usando salt proporcionado por el cliente")
-        except ValueError as e:
-            logger.exception("Salt inválido proporcionado al cifrar texto")
-            raise ValueError("El salt proporcionado no es base64 válido") from e
-    else:
-        logger.info("Generando salt automáticamente")
+    logger.info("Generando salt automáticamente")
 
-    # Generar clave desde password (con o sin salt personalizado)
-    clave, salt = generar_clave_desde_password(password, tipo_aes, salt_bytes)
+    # Generar clave desde password (salt se genera automáticamente)
+    clave, salt = generar_clave_desde_password(password, tipo_aes, None)
 
     # Cifrar datos
     nonce, datos_cifrados, tag = cifrar_aes(texto.encode('utf-8'), clave, tipo_aes)
@@ -443,7 +426,7 @@ def cifrar_texto(
     # Empaquetar y retornar
     texto_cifrado = empaquetar_datos_cifrados(nonce, datos_cifrados, tag)
     salt_base64 = empaquetar_salt(salt)
-    
+
     logger.info("Texto cifrado exitosamente")
 
     return texto_cifrado, salt_base64
@@ -492,17 +475,16 @@ def descifrar_texto(
 
     # Decodificar de bytes a string
     texto_descifrado = datos_descifrados.decode('utf-8')
-    
-    logger.info("Texto descifrado exitosamente - Longitud: %d caracteres", len(texto_descifrado))
-    
+
+    logger.info("Texto descifrado exitosamente")
+
     return texto_descifrado
 
 
 def cifrar_archivo(
     contenido_archivo: bytes,
     password: str,
-    tipo_aes: TipoAES = "AES-256",
-    salt_base64: str | None = None
+    tipo_aes: TipoAES = "AES-256"
 ) -> Tuple[str, str]:
     """
     Cifra el contenido de un archivo usando un password.
@@ -511,7 +493,6 @@ def cifrar_archivo(
         contenido_archivo: Contenido del archivo en bytes.
         password: Password para derivar la clave.
         tipo_aes: Tipo de AES a usar.
-        salt_base64: Salt opcional en base64. Si no se proporciona, se genera automáticamente.
 
     Returns:
         Tupla (archivo_cifrado_base64, salt_base64).
@@ -519,30 +500,17 @@ def cifrar_archivo(
     Example:
         >>> with open("documento.pdf", "rb") as f:
         >>>     contenido = f.read()
-        >>> # Sin salt (automático)
         >>> cifrado, salt = cifrar_archivo(contenido, "mi_password", "AES-256")
-        >>> # Con salt personalizado
-        >>> cifrado, salt = cifrar_archivo(contenido, "mi_password", "AES-256", "cmFuZG9tc2FsdA==")
     """
-    logger.info("Iniciando cifrado de archivo - Tipo: %s, Tamaño: %d bytes", tipo_aes, len(contenido_archivo))
+    logger.info("Iniciando cifrado de archivo - Tipo: %s", tipo_aes)
 
     # Validar password
     validar_password(password)
 
-    # Convertir salt de base64 a bytes si se proporcionó
-    salt_bytes = None
-    if salt_base64:
-        try:
-            salt_bytes = desempaquetar_salt(salt_base64)
-            logger.info("Usando salt proporcionado por el cliente")
-        except ValueError as e:
-            logger.exception("Salt inválido proporcionado al cifrar archivo")
-            raise ValueError("El salt proporcionado no es base64 válido") from e
-    else:
-        logger.info("Generando salt automáticamente")
+    logger.info("Generando salt automáticamente")
 
-    # Generar clave desde password (con o sin salt personalizado)
-    clave, salt = generar_clave_desde_password(password, tipo_aes, salt_bytes)
+    # Generar clave desde password (salt se genera automáticamente)
+    clave, salt = generar_clave_desde_password(password, tipo_aes, None)
 
     # Cifrar datos
     nonce, datos_cifrados, tag = cifrar_aes(contenido_archivo, clave, tipo_aes)
@@ -550,7 +518,7 @@ def cifrar_archivo(
     # Empaquetar y retornar
     archivo_cifrado = empaquetar_datos_cifrados(nonce, datos_cifrados, tag)
     salt_base64 = empaquetar_salt(salt)
-    
+
     logger.info("Archivo cifrado exitosamente")
 
     return archivo_cifrado, salt_base64
@@ -595,9 +563,9 @@ def descifrar_archivo(
 
     # Descifrar
     contenido_descifrado = descifrar_aes(datos_cifrados, clave, nonce, tag, tipo_aes)
-    
-    logger.info("Archivo descifrado exitosamente - Tamaño: %d bytes", len(contenido_descifrado))
-    
+
+    logger.info("Archivo descifrado exitosamente")
+
     return contenido_descifrado
 
 
@@ -608,66 +576,58 @@ def descifrar_archivo(
 def cifrar_archivo_stream(
     file_stream,
     password: str,
-    tipo_aes: TipoAES = "AES-256",
-    salt_base64: str | None = None
+    tipo_aes: TipoAES = "AES-256"
 ) -> Tuple[bytearray, str]:
     """
     Cifra un archivo usando streaming (procesa en chunks).
-    
+
     Ideal para archivos grandes (> 10 MB) que no caben en memoria.
     Procesa el archivo en chunks de 64 KB para optimizar el uso de memoria.
-    
+
     NOTA: AES-GCM no soporta cifrado verdaderamente incremental (necesita
     todo el contenido para generar el tag). Esta función lee en chunks
     pero mantiene los datos cifrados en memoria. Aún así, es más eficiente
     que leer todo de una vez.
-    
+
     Args:
         file_stream: Stream del archivo (UploadFile, file object, etc.)
         password: Password para derivar la clave.
         tipo_aes: Tipo de AES a usar.
-        salt_base64: Salt opcional en base64.
-    
+
     Returns:
         Tupla (datos_cifrados_completos, salt_base64)
-        
+
     Example:
         >>> with open("archivo_grande.pdf", "rb") as f:
         >>>     cifrado, salt = cifrar_archivo_stream(f, "password", "AES-256")
     """
     logger.info("Iniciando cifrado con streaming - Tipo: %s", tipo_aes)
-    
+
     # Validar password
     validar_password(password)
-    
-    # Convertir salt si se proporcionó
-    salt_bytes = None
-    if salt_base64:
-        salt_bytes = desempaquetar_salt(salt_base64)
-        logger.info("Usando salt proporcionado por el cliente")
-    else:
-        logger.info("Generando salt automáticamente")
-    
-    # Generar clave
-    clave, salt = generar_clave_desde_password(password, tipo_aes, salt_bytes)
+
+    logger.info("Generando salt automáticamente")
+
+    # Generar clave (salt se genera automáticamente)
+    clave, salt = generar_clave_desde_password(password, tipo_aes, None)
     
     # Leer archivo en chunks
-    logger.info("Leyendo archivo en chunks de %d KB", CHUNK_SIZE // 1024)
+    logger.debug("Leyendo archivo en chunks")
     contenido = bytearray()
     bytes_leidos = 0
-    
+
     while True:
         chunk = file_stream.read(CHUNK_SIZE)
         if not chunk:
             break
         contenido.extend(chunk)
         bytes_leidos += len(chunk)
-        
+
         # Log cada 10 MB
         if bytes_leidos % (10 * 1024 * 1024) == 0:
-            logger.info("Leídos: %d MB", bytes_leidos // (1024 * 1024))
-    
-    logger.info("Archivo leído completamente: %d bytes", bytes_leidos)
+            logger.debug("Progreso de lectura: archivo grande en proceso")
+
+    logger.debug("Archivo leído completamente")
     
     # Cifrar los datos completos
     nonce, datos_cifrados, tag = cifrar_aes(bytes(contenido), clave, tipo_aes)
@@ -684,63 +644,53 @@ def cifrar_archivo_stream(
 async def cifrar_archivo_stream_async(
     file_upload,
     password: str,
-    tipo_aes: TipoAES = "AES-256",
-    salt_base64: str | None = None
+    tipo_aes: TipoAES = "AES-256"
 ) -> Tuple[str, str]:
     """
     Cifra un archivo usando streaming asíncrono (para FastAPI UploadFile).
-    
+
     Versión asíncrona de cifrar_archivo_stream para usar con FastAPI.
-    
+
     Args:
         file_upload: UploadFile de FastAPI
         password: Password para derivar la clave
         tipo_aes: Tipo de AES
-        salt_base64: Salt opcional
-    
+
     Returns:
         Tupla (texto_cifrado_base64, salt_base64)
-    
+
     Example:
         >>> # En un endpoint FastAPI
         >>> file: UploadFile = File(...)
         >>> cifrado, salt = await cifrar_archivo_stream_async(file, "password", "AES-256")
     """
-    logger.info("Iniciando cifrado asíncrono con streaming - Tipo: %s, Archivo: %s", 
-                tipo_aes, file_upload.filename)
-    
+    logger.info("Iniciando cifrado asíncrono con streaming - Tipo: %s", tipo_aes)
+
     # Validar password
     validar_password(password)
-    
-    # Convertir salt si se proporcionó
-    salt_bytes = None
-    if salt_base64:
-        salt_bytes = desempaquetar_salt(salt_base64)
-        logger.info("Usando salt proporcionado por el cliente")
-    else:
-        logger.info("Generando salt automáticamente")
-    
-    # Generar clave
-    clave, salt = generar_clave_desde_password(password, tipo_aes, salt_bytes)
+
+    logger.info("Generando salt automáticamente")
+
+    # Generar clave (salt se genera automáticamente)
+    clave, salt = generar_clave_desde_password(password, tipo_aes, None)
     
     # Leer archivo en chunks de manera asíncrona
-    logger.info("Leyendo archivo en chunks de %d KB", CHUNK_SIZE // 1024)
+    logger.debug("Leyendo archivo en chunks de manera asíncrona")
     contenido = bytearray()
     bytes_leidos = 0
-    
+
     while True:
         chunk = await file_upload.read(CHUNK_SIZE)
         if not chunk:
             break
         contenido.extend(chunk)
         bytes_leidos += len(chunk)
-        
+
         # Log cada 10 MB
         if bytes_leidos % (10 * 1024 * 1024) == 0:
-            logger.info("Leídos: %d MB", bytes_leidos // (1024 * 1024))
-    
-    logger.info("Archivo leído completamente: %d bytes (%d MB)", 
-                bytes_leidos, bytes_leidos // (1024 * 1024))
+            logger.debug("Progreso de lectura: archivo grande en proceso")
+
+    logger.debug("Archivo leído completamente")
     
     # Cifrar los datos completos
     nonce, datos_cifrados, tag = cifrar_aes(bytes(contenido), clave, tipo_aes)
@@ -833,8 +783,7 @@ def crear_paquete_archivo_cifrado(
         ... )
         >>> # Usuario solo guarda 'paquete' (un string base64)
     """
-    logger.debug("Creando paquete binario: nombre=%s, mime=%s, aes=%s",
-                nombre_archivo, mime_type, tipo_aes)
+    logger.debug("Creando paquete binario con tipo AES: %s", tipo_aes)
 
     # Validar tipo de AES
     if tipo_aes not in AES_TYPE_MAP:
@@ -889,11 +838,7 @@ def crear_paquete_archivo_cifrado(
     # Convertir todo a base64
     paquete_base64 = base64.b64encode(bytes(paquete)).decode('ascii')
 
-    tamanio_header = 8 + 1 + 1 + 16 + 2 + len(nombre_bytes) + 2 + len(mime_bytes)
-    tamanio_total = len(paquete)
-
-    logger.info("Paquete creado: header=%d bytes, body=%d bytes, total=%d bytes → base64=%d chars",
-               tamanio_header, len(contenido_bytes), tamanio_total, len(paquete_base64))
+    logger.info("Paquete creado exitosamente")
 
     return paquete_base64
 
@@ -1009,8 +954,7 @@ def extraer_paquete_archivo_cifrado(paquete_base64: str) -> Dict[str, Any]:
         raise ValueError("Paquete no contiene datos cifrados")
     contenido_cifrado_base64 = base64.b64encode(contenido_bytes).decode('ascii')
 
-    logger.info("Paquete extraído: archivo=%s, mime=%s, aes=%s, contenido=%d bytes",
-               nombre_original, mime_type, tipo_aes, len(contenido_bytes))
+    logger.info("Paquete extraído exitosamente con tipo AES: %s", tipo_aes)
 
     return {
         "contenido_cifrado": contenido_cifrado_base64,

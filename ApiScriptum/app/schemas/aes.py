@@ -1,10 +1,11 @@
 """
 SCHEMAS AES
 Modelos Pydantic para requests y responses de los endpoints AES
+Autor: Wara
 """
 import logging
-from pydantic import BaseModel, Field
 from typing import Literal
+from pydantic import BaseModel, Field
 
 # ============================================================================
 # LOGGING
@@ -30,7 +31,7 @@ class CifrarTextoAESRequest(BaseModel):
     texto: str = Field(
         ...,
         min_length=1,
-        max_length=10_000_000,  # Límite 10 MB para texto
+        max_length=100_000_000,  # Límite unificado 100 MB
         description="Texto a cifrar"
     )
     password: str = Field(
@@ -38,10 +39,6 @@ class CifrarTextoAESRequest(BaseModel):
         min_length=8,
         max_length=1000,
         description="Password para derivar la clave (mínimo 8 caracteres)"
-    )
-    salt: str | None = Field(
-        default=None,
-        description="Salt en base64 (opcional). Si no se proporciona, se genera uno automáticamente"
     )
     tipo_aes: TipoAES = Field(
         default="AES-256",
@@ -54,12 +51,6 @@ class CifrarTextoAESRequest(BaseModel):
                 {
                     "texto": "Este es un mensaje secreto",
                     "password": "mi_password_seguro_123",
-                    "tipo_aes": "AES-256"
-                },
-                {
-                    "texto": "Mensaje con salt personalizado",
-                    "password": "mi_password_seguro_123",
-                    "salt": "cmFuZG9tc2FsdDEyMzQ1Ng==",
                     "tipo_aes": "AES-256"
                 }
             ]
@@ -173,6 +164,54 @@ class CifradoAESResponse(BaseModel):
                     "tipo_aes": "AES-256",
                     "tamanio_original_bytes": 1024,
                     "tamanio_cifrado_bytes": 1152
+                }
+            ]
+        }
+    }
+
+
+class CifradoAESArchivoConMetadataResponse(BaseModel):
+    """Response para cifrado de archivo con metadata completa"""
+    archivo_cifrado: str = Field(
+        ...,
+        description="Archivo cifrado en formato base64"
+    )
+    salt: str = Field(
+        ...,
+        description="Salt usado (necesario para descifrar, ¡guárdalo!)"
+    )
+    tipo_aes: str = Field(
+        ...,
+        description="Tipo de AES usado (AES-128, AES-192, AES-256)"
+    )
+    nombre_original: str = Field(
+        ...,
+        description="Nombre original del archivo"
+    )
+    mime_type: str = Field(
+        ...,
+        description="Tipo MIME del archivo original"
+    )
+    tamanio_original_bytes: int = Field(
+        ...,
+        description="Tamaño original del archivo en bytes"
+    )
+    tamanio_cifrado_bytes: int = Field(
+        ...,
+        description="Tamaño del archivo cifrado (base64) en bytes"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "archivo_cifrado": "VGhpcyBpcyBhbiBlbmNyeXB0ZWQgZmlsZSB3aXRoIEFFUy0yNTY=",
+                    "salt": "cmFuZG9tc2FsdDEyMzQ1Ng==",
+                    "tipo_aes": "AES-256",
+                    "nombre_original": "documento.pdf",
+                    "mime_type": "application/pdf",
+                    "tamanio_original_bytes": 245678,
+                    "tamanio_cifrado_bytes": 327570
                 }
             ]
         }
