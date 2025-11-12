@@ -36,16 +36,22 @@ public class VentanaController {
 
     // ========== Elementos del menú ==========
     @FXML private VBox root;
+    @FXML private MenuItem menuIdiomaEspanol;
+    @FXML private MenuItem menuIdiomaIngles;
     @FXML private MenuItem menuThemeToggle;
     @FXML private MenuItem menuAbout;
     @FXML private MenuItem menuExit;
 
     // ========== Estado de la API ==========
+    @FXML private Label lblEstadoApiTitulo;
     @FXML private Label lblEstadoApi;
     @FXML private ProgressIndicator progressConexion;
 
     // ========== Campos de entrada/salida ==========
+    @FXML private Label lblSeccionEntrada;
+    @FXML private Label lblEntradaDescripcion;
     @FXML private TextArea txtEntrada;
+    @FXML private Label lblSeccionSalida;
     @FXML private TextArea txtSalida;
     @FXML private Button btnSubirArchivo;
     @FXML private Button btnVaciarEntrada;
@@ -54,22 +60,35 @@ public class VentanaController {
     @FXML private Button btnVaciarSalida;
 
     // ========== Configuración de cifrado ==========
+    @FXML private TitledPane titledPaneAjustes;
+    @FXML private Label lblAjustesDescripcion;
+    @FXML private Label lblModo;
     @FXML private ComboBox<String> comboModo;
+    @FXML private Label lblMetodo;
     @FXML private ComboBox<String> comboMetodo;
     @FXML private Label lblDescripcionMetodo;
+    @FXML private Label lblAjustesAvanzados;
     @FXML private Label lblResultado;
     @FXML private ProgressIndicator progressOperacion;
 
     // ========== Campos específicos de Vigenère ==========
     @FXML private VBox vboxClaveVigenere;
+    @FXML private Label lblClaveVigenere;
     @FXML private TextField txtClaveVigenere;
+    @FXML private Label lblClaveVigenereDesc;
 
     // ========== Campos específicos de AES ==========
     @FXML private VBox vboxCamposAes;
+    @FXML private Label lblPasswordAes;
     @FXML private TextField txtPasswordAes;
+    @FXML private Label lblPasswordAesDesc;
+    @FXML private Label lblTipoAes;
     @FXML private ComboBox<String> comboTipoAes;
+    @FXML private Label lblTipoAesDesc;
     @FXML private VBox vboxSaltAes;
+    @FXML private Label lblSaltAes;
     @FXML private TextField txtSaltAes;
+    @FXML private Label lblSaltAesDesc;
 
     // ========== Botón de acción ==========
     @FXML private Button btnAccion;
@@ -134,6 +153,14 @@ public class VentanaController {
      * Configura el menú de la aplicación.
      */
     private void configurarMenu() {
+        if (menuIdiomaEspanol != null) {
+            menuIdiomaEspanol.setOnAction(e -> cambiarIdioma("es"));
+        }
+
+        if (menuIdiomaIngles != null) {
+            menuIdiomaIngles.setOnAction(e -> cambiarIdioma("en"));
+        }
+
         if (menuThemeToggle != null) {
             menuThemeToggle.setOnAction(e -> cambiarTema());
         }
@@ -287,7 +314,7 @@ public class VentanaController {
     }
 
     /**
-     * Muestra/oculta campos según el metodo seleccionado.
+     * Mostrar y ocultar campos según el metodo seleccionado.
      */
     private void actualizarCamposSegunMetodo() {
         String metodo = comboMetodo.getValue();
@@ -555,6 +582,135 @@ public class VentanaController {
     // ==================== FUNCIONES DEL MENÚ ====================
 
     /**
+     * Cambia el idioma de la aplicación y actualiza todos los textos.
+     * @param codigoIdioma El código del idioma ("es" para español, "en" para inglés)
+     */
+    private void cambiarIdioma(String codigoIdioma) {
+        try {
+            // Cambiar el idioma en la clase Mensajes
+            if ("es".equals(codigoIdioma)) {
+                Mensajes.usarEspanol();
+            } else if ("en".equals(codigoIdioma)) {
+                Mensajes.usarIngles();
+            }
+
+            // Actualizar todos los textos de la interfaz sin recargar
+            actualizarTextosInterfaz();
+
+            logger.info("Idioma cambiado a: {}", codigoIdioma);
+        } catch (Exception e) {
+            logger.error("Error al cambiar idioma", e);
+            mostrarAlerta(
+                "Error",
+                "No se pudo cambiar el idioma",
+                Alert.AlertType.ERROR
+            );
+        }
+    }
+
+    /**
+     * Actualiza todos los textos de la interfaz con el idioma actual.
+     * Mantiene el estado de la aplicación (texto ingresado, selecciones, etc.)
+     */
+    private void actualizarTextosInterfaz() {
+        // Actualizar textos del menú
+        menuThemeToggle.setText(temaClaro ?
+            Mensajes.obtener("menu.tema.oscuro") :
+            Mensajes.obtener("menu.tema.claro")
+        );
+        menuAbout.setText(Mensajes.obtener("menu.acerca"));
+        menuExit.setText(Mensajes.obtener("menu.salir"));
+        menuIdiomaEspanol.setText(Mensajes.obtener("menu.idioma.espanol"));
+        menuIdiomaIngles.setText(Mensajes.obtener("menu.idioma.ingles"));
+
+        // Actualizar estado de la API
+        lblEstadoApi.setText(lblEstadoApi.getText().contains("Conectada") ||
+                            lblEstadoApi.getText().contains("Connected") ?
+            Mensajes.obtener("api.estado.conectada") :
+            lblEstadoApi.getText().contains("Verificando") ||
+                            lblEstadoApi.getText().contains("Checking") ?
+            Mensajes.obtener("api.estado.verificando") :
+            Mensajes.obtener("api.estado.desconectada")
+        );
+
+        // Actualizar botones de entrada
+        btnSubirArchivo.setText(Mensajes.obtener("entrada.boton.subir"));
+        btnVaciarEntrada.setText(Mensajes.obtener("entrada.boton.vaciar"));
+
+        // Actualizar botones de salida
+        btnCopiar.setText(Mensajes.obtener("salida.boton.copiar"));
+        btnDescargar.setText(Mensajes.obtener("salida.boton.descargar"));
+        btnVaciarSalida.setText(Mensajes.obtener("salida.boton.limpiar"));
+
+        // Actualizar placeholders
+        txtEntrada.setPromptText(Mensajes.obtener("entrada.placeholder"));
+        txtSalida.setPromptText(Mensajes.obtener("salida.placeholder"));
+        txtClaveVigenere.setPromptText(Mensajes.obtener("vigenere.clave.placeholder"));
+        txtPasswordAes.setPromptText(Mensajes.obtener("aes.password.placeholder"));
+        txtSaltAes.setPromptText(Mensajes.obtener("aes.salt.placeholder"));
+
+        // Actualizar ComboBox manteniendo las selecciones
+        actualizarComboModo();
+        actualizarComboMetodo();
+        actualizarComboTipoAes();
+
+        // Actualizar labels de descripción
+        actualizarDescripcionMetodo();
+
+        // Actualizar botón de acción según el modo actual
+        String modoActual = comboModo.getSelectionModel().getSelectedIndex() == 0 ? "cifrar" : "descifrar";
+        btnAccion.setText(modoActual.equals("cifrar") ?
+            Mensajes.obtener("boton.cifrar") :
+            Mensajes.obtener("boton.descifrar")
+        );
+
+        // Actualizar label de resultado según el modo actual
+        lblResultado.setText(modoActual.equals("cifrar") ?
+            Mensajes.obtener("salida.resultado.cifrado") :
+            Mensajes.obtener("salida.resultado.descifrado")
+        );
+
+        logger.debug("Textos de la interfaz actualizados");
+    }
+
+    /**
+     * Actualiza el ComboBox de modo manteniendo la selección actual.
+     */
+    private void actualizarComboModo() {
+        int seleccionActual = comboModo.getSelectionModel().getSelectedIndex();
+        comboModo.setItems(FXCollections.observableArrayList(
+            Mensajes.obtener("modo.cifrar"),
+            Mensajes.obtener("modo.descifrar")
+        ));
+        comboModo.getSelectionModel().select(Math.max(seleccionActual, 0));
+    }
+
+    /**
+     * Actualiza el ComboBox de método manteniendo la selección actual.
+     */
+    private void actualizarComboMetodo() {
+        int seleccionActual = comboMetodo.getSelectionModel().getSelectedIndex();
+        comboMetodo.setItems(FXCollections.observableArrayList(
+            Mensajes.obtener("metodo.vigenere"),
+            Mensajes.obtener("metodo.aes")
+        ));
+        comboMetodo.getSelectionModel().select(Math.max(seleccionActual, 0));
+    }
+
+    /**
+     * Actualiza el ComboBox de tipo AES manteniendo la selección actual.
+     */
+    private void actualizarComboTipoAes() {
+        int seleccionActual = comboTipoAes.getSelectionModel().getSelectedIndex();
+        comboTipoAes.setItems(FXCollections.observableArrayList(
+            Mensajes.obtener("aes.tipo.128"),
+            Mensajes.obtener("aes.tipo.192"),
+            Mensajes.obtener("aes.tipo.256")
+        ));
+        comboTipoAes.getSelectionModel().select(seleccionActual >= 0 ? seleccionActual : 2);
+    }
+
+    /**
      * Cambia entre tema claro y oscuro.
      */
     private void cambiarTema() {
@@ -761,7 +917,7 @@ public class VentanaController {
     }
 
     /**
-     * Muestra/oculta indicadores de carga.
+     * Mostrar y ocultar indicadores de carga.
      */
     private void mostrarCargando(boolean mostrar) {
         progressOperacion.setVisible(mostrar);

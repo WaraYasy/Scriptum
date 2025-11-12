@@ -19,6 +19,10 @@
     <!-- MenuBar -->
     <MenuBar styleClass="menu-bar">
         <Menu text="%menu.archivo">
+            <Menu text="%menu.idioma">
+                <MenuItem fx:id="menuIdiomaEspanol" text="%menu.idioma.espanol" />
+                <MenuItem fx:id="menuIdiomaIngles" text="%menu.idioma.ingles" />
+            </Menu>
             <MenuItem fx:id="menuThemeToggle" text="%menu.tema.oscuro" />
         </Menu>
         <Menu text="%menu.ayuda">
@@ -40,7 +44,7 @@
 
         <!-- Estado de conexión con la API -->
         <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label text="%api.estado.label" />
+            <Label fx:id="lblEstadoApiTitulo" text="%api.estado.label" />
             <Label fx:id="lblEstadoApi" text="%api.estado.verificando" />
             <ProgressIndicator fx:id="progressConexion" prefHeight="20" prefWidth="20" visible="false" />
         </HBox>
@@ -49,9 +53,9 @@
     <HBox spacing="20">
         <!-- Entrada -->
         <VBox spacing="10" HBox.hgrow="ALWAYS">
-            <Label styleClass="section-title" text="%seccion.entrada" />
+            <Label fx:id="lblSeccionEntrada" styleClass="section-title" text="%seccion.entrada" />
             <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="35">
-                <Label text="%entrada.descripcion" />
+                <Label fx:id="lblEntradaDescripcion" text="%entrada.descripcion" />
                 <Button fx:id="btnSubirArchivo" styleClass="btn-primary" text="%entrada.boton.subir" onAction="#onSubirArchivo" />
             </HBox>
             <TextArea fx:id="txtEntrada" prefHeight="200" promptText="%entrada.placeholder" VBox.vgrow="ALWAYS" />
@@ -63,7 +67,7 @@
 
         <!-- Salida -->
         <VBox spacing="10" HBox.hgrow="ALWAYS">
-            <Label styleClass="section-title" text="%seccion.salida" />
+            <Label fx:id="lblSeccionSalida" styleClass="section-title" text="%seccion.salida" />
             <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="35">
                 <Label fx:id="lblResultado" text="%salida.resultado.cifrado" />
                 <ProgressIndicator fx:id="progressOperacion" prefHeight="25" prefWidth="25" visible="false" />
@@ -78,20 +82,20 @@
     </HBox>
 
     <!-- Ajustes de encriptado (Desplegable) -->
-    <TitledPane text="%ajustes.titulo" expanded="true" collapsible="true">
+    <TitledPane fx:id="titledPaneAjustes" text="%ajustes.titulo" expanded="true" collapsible="true">
         <VBox spacing="15" style="-fx-padding: 24;">
-            <Label text="%ajustes.descripcion" />
+            <Label fx:id="lblAjustesDescripcion" text="%ajustes.descripcion" />
 
             <HBox spacing="20">
                 <!-- Modo -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="%modo.label" />
+                    <Label fx:id="lblModo" text="%modo.label" />
                     <ComboBox fx:id="comboModo" prefWidth="250" promptText="%modo.placeholder" onAction="#onModoChanged" />
                 </VBox>
 
                 <!-- Metodo de encriptado -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="%metodo.label" />
+                    <Label fx:id="lblMetodo" text="%metodo.label" />
                     <ComboBox fx:id="comboMetodo" prefWidth="250" promptText="%metodo.placeholder" onAction="#onMetodoChanged" />
                 </VBox>
             </HBox>
@@ -103,38 +107,38 @@
 
             <!-- Ajustes avanzados -->
             <Separator />
-            <Label styleClass="advanced-settings-label" text="%ajustes.avanzados" />
+            <Label fx:id="lblAjustesAvanzados" styleClass="advanced-settings-label" text="%ajustes.avanzados" />
 
             <!-- Campo de clave (Vigenère) -->
             <VBox fx:id="vboxClaveVigenere" spacing="5" managed="true" visible="true">
                 <HBox alignment="CENTER_LEFT" spacing="5">
-                    <Label text="%vigenere.clave.label" />
+                    <Label fx:id="lblClaveVigenere" text="%vigenere.clave.label" />
                 </HBox>
                 <TextField fx:id="txtClaveVigenere" prefWidth="250" promptText="%vigenere.clave.placeholder" />
-                <Label styleClass="field-description" text="%vigenere.clave.descripcion" />
+                <Label fx:id="lblClaveVigenereDesc" styleClass="field-description" text="%vigenere.clave.descripcion" />
             </VBox>
 
             <!-- Campos para AES -->
             <VBox fx:id="vboxCamposAes" spacing="15" managed="false" visible="false">
                 <!-- Password -->
                 <VBox spacing="5">
-                    <Label text="%aes.password.label" />
+                    <Label fx:id="lblPasswordAes" text="%aes.password.label" />
                     <TextField fx:id="txtPasswordAes" prefWidth="250" promptText="%aes.password.placeholder" />
-                    <Label styleClass="field-description" text="%aes.password.descripcion" />
+                    <Label fx:id="lblPasswordAesDesc" styleClass="field-description" text="%aes.password.descripcion" />
                 </VBox>
 
                 <!-- Tipo de AES -->
                 <VBox spacing="5">
-                    <Label text="%aes.tipo.label" />
+                    <Label fx:id="lblTipoAes" text="%aes.tipo.label" />
                     <ComboBox fx:id="comboTipoAes" prefWidth="250" promptText="%aes.tipo.placeholder" />
-                    <Label styleClass="field-description" text="%aes.tipo.descripcion" />
+                    <Label fx:id="lblTipoAesDesc" styleClass="field-description" text="%aes.tipo.descripcion" />
                 </VBox>
 
                 <!-- Salt (solo para descifrado) -->
                 <VBox fx:id="vboxSaltAes" spacing="5" managed="false" visible="false">
-                    <Label text="%aes.salt.label" />
+                    <Label fx:id="lblSaltAes" text="%aes.salt.label" />
                     <TextField fx:id="txtSaltAes" prefWidth="250" promptText="%aes.salt.placeholder" />
-                    <Label styleClass="field-description" text="%aes.salt.descripcion" />
+                    <Label fx:id="lblSaltAesDesc" styleClass="field-description" text="%aes.salt.descripcion" />
                 </VBox>
             </VBox>
 

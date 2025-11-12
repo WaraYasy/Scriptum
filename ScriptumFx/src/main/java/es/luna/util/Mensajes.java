@@ -8,7 +8,7 @@ import java.util.ResourceBundle;
  * Clase utilitaria para cargar mensajes internacionalizados.
  * Gestiona el acceso al archivo de propiedades de mensajes.
  *
- * @author Arantxa
+ * @author Wara
  * @version 1.0
  * @since 2025-11-12
  */
@@ -85,14 +85,14 @@ public class Mensajes {
      * Cambia a español.
      */
     public static void usarEspanol() {
-        cambiarIdioma(new Locale("es", "ES"));
+        cambiarIdioma(Locale.forLanguageTag("es-ES"));
     }
 
     /**
      * Cambia a inglés.
      */
     public static void usarIngles() {
-        cambiarIdioma(new Locale("en", "US"));
+        cambiarIdioma(Locale.forLanguageTag("en-US"));
     }
 
     /**
