@@ -86,7 +86,7 @@ public class AesService {
                 AesCifradoResponse.class
         ).whenComplete((response, error) -> {
             if (error != null) {
-                logger.error("Error al cifrar texto con AES", error);
+                logger.warn("Error al cifrar texto con AES: {}", error.getMessage());
             } else {
                 logger.info("Texto cifrado exitosamente con AES-{}", tipoAes);
             }
@@ -139,7 +139,7 @@ public class AesService {
                 AesDescifradoResponse.class
         ).whenComplete((response, error) -> {
             if (error != null) {
-                logger.error("Error al descifrar texto con AES", error);
+                logger.warn("Error al descifrar texto con AES: {}", error.getMessage());
             } else {
                 logger.info("Texto descifrado exitosamente con AES");
             }
