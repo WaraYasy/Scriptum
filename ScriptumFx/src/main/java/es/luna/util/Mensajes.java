@@ -1,5 +1,8 @@
 package es.luna.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -17,10 +20,11 @@ public class Mensajes {
     private static final String BUNDLE_NAME = "mensajes";
     private static ResourceBundle bundle;
     private static Locale currentLocale;
-
+    private static final Logger logger = LoggerFactory.getLogger(Mensajes.class);
     static {
         // Por defecto, usar el idioma del sistema
         currentLocale = Locale.getDefault();
+        logger.info("Inicializando sistema de mensajes con locale del sistema: {}", currentLocale);
         cargarBundle();
     }
 
@@ -28,7 +32,13 @@ public class Mensajes {
      * Carga o recarga el ResourceBundle con el locale actual.
      */
     private static void cargarBundle() {
-        bundle = ResourceBundle.getBundle(BUNDLE_NAME, currentLocale);
+        try {
+            bundle = ResourceBundle.getBundle(BUNDLE_NAME, currentLocale);
+            logger.info("ResourceBundle cargado exitosamente para locale: {}", currentLocale);
+        } catch (Exception e) {
+            logger.error("Error al cargar ResourceBundle para locale: {}", currentLocale, e);
+            throw e;
+        }
     }
 
     /**
@@ -41,6 +51,7 @@ public class Mensajes {
         try {
             return bundle.getString(clave);
         } catch (Exception e) {
+            logger.warn("Clave de mensaje no encontrada: '{}' en locale: {}", clave, currentLocale);
             return "!" + clave + "!";
         }
     }
@@ -58,6 +69,7 @@ public class Mensajes {
             String mensaje = bundle.getString(clave);
             return MessageFormat.format(mensaje, parametros);
         } catch (Exception e) {
+            logger.warn("Error al obtener/formatear mensaje con clave '{}': {}", clave, e.getMessage());
             return "!" + clave + "!";
         }
     }
@@ -68,7 +80,9 @@ public class Mensajes {
      * @param locale El nuevo locale
      */
     public static void cambiarIdioma(Locale locale) {
+        Locale previousLocale = currentLocale;
         currentLocale = locale;
+        logger.info("Cambiando idioma de {} a {}", previousLocale, locale);
         cargarBundle();
     }
 
@@ -85,6 +99,7 @@ public class Mensajes {
      * Cambia a español.
      */
     public static void usarEspanol() {
+        logger.debug("Solicitado cambio a idioma español");
         cambiarIdioma(Locale.forLanguageTag("es-ES"));
     }
 
@@ -92,6 +107,7 @@ public class Mensajes {
      * Cambia a inglés.
      */
     public static void usarIngles() {
+        logger.debug("Solicitado cambio a idioma inglés");
         cambiarIdioma(Locale.forLanguageTag("en-US"));
     }
 
