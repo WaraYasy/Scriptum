@@ -8,12 +8,9 @@ PORT=${PORT:-8000}
 echo "🚀 Iniciando Scriptum API en puerto $PORT..."
 
 # Ejecutar uvicorn con configuración para archivos grandes
-# --timeout-keep-alive: Mantiene la conexión abierta más tiempo
-# --limit-max-requests: Sin límite de requests antes de reiniciar
+# --timeout-keep-alive: Mantiene la conexión abierta más tiempo (5 min)
 # --timeout-graceful-shutdown: Tiempo para cerrar correctamente
 exec uvicorn main:app \
   --host 0.0.0.0 \
   --port "$PORT" \
-  --timeout-keep-alive 300 \
-  --limit-max-requests 0 \
-  --timeout-graceful-shutdown 30
+  --timeout-keep-alive 300
