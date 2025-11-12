@@ -13,6 +13,7 @@ Arquitectura del módulo:
 """
 import os
 import re
+import unicodedata
 
 
 # ============================================================================
@@ -142,6 +143,8 @@ def formatear_texto(texto: str) -> str:
     Prepara el texto para el proceso de cifrado eliminando todos los
     caracteres que no sean letras (A-Z) y convirtiendo a mayúsculas.
 
+    Normaliza caracteres con tildes (á→a, é→e, ñ→n, etc.) antes de procesar.
+
     Args:
         texto (str): Texto a formatear.
 
@@ -151,12 +154,26 @@ def formatear_texto(texto: str) -> str:
     Example:
         >>> formatear_texto("Hello, World! 123")
         'HELLOWORLD'
+        >>> formatear_texto("Hola qué tal")
+        'HOLAQUETAL'
     """
     if not texto:
         return ""
 
+    # Normalizar texto: convertir caracteres con tildes a su forma base
+    # NFD = Normalization Form Canonical Decomposition
+    # Esto separa "é" en "e" + acento, luego eliminamos los acentos
+    texto_normalizado = unicodedata.normalize('NFD', texto)
+
+    # Eliminar marcas diacríticas (tildes, acentos, diéresis)
+    texto_sin_tildes = ''.join(
+        c for c in texto_normalizado
+        if unicodedata.category(c) != 'Mn'  # Mn = Nonspacing_Mark (acentos)
+    )
+
     # Método optimizado: usar lista y join es más eficiente que concatenación
-    caracteres_validos = [c.upper() for c in texto if c.isalpha()]
+    # Ahora solo dejamos pasar letras ASCII (A-Z)
+    caracteres_validos = [c.upper() for c in texto_sin_tildes if c.isalpha() and c.isascii()]
     return "".join(caracteres_validos)
 
 
