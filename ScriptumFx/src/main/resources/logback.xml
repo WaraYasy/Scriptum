@@ -10,7 +10,7 @@
     <property name="LOG_HOME" value="logs" />
     <property name="APP_NAME" value="ScriptumFX" />
 
-    <!-- File Appender INFO ONLY (logs de produccion) -->
+    <!-- File Appender INFO ONLY (logs de producción) -->
     <appender name="FILE_INFO_ONLY" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/${APP_NAME}-info.log</file>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
@@ -60,7 +60,7 @@
     <logger name="javafx" level="WARN"/>
     <logger name="org.slf4j" level="INFO"/>
 
-    <!-- Logger raiz para todo lo demas -->
+    <!-- Logger raíz para con toda la información-->
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE_INFO_ONLY" />
