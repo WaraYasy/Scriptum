@@ -7,6 +7,12 @@ Este directorio contiene los archivos de logs generados por la aplicación.
 ### `scriptum.log`
 **Archivo principal con logs de operación (INFO, WARNING, ERROR, CRITICAL)**
 
+**⚙️ Rotación automática por día:**
+- **Frecuencia**: Cada día a medianoche
+- **Histórico**: **30 días** de logs guardados
+- **Formato de archivo**: `scriptum.log.2025-11-10`, `scriptum.log.2025-11-09`, etc.
+- **Espacio aproximado**: Depende del uso (~1-10 MB por día típicamente)
+
 Registra:
 - ✅ Todas las peticiones HTTP a los endpoints
 - ✅ Operaciones de cifrado/descifrado (AES, Vigenère)
@@ -20,6 +26,12 @@ Registra:
 
 ### `scriptum-debug.log`
 **Archivo de debugging con información detallada (solo DEBUG)**
+
+**⚙️ Rotación automática por día:**
+- **Frecuencia**: Cada día a medianoche
+- **Histórico**: **7 días** de logs guardados
+- **Formato de archivo**: `scriptum-debug.log.2025-11-10`, `scriptum-debug.log.2025-11-09`, etc.
+- **Espacio aproximado**: Depende del uso (~500 KB - 5 MB por día típicamente)
 
 Registra únicamente:
 - 🔍 Información detallada de validaciones
@@ -129,27 +141,107 @@ wc -l logs/scriptum-debug.log
 > logs/scriptum-debug.log
 ```
 
-## Rotación de Logs (Recomendación para Producción)
+## Rotación de Logs (Ya Configurada ✅)
 
-Para evitar que los archivos crezcan demasiado:
+La rotación está **activa con rotación diaria automática**:
+
+### ¿Cómo funciona?
+
+Cada día a **medianoche (00:00)**:
+
+1. El archivo actual se renombra con la fecha del día anterior
+   - `scriptum.log` → `scriptum.log.2025-11-10`
+   - `scriptum-debug.log` → `scriptum-debug.log.2025-11-10`
+2. Se crean nuevos archivos vacíos para el nuevo día
+3. Los archivos más antiguos se eliminan automáticamente:
+   - `scriptum.log`: después de 30 días
+   - `scriptum-debug.log`: después de 7 días
+
+### Ejemplo de estructura en disco:
+
+```
+var/logs/
+├── scriptum.log                    # Hoy (11 nov) - Escritura activa
+├── scriptum.log.2025-11-10         # Ayer
+├── scriptum.log.2025-11-09         # Hace 2 días
+├── scriptum.log.2025-11-08         # Hace 3 días
+├── ...                             # ... hasta 30 días atrás
+├── scriptum.log.2025-10-12         # Hace 30 días ← Se borra mañana
+│
+├── scriptum-debug.log              # Hoy (11 nov) - Escritura activa
+├── scriptum-debug.log.2025-11-10   # Ayer
+├── scriptum-debug.log.2025-11-09   # Hace 2 días
+├── ...                             # ... hasta 7 días atrás
+└── scriptum-debug.log.2025-11-04   # Hace 7 días ← Se borra mañana
+```
+
+### Ventajas de rotación por fecha:
+
+✅ **Fácil búsqueda**: "¿Qué pasó el 10 de noviembre?" → Ver `scriptum.log.2025-11-10`  
+✅ **Histórico claro**: Cada archivo representa un día completo  
+✅ **Depuración simple**: Comparar logs de diferentes días  
+✅ **Predecible**: Sabes exactamente qué logs tienes (últimos 30/7 días)  
+✅ **Organizado**: No hay archivos .1, .2, .3 confusos  
+
+### Configuración actual:
+
+| Archivo | Rotación | Histórico | Archivos guardados |
+|---------|----------|-----------|-------------------|
+| **scriptum.log** | Diaria (medianoche) | 30 días | ~31 archivos (hoy + 30 días) |
+| **scriptum-debug.log** | Diaria (medianoche) | 7 días | ~8 archivos (hoy + 7 días) |
+
+### Ver logs de una fecha específica:
+
+```bash
+# Ver logs del 10 de noviembre
+cat var/logs/scriptum.log.2025-11-10
+
+# Ver logs de debug del 9 de noviembre
+cat var/logs/scriptum-debug.log.2025-11-09
+
+# Buscar errores en fecha específica
+grep "ERROR" var/logs/scriptum.log.2025-11-10
+
+# Ver todos los logs de la última semana
+ls -lt var/logs/scriptum.log.* | head -7
+```
+
+### Cambiar configuración:
+
+Edita `app/logging_config.py`:
 
 ```python
-from logging.handlers import RotatingFileHandler
+# Para scriptum.log
+file_handler = TimedRotatingFileHandler(
+    settings.LOG_DIR / "scriptum.log",
+    when='midnight',      # 'midnight', 'H' (horas), 'D' (días), 'W0'-'W6' (día semana)
+    interval=1,           # Cada cuánto (1 día, 2 días, etc.)
+    backupCount=30,       # Cambiar días de histórico aquí (30, 60, 90, etc.)
+    encoding='utf-8',
+    utc=False
+)
 
-# En logging_config.py, reemplazar FileHandler por:
-handler = RotatingFileHandler(
-    'scriptum.log',
-    maxBytes=10*1024*1024,  # 10 MB
-    backupCount=5,           # Mantener 5 archivos antiguos
-    encoding='utf-8'
+# Para scriptum-debug.log
+debug_handler = TimedRotatingFileHandler(
+    settings.LOG_DIR / "scriptum-debug.log",
+    when='midnight',
+    interval=1,
+    backupCount=7,        # Cambiar días de histórico aquí (7, 14, 30, etc.)
+    encoding='utf-8',
+    utc=False
 )
 ```
 
-Esto creará:
-- `scriptum.log` (actual)
-- `scriptum.log.1` (anterior)
-- `scriptum.log.2` (más antiguo)
-- ... hasta `scriptum.log.5`
+### Otras opciones de rotación:
+
+| `when` | Descripción | Ejemplo |
+|--------|-------------|---------|
+| `'S'` | Segundos | Cada N segundos |
+| `'M'` | Minutos | Cada N minutos |
+| `'H'` | Horas | Cada N horas |
+| `'D'` | Días | Cada N días |
+| `'midnight'` | Medianoche | Cada día a las 00:00 ⭐ |
+| `'W0'`-`'W6'` | Día de semana | Lunes (W0) a Domingo (W6) |
 
 ## Notas
 
