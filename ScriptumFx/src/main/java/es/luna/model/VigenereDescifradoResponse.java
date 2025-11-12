@@ -31,16 +31,4 @@ public class VigenereDescifradoResponse {
     public String getTextoDescifrado() {
         return textoDescifrado;
     }
-
-    public void setTextoDescifrado(String textoDescifrado) {
-        this.textoDescifrado = textoDescifrado;
-    }
-
-    public String getClaveUsada() {
-        return claveUsada;
-    }
-
-    public void setClaveUsada(String claveUsada) {
-        this.claveUsada = claveUsada;
-    }
 }

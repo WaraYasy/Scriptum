@@ -26,24 +26,6 @@ public class ApiErrorResponse {
     public ApiErrorResponse() {
     }
 
-    // Getters y Setters
-
-    public String getError() {
-        return error;
-    }
-
-    public void setError(String error) {
-        this.error = error;
-    }
-
-    public String getDetalle() {
-        return detalle;
-    }
-
-    public void setDetalle(String detalle) {
-        this.detalle = detalle;
-    }
-
     @Override
     public String toString() {
         return "ApiErrorResponse{" +

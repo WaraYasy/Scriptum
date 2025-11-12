@@ -35,24 +35,4 @@ public class AesDescifradoResponse {
     public String getTextoDescifrado() {
         return textoDescifrado;
     }
-
-    public void setTextoDescifrado(String textoDescifrado) {
-        this.textoDescifrado = textoDescifrado;
-    }
-
-    public String getTipoAes() {
-        return tipoAes;
-    }
-
-    public void setTipoAes(String tipoAes) {
-        this.tipoAes = tipoAes;
-    }
-
-    public int getTamanioBytes() {
-        return tamanioBytes;
-    }
-
-    public void setTamanioBytes(int tamanioBytes) {
-        this.tamanioBytes = tamanioBytes;
-    }
 }

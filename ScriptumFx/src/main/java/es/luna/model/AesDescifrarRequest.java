@@ -10,6 +10,8 @@ import com.google.gson.annotations.SerializedName;
  * @version 1.0
  * @since 2025-11-11
  */
+
+@SuppressWarnings("FieldCanBeLocal")
 public class AesDescifrarRequest {
 
     /** Texto cifrado en formato base64 */
@@ -47,40 +49,6 @@ public class AesDescifrarRequest {
         this.textoCifrado = textoCifrado;
         this.password = password;
         this.salt = salt;
-        this.tipoAes = tipoAes;
-    }
-
-    // Getters y Setters
-
-    public String getTextoCifrado() {
-        return textoCifrado;
-    }
-
-    public void setTextoCifrado(String textoCifrado) {
-        this.textoCifrado = textoCifrado;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getSalt() {
-        return salt;
-    }
-
-    public void setSalt(String salt) {
-        this.salt = salt;
-    }
-
-    public String getTipoAes() {
-        return tipoAes;
-    }
-
-    public void setTipoAes(String tipoAes) {
         this.tipoAes = tipoAes;
     }
 }

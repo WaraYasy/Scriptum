@@ -10,6 +10,8 @@ import com.google.gson.annotations.SerializedName;
  * @version 1.0
  * @since 2025-11-11
  */
+
+@SuppressWarnings("FieldCanBeLocal")
 public class VigenereDescifrarRequest {
 
     /** Texto cifrado a descifrar */
@@ -34,24 +36,6 @@ public class VigenereDescifrarRequest {
      */
     public VigenereDescifrarRequest(String textoCifrado, String clave) {
         this.textoCifrado = textoCifrado;
-        this.clave = clave;
-    }
-
-    // Getters y Setters
-
-    public String getTextoCifrado() {
-        return textoCifrado;
-    }
-
-    public void setTextoCifrado(String textoCifrado) {
-        this.textoCifrado = textoCifrado;
-    }
-
-    public String getClave() {
-        return clave;
-    }
-
-    public void setClave(String clave) {
         this.clave = clave;
     }
 }

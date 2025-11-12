@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -46,11 +47,6 @@ public class VentanaController {
     // ========== Campos de entrada/salida ==========
     @FXML private TextArea txtEntrada;
     @FXML private TextArea txtSalida;
-    @FXML private Button btnSubirArchivo;
-    @FXML private Button btnVaciarEntrada;
-    @FXML private Button btnCopiar;
-    @FXML private Button btnDescargar;
-    @FXML private Button btnVaciarSalida;
 
     // ========== Configuración de cifrado ==========
     @FXML private ComboBox<String> comboModo;
@@ -80,7 +76,6 @@ public class VentanaController {
 
     // ========== Estado ==========
     private boolean temaClaro = true;
-    private String ultimoSaltGenerado = null; // Para guardar el salt del último cifrado AES
 
     /**
      * Inicialización del controlador.
@@ -352,183 +347,82 @@ public class VentanaController {
      * Cifra texto con Vigenère.
      */
     private void cifrarVigenere(String texto) {
-        String clave = txtClaveVigenere.getText();
+        String clave = validarClave();
+        if (clave == null) return;
 
-        if (clave == null || clave.trim().isEmpty()) {
-            mostrarAlerta("Clave vacía", "Por favor, introduce una clave", Alert.AlertType.WARNING);
-            return;
-        }
-
-        // Mostrar indicador de carga
         mostrarCargando(true);
         lblMensajeEstado.setText("Cifrando con Vigenère...");
 
-        // Llamada asíncrona
         vigenereService.cifrarTexto(texto, clave)
             .thenAccept(response -> Platform.runLater(() -> {
                 txtSalida.setText(response.getTextoCifrado());
-                lblMensajeEstado.setText("✓ Cifrado exitoso con clave: " + response.getClaveUsada());
-                lblMensajeEstado.setStyle("-fx-text-fill: green;");
-                mostrarCargando(false);
+                mostrarExito("✓ Cifrado exitoso con clave: " + response.getClaveUsada());
                 logger.info("Cifrado Vigenère exitoso");
             }))
-            .exceptionally(error -> {
-                Platform.runLater(() -> {
-                    String mensaje = obtenerMensajeError(error);
-                    lblMensajeEstado.setText("✗ Error: " + mensaje);
-                    lblMensajeEstado.setStyle("-fx-text-fill: red;");
-                    mostrarCargando(false);
-                    mostrarAlerta("Error al cifrar", mensaje, Alert.AlertType.ERROR);
-                });
-                return null;
-            });
+            .exceptionally(error -> manejarErrorOperacion(error, "Error al cifrar"));
     }
 
     /**
      * Descifra texto con Vigenère.
      */
     private void descifrarVigenere(String textoCifrado) {
-        String clave = txtClaveVigenere.getText();
+        String clave = validarClave();
+        if (clave == null) return;
 
-        if (clave == null || clave.trim().isEmpty()) {
-            mostrarAlerta("Clave vacía", "Por favor, introduce una clave", Alert.AlertType.WARNING);
-            return;
-        }
-
-        // Mostrar indicador de carga
         mostrarCargando(true);
         lblMensajeEstado.setText("Descifrando con Vigenère...");
 
-        // Llamada asíncrona
         vigenereService.descifrarTexto(textoCifrado, clave)
             .thenAccept(response -> Platform.runLater(() -> {
                 txtSalida.setText(response.getTextoDescifrado());
-                lblMensajeEstado.setText("✓ Descifrado exitoso");
-                lblMensajeEstado.setStyle("-fx-text-fill: green;");
-                mostrarCargando(false);
+                mostrarExito("✓ Descifrado exitoso");
                 logger.info("Descifrado Vigenère exitoso");
             }))
-            .exceptionally(error -> {
-                Platform.runLater(() -> {
-                    String mensaje = obtenerMensajeError(error);
-                    lblMensajeEstado.setText("✗ Error: " + mensaje);
-                    lblMensajeEstado.setStyle("-fx-text-fill: red;");
-                    mostrarCargando(false);
-                    mostrarAlerta("Error al descifrar", mensaje, Alert.AlertType.ERROR);
-                });
-                return null;
-            });
+            .exceptionally(error -> manejarErrorOperacion(error, "Error al descifrar"));
     }
 
     /**
      * Cifra texto con AES.
      */
     private void cifrarAes(String texto) {
-        String password = txtPasswordAes.getText();
+        String password = validarPassword();
+        if (password == null) return;
+
         String tipoAes = comboTipoAes.getValue();
-
-        if (password == null || password.length() < 8) {
-            mostrarAlerta(
-                "Password inválido",
-                "El password debe tener al menos 8 caracteres",
-                Alert.AlertType.WARNING
-            );
-            return;
-        }
-
-        // Mostrar indicador de carga
         mostrarCargando(true);
         lblMensajeEstado.setText("Cifrando con " + tipoAes + "...");
 
-        // Llamada asíncrona
         aesService.cifrarTexto(texto, password, tipoAes)
             .thenAccept(response -> Platform.runLater(() -> {
                 txtSalida.setText(response.getTextoCifrado());
-                ultimoSaltGenerado = response.getSalt();
-
-                lblMensajeEstado.setText("✓ Cifrado exitoso con " + response.getTipoAes());
-                lblMensajeEstado.setStyle("-fx-text-fill: green;");
-                mostrarCargando(false);
-
-                // Mostrar alert con el salt y opción de copiar
+                mostrarExito("✓ Cifrado exitoso con " + response.getTipoAes());
                 mostrarAlertaSaltConBotonCopiar(response.getSalt());
-
                 logger.info("Cifrado AES exitoso");
             }))
-            .exceptionally(error -> {
-                Platform.runLater(() -> {
-                    String mensaje = obtenerMensajeError(error);
-                    lblMensajeEstado.setText("✗ Error: " + mensaje);
-                    lblMensajeEstado.setStyle("-fx-text-fill: red;");
-                    mostrarCargando(false);
-                    mostrarAlerta("Error al cifrar", mensaje, Alert.AlertType.ERROR);
-                });
-                return null;
-            });
+            .exceptionally(error -> manejarErrorOperacion(error, "Error al cifrar"));
     }
 
     /**
      * Descifra texto con AES.
      */
     private void descifrarAes(String textoCifrado) {
-        String password = txtPasswordAes.getText();
-        String salt = txtSaltAes.getText();
+        String password = validarPassword();
+        if (password == null) return;
+
+        String salt = validarSalt();
+        if (salt == null) return;
+
         String tipoAes = comboTipoAes.getValue();
-
-        if (password == null || password.length() < 8) {
-            mostrarAlerta(
-                "Password inválido",
-                "El password debe tener al menos 8 caracteres",
-                Alert.AlertType.WARNING
-            );
-            return;
-        }
-
-        if (salt == null || salt.trim().isEmpty()) {
-            mostrarAlerta(
-                "Salt vacío",
-                "Por favor, introduce el salt que obtuviste al cifrar",
-                Alert.AlertType.WARNING
-            );
-            return;
-        }
-
-        // Mostrar indicador de carga
         mostrarCargando(true);
         lblMensajeEstado.setText("Descifrando con " + tipoAes + "...");
 
-        // Llamada asíncrona
         aesService.descifrarTexto(textoCifrado, password, salt, tipoAes)
             .thenAccept(response -> Platform.runLater(() -> {
                 txtSalida.setText(response.getTextoDescifrado());
-                lblMensajeEstado.setText("✓ Descifrado exitoso");
-                lblMensajeEstado.setStyle("-fx-text-fill: green;");
-                mostrarCargando(false);
+                mostrarExito("✓ Descifrado exitoso");
                 logger.info("Descifrado AES exitoso");
             }))
-            .exceptionally(error -> {
-                Platform.runLater(() -> {
-                    String mensaje = obtenerMensajeError(error);
-                    lblMensajeEstado.setText("✗ Error: " + mensaje);
-                    lblMensajeEstado.setStyle("-fx-text-fill: red;");
-                    mostrarCargando(false);
-
-                    // Mensaje más específico para errores de AES
-                    if (mensaje.contains("autenticación") || mensaje.contains("tag")) {
-                        mostrarAlerta(
-                            "Error al descifrar",
-                            "Password o salt incorrectos.\n\nVerifica que:\n" +
-                            "• El password sea el mismo que usaste al cifrar\n" +
-                            "• El salt sea exactamente el que se generó al cifrar\n" +
-                            "• El tipo de AES sea el correcto",
-                            Alert.AlertType.ERROR
-                        );
-                    } else {
-                        mostrarAlerta("Error al descifrar", mensaje, Alert.AlertType.ERROR);
-                    }
-                });
-                return null;
-            });
+            .exceptionally(this::manejarErrorAesDescifrado);
     }
 
     /**
@@ -668,16 +562,21 @@ public class VentanaController {
         alert.setTitle("Acerca de ScriptumFX");
         alert.setHeaderText("ScriptumFX - Aplicación de Cifrado");
         alert.setContentText(
-            "Versión: 1.0\n\n" +
-            "Aplicación de cifrado y descifrado de mensajes\n" +
-            "utilizando diferentes métodos criptográficos.\n\n" +
-            "Métodos soportados:\n" +
-            "• Vigenère (cifrado clásico)\n" +
-            "• AES-128/192/256 (cifrado moderno)\n\n" +
-            "Autoras:\n" +
-            "• Arantxa\n" +
-            "• Wara\n\n" +
-            "© 2025 - Todos los derechos reservados"
+                """
+                        Versión: 1.0
+                        
+                        Aplicación de cifrado y descifrado de mensajes
+                        utilizando diferentes métodos criptográficos.
+                        
+                        Métodos soportados:
+                        • Vigenère (cifrado clásico)
+                        • AES-128/192/256 (cifrado moderno)
+                        
+                        Autoras:
+                        • Arantxa
+                        • Wara
+                        
+                        © 2025 - Todos los derechos reservados"""
         );
         alert.showAndWait();
     }
@@ -706,6 +605,108 @@ public class VentanaController {
     // ==================== UTILIDADES ====================
 
     /**
+     * Valida que la clave de Vigenère no esté vacía.
+     * @return La clave si es válida, null si no lo es.
+     */
+    private String validarClave() {
+        String clave = txtClaveVigenere.getText();
+        if (clave == null || clave.trim().isEmpty()) {
+            mostrarAlerta("Clave vacía", "Por favor, introduce una clave", Alert.AlertType.WARNING);
+            return null;
+        }
+        return clave;
+    }
+
+    /**
+     * Valida que el password de AES tenga al menos 8 caracteres.
+     * @return El password si es válido, null si no lo es.
+     */
+    private String validarPassword() {
+        String password = txtPasswordAes.getText();
+        if (password == null || password.length() < 8) {
+            mostrarAlerta(
+                "Password inválido",
+                "El password debe tener al menos 8 caracteres",
+                Alert.AlertType.WARNING
+            );
+            return null;
+        }
+        return password;
+    }
+
+    /**
+     * Valida que el salt no esté vacío.
+     * @return El salt si es válido, null si no lo es.
+     */
+    private String validarSalt() {
+        String salt = txtSaltAes.getText();
+        if (salt == null || salt.trim().isEmpty()) {
+            mostrarAlerta(
+                "Salt vacío",
+                "Por favor, introduce el salt que obtuviste al cifrar",
+                Alert.AlertType.WARNING
+            );
+            return null;
+        }
+        return salt;
+    }
+
+    /**
+     * Muestra un mensaje de éxito y oculta el indicador de carga.
+     */
+    private void mostrarExito(String mensaje) {
+        lblMensajeEstado.setText(mensaje);
+        lblMensajeEstado.setStyle("-fx-text-fill: green;");
+        mostrarCargando(false);
+    }
+
+    /**
+     * Maneja errores de operaciones asíncronas de cifrado/descifrado.
+     * @return null (requerido por CompletableFuture.exceptionally)
+     */
+    private Void manejarErrorOperacion(Throwable error, String tituloError) {
+        Platform.runLater(() -> {
+            String mensaje = obtenerMensajeError(error);
+            lblMensajeEstado.setText("✗ Error: " + mensaje);
+            lblMensajeEstado.setStyle("-fx-text-fill: red;");
+            mostrarCargando(false);
+            mostrarAlerta(tituloError, mensaje, Alert.AlertType.ERROR);
+        });
+        return null;
+    }
+
+    /**
+     * Maneja errores específicos del descifrado AES.
+     * @return null (requerido por CompletableFuture.exceptionally)
+     */
+    private Void manejarErrorAesDescifrado(Throwable error) {
+        Platform.runLater(() -> {
+            String mensaje = obtenerMensajeError(error);
+            lblMensajeEstado.setText("✗ Error: " + mensaje);
+            lblMensajeEstado.setStyle("-fx-text-fill: red;");
+            mostrarCargando(false);
+
+            // Mensaje más específico para errores de AES
+            if (mensaje.contains("autenticación") || mensaje.contains("tag")) {
+                mostrarAlerta(
+                    "Error al descifrar",
+                        """
+                                Password o salt incorrectos.
+
+                                Verifica que:
+                                • El password sea el mismo que usaste al cifrar
+                                • El salt sea exactamente el que se generó al cifrar
+                                • El tipo de AES sea el correcto""",
+                    Alert.AlertType.ERROR
+                );
+            } else {
+                mostrarAlerta("Error al descifrar", mensaje, Alert.AlertType.ERROR);
+            }
+        });
+        return null;
+    }
+
+    /**
      * Muestra/oculta indicadores de carga.
      */
     private void mostrarCargando(boolean mostrar) {
@@ -718,10 +719,7 @@ public class VentanaController {
      */
     private String obtenerMensajeError(Throwable error) {
         Throwable causa = error.getCause();
-        if (causa != null) {
-            return causa.getMessage();
-        }
-        return error.getMessage();
+        return Objects.requireNonNullElse(causa, error).getMessage();
     }
 
     /**

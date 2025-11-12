@@ -26,7 +26,7 @@ public class ApiConfig {
                 .getResourceAsStream("application.properties")) {
 
             if (input == null) {
-                logger.warn("No se encontró application.properties, usando valores por defecto");
+                logger.warn("No se encontró application.properties");
             } else {
                 properties.load(input);
                 logger.info("Configuración cargada desde application.properties");
@@ -40,29 +40,15 @@ public class ApiConfig {
      * URL base de la API.
      * Se obtiene en orden de prioridad:
      * 1. Variable de entorno SCRIPTUM_API_URL
-     * 2. Propiedad del sistema scriptum.api.url
-     * 3. Archivo application.properties
+     * 2. Archivo application.properties
      */
     public static final String API_BASE_URL = getApiUrl();
 
     /**
-     * Puerto por defecto de la API.
-     */
-    public static final int API_PORT = getIntProperty("scriptum.api.port", 8000);
-
-    /**
-     * Timeout por defecto para las peticiones (en segundos).
-     */
-    public static final int REQUEST_TIMEOUT_SECONDS = getIntProperty("scriptum.api.timeout", 30);
-
-    /**
-     * Obtiene la URL de la API basada en variables de entorno, propiedades del sistema,
-     * o archivo application.properties.
+     * Obtiene la URL de la API basada en variables de entorno o application.properties.
      * Orden de prioridad:
      * 1. Variable de entorno SCRIPTUM_API_URL
-     * 2. Propiedad del sistema -Dscriptum.api.url
-     * 3. Archivo application.properties
-     * 4. Valor por defecto (localhost)
+     * 2. Archivo application.properties
      *
      * @return la URL de la API
      */
@@ -74,48 +60,17 @@ public class ApiConfig {
             return apiUrl;
         }
 
-        // 2. Intentar obtener de propiedad del sistema
-        apiUrl = System.getProperty("scriptum.api.url");
-        if (apiUrl != null && !apiUrl.isEmpty()) {
-            logger.info("Usando URL de propiedad del sistema: {}", apiUrl);
-            return apiUrl;
-        }
-
-        // 3. Intentar obtener de application.properties
+        // 2. Obtener de application.properties
         apiUrl = properties.getProperty("scriptum.api.url");
         if (apiUrl != null && !apiUrl.isEmpty()) {
             logger.info("Usando URL de application.properties: {}", apiUrl);
             return apiUrl;
         }
 
-        // 4. Valor por defecto
-        logger.warn("No se encontró configuración de URL, usando localhost");
-        return "http://localhost:" + getIntProperty("scriptum.api.port", 8000);
-    }
-
-    /**
-     * Obtiene una propiedad entera del archivo de configuración.
-     *
-     * @param key el nombre de la propiedad
-     * @param defaultValue el valor por defecto si no se encuentra
-     * @return el valor de la propiedad o el valor por defecto
-     */
-    private static int getIntProperty(String key, int defaultValue) {
-        try {
-            String value = properties.getProperty(key);
-            return value != null ? Integer.parseInt(value) : defaultValue;
-        } catch (NumberFormatException e) {
-            logger.warn("Error al parsear propiedad {}, usando valor por defecto: {}", key, defaultValue);
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Verifica si la aplicación está en modo desarrollo.
-     *
-     * @return true si está en modo desarrollo
-     */
-    public static boolean isDevelopmentMode() {
-        return API_BASE_URL.contains("localhost") || API_BASE_URL.contains("127.0.0.1");
+        // Si no hay configuración, lanzar error
+        throw new IllegalStateException(
+            "No se encontró configuración de URL. " +
+            "Configure SCRIPTUM_API_URL o scriptum.api.url en application.properties"
+        );
     }
 }

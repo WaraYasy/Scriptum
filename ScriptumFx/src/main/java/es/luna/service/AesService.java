@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
  * @version 1.0
  * @since 2025-11-11
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class AesService {
 
     private static final Logger logger = LoggerFactory.getLogger(AesService.class);
@@ -34,7 +35,7 @@ public class AesService {
     /**
      * Constructor que inicializa el servicio con la URL de la API.
      *
-     * @param apiUrl la URL base de la API (ej: "http://localhost:8000")
+     * @param apiUrl la URL base de la API
      */
     public AesService(String apiUrl) {
         this.apiClient = new ApiClient(apiUrl);
@@ -63,7 +64,7 @@ public class AesService {
         logger.debug("Cifrando texto con AES - Texto length: {}, Tipo: {}", texto.length(), tipoAes);
 
         // Validaciones básicas
-        if (texto == null || texto.trim().isEmpty()) {
+        if (texto.trim().isEmpty()) {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("El texto no puede estar vacío")
             );
@@ -90,17 +91,6 @@ public class AesService {
                 logger.info("Texto cifrado exitosamente con AES-{}", tipoAes);
             }
         });
-    }
-
-    /**
-     * Cifra un texto usando AES-256 por defecto.
-     *
-     * @param texto el texto a cifrar
-     * @param password el password para derivar la clave
-     * @return CompletableFuture con la respuesta del cifrado
-     */
-    public CompletableFuture<AesCifradoResponse> cifrarTexto(String texto, String password) {
-        return cifrarTexto(texto, password, "AES-256");
     }
 
     /**
@@ -154,40 +144,5 @@ public class AesService {
                 logger.info("Texto descifrado exitosamente con AES");
             }
         });
-    }
-
-    /**
-     * Descifra un texto usando AES-256 por defecto.
-     *
-     * @param textoCifrado el texto cifrado en base64
-     * @param password el password usado para cifrar
-     * @param salt el salt en base64 obtenido al cifrar
-     * @return CompletableFuture con la respuesta del descifrado
-     */
-    public CompletableFuture<AesDescifradoResponse> descifrarTexto(
-            String textoCifrado,
-            String password,
-            String salt
-    ) {
-        return descifrarTexto(textoCifrado, password, salt, "AES-256");
-    }
-
-    /**
-     * Verifica la conectividad con el backend.
-     *
-     * @return CompletableFuture<Boolean> true si la conexión es exitosa
-     */
-    public CompletableFuture<Boolean> verificarConexion() {
-        logger.debug("Verificando conexión con la API");
-
-        return apiClient.getAsync("/health", Object.class)
-                .thenApply(response -> {
-                    logger.info("Conexión con API verificada exitosamente");
-                    return true;
-                })
-                .exceptionally(error -> {
-                    logger.error("Error al verificar conexión con la API", error);
-                    return false;
-                });
     }
 }

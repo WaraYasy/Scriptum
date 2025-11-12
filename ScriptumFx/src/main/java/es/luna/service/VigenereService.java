@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
  * @version 1.0
  * @since 2025-11-11
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class VigenereService {
 
     private static final Logger logger = LoggerFactory.getLogger(VigenereService.class);
@@ -31,7 +32,7 @@ public class VigenereService {
     /**
      * Constructor que inicializa el servicio con la URL de la API.
      *
-     * @param apiUrl la URL base de la API (ej: "http://localhost:8000")
+     * @param apiUrl la URL base de la API
      */
     public VigenereService(String apiUrl) {
         this.apiClient = new ApiClient(apiUrl);
@@ -59,7 +60,7 @@ public class VigenereService {
         logger.debug("Cifrando texto con Vigenère - Texto length: {}, Clave: {}", texto.length(), clave);
 
         // Validaciones básicas
-        if (texto == null || texto.trim().isEmpty()) {
+        if (texto.trim().isEmpty()) {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("El texto no puede estar vacío")
             );
@@ -99,7 +100,7 @@ public class VigenereService {
         logger.debug("Descifrando texto con Vigenère - Texto length: {}, Clave: {}", textoCifrado.length(), clave);
 
         // Validaciones básicas
-        if (textoCifrado == null || textoCifrado.trim().isEmpty()) {
+        if (textoCifrado.trim().isEmpty()) {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("El texto cifrado no puede estar vacío")
             );

@@ -24,59 +24,23 @@ public class AesCifradoResponse {
     @SerializedName("tipo_aes")
     private String tipoAes;
 
-    /** Tamaño original de los datos en bytes */
-    @SerializedName("tamanio_original_bytes")
-    private int tamanioOriginalBytes;
-
-    /** Tamaño de los datos cifrados en bytes */
-    @SerializedName("tamanio_cifrado_bytes")
-    private int tamanioCifradoBytes;
-
     /**
      * Constructor vacío.
      */
     public AesCifradoResponse() {
     }
 
-    // Getters y Setters
+    // Getters
 
     public String getTextoCifrado() {
         return textoCifrado;
-    }
-
-    public void setTextoCifrado(String textoCifrado) {
-        this.textoCifrado = textoCifrado;
     }
 
     public String getSalt() {
         return salt;
     }
 
-    public void setSalt(String salt) {
-        this.salt = salt;
-    }
-
     public String getTipoAes() {
         return tipoAes;
-    }
-
-    public void setTipoAes(String tipoAes) {
-        this.tipoAes = tipoAes;
-    }
-
-    public int getTamanioOriginalBytes() {
-        return tamanioOriginalBytes;
-    }
-
-    public void setTamanioOriginalBytes(int tamanioOriginalBytes) {
-        this.tamanioOriginalBytes = tamanioOriginalBytes;
-    }
-
-    public int getTamanioCifradoBytes() {
-        return tamanioCifradoBytes;
-    }
-
-    public void setTamanioCifradoBytes(int tamanioCifradoBytes) {
-        this.tamanioCifradoBytes = tamanioCifradoBytes;
     }
 }

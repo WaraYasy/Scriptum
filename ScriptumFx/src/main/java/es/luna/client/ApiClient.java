@@ -3,7 +3,6 @@ package es.luna.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
-import es.luna.model.ApiErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,7 @@ public class ApiClient {
     /**
      * Constructor que crea un cliente HTTP con configuración por defecto.
      *
-     * @param baseUrl la URL base de la API (ej: "http://localhost:8000")
+     * @param baseUrl la URL base de la API
      */
     public ApiClient(String baseUrl) {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
