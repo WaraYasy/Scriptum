@@ -99,25 +99,6 @@ class DescifrarTextoAESRequest(BaseModel):
 # REQUEST SCHEMAS - ARCHIVOS
 # ============================================================================
 
-class DescifrarArchivoAESRequest(BaseModel):
-    """Request para descifrar archivo con AES (usado con Form)"""
-    password: str = Field(
-        ...,
-        min_length=8,
-        max_length=1000,
-        description="Password usado para cifrar"
-    )
-    salt: str = Field(
-        ...,
-        min_length=1,
-        description="Salt en formato base64"
-    )
-    tipo_aes: TipoAES = Field(
-        default="AES-256",
-        description="Tipo de cifrado AES usado"
-    )
-
-
 class DescifrarArchivoPaqueteAESRequest(BaseModel):
     """Request para descifrar archivo usando paquete único"""
     password: str = Field(
@@ -164,54 +145,6 @@ class CifradoAESResponse(BaseModel):
                     "tipo_aes": "AES-256",
                     "tamanio_original_bytes": 1024,
                     "tamanio_cifrado_bytes": 1152
-                }
-            ]
-        }
-    }
-
-
-class CifradoAESArchivoConMetadataResponse(BaseModel):
-    """Response para cifrado de archivo con metadata completa"""
-    archivo_cifrado: str = Field(
-        ...,
-        description="Archivo cifrado en formato base64"
-    )
-    salt: str = Field(
-        ...,
-        description="Salt usado (necesario para descifrar, ¡guárdalo!)"
-    )
-    tipo_aes: str = Field(
-        ...,
-        description="Tipo de AES usado (AES-128, AES-192, AES-256)"
-    )
-    nombre_original: str = Field(
-        ...,
-        description="Nombre original del archivo"
-    )
-    mime_type: str = Field(
-        ...,
-        description="Tipo MIME del archivo original"
-    )
-    tamanio_original_bytes: int = Field(
-        ...,
-        description="Tamaño original del archivo en bytes"
-    )
-    tamanio_cifrado_bytes: int = Field(
-        ...,
-        description="Tamaño del archivo cifrado (base64) en bytes"
-    )
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "archivo_cifrado": "VGhpcyBpcyBhbiBlbmNyeXB0ZWQgZmlsZSB3aXRoIEFFUy0yNTY=",
-                    "salt": "cmFuZG9tc2FsdDEyMzQ1Ng==",
-                    "tipo_aes": "AES-256",
-                    "nombre_original": "documento.pdf",
-                    "mime_type": "application/pdf",
-                    "tamanio_original_bytes": 245678,
-                    "tamanio_cifrado_bytes": 327570
                 }
             ]
         }
@@ -287,39 +220,6 @@ class DescifradoAESTextoResponse(BaseModel):
                     "texto_descifrado": "Este es un mensaje secreto",
                     "tipo_aes": "AES-256",
                     "tamanio_bytes": 27
-                }
-            ]
-        }
-    }
-
-
-class DescifradoAESArchivoResponse(BaseModel):
-    """Response para operación de descifrado de archivo"""
-    archivo_descifrado_base64: str = Field(
-        ...,
-        description="Contenido del archivo descifrado en base64"
-    )
-    tipo_aes: str = Field(
-        ...,
-        description="Tipo de AES usado"
-    )
-    tamanio_bytes: int = Field(
-        ...,
-        description="Tamaño del archivo descifrado en bytes"
-    )
-    mensaje: str = Field(
-        ...,
-        description="Mensaje informativo"
-    )
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "archivo_descifrado_base64": "UEsDBAoAAAAAAA...",
-                    "tipo_aes": "AES-256",
-                    "tamanio_bytes": 2048,
-                    "mensaje": "Archivo descifrado exitosamente. Descarga el contenido desde 'archivo_descifrado_base64'"
                 }
             ]
         }

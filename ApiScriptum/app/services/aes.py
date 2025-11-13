@@ -95,7 +95,7 @@ def cifrar_aes(
             f"Se proporcionaron {len(clave)} bytes."
         )
 
-    # Generar nonce aleatorio (12 bytes es el tama�o recomendado para GCM)
+    # Generar nonce aleatorio (12 bytes es el tamaño recomendado para GCM)
     nonce = get_random_bytes(NONCE_SIZE)
 
     # Crear cipher AES-GCM
@@ -165,7 +165,7 @@ def descifrar_aes(
 
 
 # ============================================================================
-# CAPA 2: GENERACI�N Y VALIDACI�N DE CLAVES
+# CAPA 2: GENERACION Y VALIDACION DE CLAVES
 # ============================================================================
 
 def generar_clave_desde_password(
@@ -383,7 +383,7 @@ def desempaquetar_salt(salt_base64: str) -> bytes:
     try:
         return base64.b64decode(salt_base64)
     except Exception as e:
-        raise ValueError("El salt no es base64 v�lido.") from e
+        raise ValueError("El salt no es base64 válido.") from e
 
 
 # ============================================================================
