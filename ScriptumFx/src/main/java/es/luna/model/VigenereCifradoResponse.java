@@ -36,7 +36,15 @@ public class VigenereCifradoResponse {
         return textoCifrado;
     }
 
+    public void setTextoCifrado(String textoCifrado) {
+        this.textoCifrado = textoCifrado;
+    }
+
     public String getClaveUsada() {
         return claveUsada;
+    }
+
+    public void setClaveUsada(String claveUsada) {
+        this.claveUsada = claveUsada;
     }
 }

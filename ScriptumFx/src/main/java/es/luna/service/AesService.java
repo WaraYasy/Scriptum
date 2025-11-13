@@ -37,6 +37,9 @@ public class AesService {
     /** Longitud mínima del password */
     private static final int MIN_PASSWORD_LENGTH = 8;
 
+    /** Umbral de tamaño para usar streaming en backend (9.5 MB en bytes) */
+    private static final long STREAMING_THRESHOLD = (long) (9.5 * 1024 * 1024); // 9.5 MB
+
     /**
      * Constructor que inicializa el servicio con la URL de la API.
      *
@@ -160,7 +163,19 @@ public class AesService {
      * @return CompletableFuture con la respuesta del cifrado
      */
     public CompletableFuture<AesCifradoArchivoResponse> cifrarArchivo(File archivo, String password, String tipoAes) {
-        logger.debug("Cifrando archivo con AES - Archivo: {}, Tipo: {}", archivo.getName(), tipoAes);
+        long fileSize = archivo.length();
+        boolean willUseStreaming = fileSize >= STREAMING_THRESHOLD;
+
+        logger.debug("Cifrando archivo con AES - Archivo: {}, Tamaño: {} bytes, Tipo: {}",
+                archivo.getName(), fileSize, tipoAes);
+
+        if (willUseStreaming) {
+            logger.info("Archivo grande detectado ({} MB), el backend usará streaming automático",
+                    fileSize / (1024.0 * 1024.0));
+        } else {
+            logger.info("Archivo pequeño ({} MB), el backend procesará en memoria",
+                    fileSize / (1024.0 * 1024.0));
+        }
 
         // Validaciones básicas
         if (!archivo.exists()) {
@@ -190,7 +205,8 @@ public class AesService {
             if (error != null) {
                 logger.warn("Error al cifrar archivo con AES: {}", error.getMessage());
             } else {
-                logger.info("Archivo cifrado exitosamente con AES-{}", tipoAes);
+                logger.info("Archivo cifrado exitosamente con AES-{} (streaming: {})",
+                        tipoAes, willUseStreaming ? "sí" : "no");
             }
         });
     }
@@ -210,7 +226,19 @@ public class AesService {
             String salt,
             String tipoAes
     ) {
-        logger.debug("Descifrando archivo con AES - Archivo: {}, Tipo: {}", archivoCifrado.getName(), tipoAes);
+        long fileSize = archivoCifrado.length();
+        boolean willUseStreaming = fileSize >= STREAMING_THRESHOLD;
+
+        logger.debug("Descifrando archivo con AES - Archivo: {}, Tamaño: {} bytes, Tipo: {}",
+                archivoCifrado.getName(), fileSize, tipoAes);
+
+        if (willUseStreaming) {
+            logger.info("Archivo grande detectado ({} MB), el backend usará streaming automático",
+                    fileSize / (1024.0 * 1024.0));
+        } else {
+            logger.info("Archivo pequeño ({} MB), el backend procesará en memoria",
+                    fileSize / (1024.0 * 1024.0));
+        }
 
         // Validaciones básicas
         if (!archivoCifrado.exists()) {
@@ -247,7 +275,8 @@ public class AesService {
             if (error != null) {
                 logger.warn("Error al descifrar archivo con AES: {}", error.getMessage());
             } else {
-                logger.info("Archivo descifrado exitosamente con AES");
+                logger.info("Archivo descifrado exitosamente con AES (streaming: {})",
+                        willUseStreaming ? "sí" : "no");
             }
         });
     }

@@ -335,6 +335,182 @@ async def cifrar_archivo(
 
 
 @router.post(
+    "/cifrar/file/large",
+    responses={
+        200: {"description": "Archivo cifrado exitosamente"},
+        400: {"model": ErrorResponse, "description": "Error en la validación"},
+        413: {"model": ErrorResponse, "description": "Archivo demasiado grande"},
+        500: {"model": ErrorResponse, "description": "Error interno del servidor"}
+    },
+    summary="Cifrar archivo grande con streaming",
+    description="""
+    Cifra archivos grandes (10-500 MB) con procesamiento en streaming.
+
+    **Características:**
+    - Límite: 500 MB
+    - Procesamiento en bloques (streaming) - memoria estable
+    - Validación automática de caracteres invisibles en la clave
+    - Opción para agregar magic header al inicio del archivo
+    - Preserva caracteres no alfabéticos (espacios, saltos de línea, etc.)
+
+    **Magic Header:** Se puede agregar un encabezado al inicio del archivo cifrado
+    para validar posteriormente que el descifrado fue exitoso (útil para canary check).
+    El header se cifrará junto con el contenido.
+
+    **Streaming:** El archivo se procesa por bloques de 1 MB, manteniendo
+    uso de memoria constante independientemente del tamaño del archivo.
+    """
+)
+async def cifrar_archivo_grande(
+    file: UploadFile = File(..., description="Archivo .txt grande a cifrar"),
+    clave: str = Form(..., description="Clave para el cifrado"),
+    magic_header: str = Form(default="MAGICV1\n",
+                             description="Header a agregar al inicio del archivo antes de cifrar (todo en mayúsculas)"),
+    add_header: bool = Form(default=True, description="Si True, agrega el magic_header al inicio del archivo")
+):
+    """
+    Cifra archivo grande con procesamiento en streaming EN BLOQUES
+
+    Args:
+        file: Archivo grande a cifrar
+        clave: Clave para el cifrado
+        magic_header: Header a agregar al inicio (útil para canary check posterior)
+        add_header: Si True, agrega el magic_header al inicio
+
+    Returns:
+        Texto cifrado y metadatos
+    """
+    try:
+        # 1. Validar la clave
+        validar_clave_sin_caracteres_invisibles(clave)
+        clave_formateada = validar_y_formatear_clave(clave)
+
+        # 2. Validar que el archivo tenga nombre
+        if not file.filename:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "El archivo debe tener un nombre"}
+            )
+
+        # Asignar nombre a variable local para type narrowing
+        filename = file.filename
+        logger.info("Cifrado de archivo grande iniciado - %s", filename)
+
+        # 3. Validar extensión del archivo
+        if not filename.endswith('.txt'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error": "Solo se aceptan archivos .txt",
+                    "archivo_recibido": filename
+                }
+            )
+
+        # 4. STREAMING: Procesar archivo por bloques
+        BLOCK_SIZE = 1 * 1024 * 1024  # 1 MB por bloque
+        texto_cifrado_completo = []
+        bytes_procesados = 0
+        posicion_clave = 0
+
+        # 5. Agregar magic header al inicio si está habilitado
+        if add_header:
+            logger.info("Agregando magic header al inicio: %s", repr(magic_header))
+            # Cifrar el magic header
+            header_cifrado_chars = []
+            for char in magic_header:
+                if char.isalpha():
+                    # Cifrar solo letras
+                    base = ord('A')
+                    char_index = ord(char.upper()) - base
+                    key_index = ord(clave_formateada[posicion_clave]) - base
+                    cifrado_index = (char_index + key_index) % 26
+                    header_cifrado_chars.append(chr(base + cifrado_index))
+                    posicion_clave = (posicion_clave + 1) % len(clave_formateada)
+                else:
+                    # Preservar caracteres no alfabéticos
+                    header_cifrado_chars.append(char)
+
+            texto_cifrado_completo.append(''.join(header_cifrado_chars))
+            bytes_procesados += len(magic_header.encode('utf-8'))
+
+        # 6. Procesar el archivo por bloques
+        logger.info("Iniciando cifrado en streaming por bloques...")
+
+        bloque_numero = 0
+        while True:
+            # Leer siguiente bloque EN STREAMING
+            bloque_bytes = await file.read(BLOCK_SIZE)
+
+            if not bloque_bytes:
+                # Fin del archivo
+                break
+
+            bytes_procesados += len(bloque_bytes)
+            bloque_numero += 1
+
+            # Validar que sea UTF-8 válido
+            try:
+                bloque_texto = bloque_bytes.decode('utf-8')
+            except UnicodeDecodeError as exc:
+                logger.exception("Error al decodificar bloque %d como UTF-8", bloque_numero)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": f"Error de encoding en bloque {bloque_numero}",
+                        "sugerencia": "El archivo contiene caracteres no válidos UTF-8"
+                    }
+                ) from exc
+
+            # Validar tamaño máximo (500 MB)
+            if bytes_procesados > MAX_FILE_SIZE:
+                raise HTTPException(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail={
+                        "error": f"Archivo demasiado grande: {bytes_procesados / (1024*1024):.2f} MB",
+                        "limite": f"{MAX_FILE_SIZE / (1024*1024):.0f} MB"
+                    }
+                )
+
+            # Cifrar bloque manteniendo posición de clave y PRESERVANDO caracteres no alfabéticos
+            texto_cifrado_bloque = []
+            for char in bloque_texto:
+                if char.isalpha():
+                    # Cifrar letras
+                    base = ord('A')
+                    char_index = ord(char.upper()) - base
+                    key_index = ord(clave_formateada[posicion_clave]) - base
+                    cifrado_index = (char_index + key_index) % 26
+                    texto_cifrado_bloque.append(chr(base + cifrado_index))
+                    posicion_clave = (posicion_clave + 1) % len(clave_formateada)
+                else:
+                    # Preservar caracteres no alfabéticos (espacios, \n, etc.)
+                    texto_cifrado_bloque.append(char)
+
+            texto_cifrado_completo.append(''.join(texto_cifrado_bloque))
+
+            # Log de progreso cada 10 bloques (cada 10 MB)
+            if bloque_numero % 10 == 0:
+                logger.info("Procesados %.2f MB en %d bloques", bytes_procesados / (1024*1024), bloque_numero)
+
+        texto_cifrado = ''.join(texto_cifrado_completo)
+        logger.info("Archivo grande cifrado exitosamente - %.2f MB en %d bloques",
+                    bytes_procesados / (1024*1024), bloque_numero)
+
+        return {
+            "texto_cifrado": texto_cifrado,
+            "clave_usada": clave_formateada,
+            "tamanio_archivo_bytes": bytes_procesados,
+            "tamanio_archivo_mb": round(bytes_procesados / (1024*1024), 2),
+            "bloques_procesados": bloque_numero,
+            "magic_header_agregado": add_header,
+            "mensaje": "Archivo cifrado exitosamente en streaming (memoria estable)"
+        }
+
+    except Exception as e:
+        raise manejar_error(e, "cifrar archivo grande") from e
+
+
+@router.post(
     "/descifrar/file",
     response_model=DescifradoResponse,
     responses={

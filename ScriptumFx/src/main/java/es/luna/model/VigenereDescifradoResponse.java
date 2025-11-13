@@ -18,6 +18,7 @@ public class VigenereDescifradoResponse {
 
     /** Clave utilizada (formateada) */
     @SerializedName("clave_usada")
+    @SuppressWarnings("FieldCanBeLocal")
     private String claveUsada;
 
     /**
@@ -30,5 +31,13 @@ public class VigenereDescifradoResponse {
 
     public String getTextoDescifrado() {
         return textoDescifrado;
+    }
+
+    public void setTextoDescifrado(String textoDescifrado) {
+        this.textoDescifrado = textoDescifrado;
+    }
+
+    public void setClaveUsada(String claveUsada) {
+        this.claveUsada = claveUsada;
     }
 }
