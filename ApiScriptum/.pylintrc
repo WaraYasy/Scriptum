@@ -1,7 +1,12 @@
 [MESSAGES CONTROL]
 disable=
     too-few-public-methods,
-    import-error
+    import-error,
+    broad-except
+
+[TYPECHECK]
+# Ignorar errores de importación de módulos que no se pueden resolver
+ignored-modules=Crypto,Crypto.Cipher,Crypto.Random
 
 [FORMAT]
 # Permitir líneas de hasta 120 caracteres
