@@ -161,8 +161,10 @@ public class VentanaController {
     private boolean temaClaro = true;
     private File archivoSubido = null; // Mantener referencia al archivo subido
     private String nombreArchivoOriginal = null; // Nombre del archivo original
-    private String archivoSalidaCifrado = null; // Contenido cifrado del archivo
+    private String archivoSalidaCifrado = null; // Contenido cifrado del archivo (texto)
+    private byte[] archivoSalidaBinaria = null; // Contenido binario del archivo descifrado
     private boolean esSalidaArchivo = false; // Indica si la salida es un archivo cifrado
+    private boolean esSalidaBinaria = false; // Indica si la salida contiene datos binarios
     private boolean ultimaOperacionFueCifrado = true; // true = cifrado, false = descifrado
     private String paqueteAesCifrado = null; // Paquete AES que contiene (archivo + metadatos)
 
@@ -660,15 +662,17 @@ public class VentanaController {
                     .thenAccept(archivoDescifradoBase64 -> Platform.runLater(() -> {
                         // El endpoint devuelve el archivo binario en base64
                         try {
-                            byte[] decodedBytes = java.util.Base64.getDecoder().decode(archivoDescifradoBase64);
-                            String textoDescifrado = new String(decodedBytes, java.nio.charset.StandardCharsets.UTF_8);
+                            byte[] bytesDescifrados = java.util.Base64.getDecoder().decode(archivoDescifradoBase64);
 
-                            archivoSalidaCifrado = textoDescifrado;
+                            // Guardar bytes directamente sin convertir a String
+                            archivoSalidaBinaria = bytesDescifrados;
+                            archivoSalidaCifrado = null; // Limpiar contenido de texto
                             esSalidaArchivo = true;
+                            esSalidaBinaria = true;
                             ultimaOperacionFueCifrado = false;
 
                             // Mostrar mensaje informativo en lugar del contenido
-                            long tamanioDescifrado = textoDescifrado.length();
+                            long tamanioDescifrado = bytesDescifrados.length;
                             double tamanioMB = tamanioDescifrado / (1024.0 * 1024.0);
                             String mensaje = String.format(
                                     """
@@ -683,7 +687,7 @@ public class VentanaController {
                             txtSalida.setText(mensaje);
 
                             mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
-                            logger.info("Descifrado AES de paquete exitoso");
+                            logger.info("Descifrado AES de paquete exitoso: {} bytes", bytesDescifrados.length);
                         } catch (IllegalArgumentException e) {
                             logger.error("Error al decodificar base64 del archivo descifrado", e);
                             mostrarAlerta(
@@ -766,39 +770,76 @@ public class VentanaController {
     private void onSubirArchivo() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(Mensajes.obtener("entrada.titulo.dialogo.archivo"));
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter(Mensajes.obtener("entrada.filtro.archivo"), "*.txt")
-        );
+
+        // Determinar qué extensiones permitir según el metodo seleccionado
+        String metodo = comboMetodo.getValue();
+        if (Mensajes.obtener("metodo.aes").equals(metodo)) {
+            // AES permite múltiples tipos de archivo
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("Todos los archivos soportados",
+                            "*.txt", "*.pdf", "*.doc", "*.docx", "*.xls", "*.xlsx",
+                            "*.jpg", "*.jpeg", "*.png", "*.gif", "*.bmp",
+                            "*.zip", "*.rar", "*.7z",
+                            "*.csv", "*.json", "*.xml"),
+                    new FileChooser.ExtensionFilter("Archivos de texto (*.txt)", "*.txt"),
+                    new FileChooser.ExtensionFilter("Documentos (*.pdf, *.doc, *.docx)", "*.pdf", "*.doc", "*.docx"),
+                    new FileChooser.ExtensionFilter("Hojas de cálculo (*.xls, *.xlsx, *.csv)", "*.xls", "*.xlsx", "*.csv"),
+                    new FileChooser.ExtensionFilter("Imágenes (*.jpg, *.png, *.gif, *.bmp)", "*.jpg", "*.jpeg", "*.png", "*.gif", "*.bmp"),
+                    new FileChooser.ExtensionFilter("Archivos comprimidos (*.zip, *.rar, *.7z)", "*.zip", "*.rar", "*.7z"),
+                    new FileChooser.ExtensionFilter("Datos (*.json, *.xml)", "*.json", "*.xml")
+            );
+        } else {
+            // Vigenère solo permite archivos de texto
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter(Mensajes.obtener("entrada.filtro.archivo"), "*.txt")
+            );
+        }
 
         File archivo = fileChooser.showOpenDialog(root.getScene().getWindow());
 
         if (archivo != null) {
             try {
-                // Validar que el archivo es accesible y legible
-                Files.readString(archivo.toPath());
+                // Validar que el archivo existe y es accesible
+                if (!archivo.exists() || !archivo.canRead()) {
+                    throw new IOException("El archivo no existe o no se puede leer");
+                }
 
                 // Guardar referencia al archivo y su nombre
                 archivoSubido = archivo;
                 nombreArchivoOriginal = archivo.getName();
 
-                // Mostrar mensaje informativo en lugar del contenido
+                // Obtener información del archivo
                 long tamanioBytes = archivo.length();
                 double tamanioMB = tamanioBytes / (1024.0 * 1024.0);
+
+                // Determinar el tipo de archivo
+                String extension = "";
+                String nombre = archivo.getName();
+                int lastDot = nombre.lastIndexOf('.');
+                if (lastDot > 0) {
+                    extension = nombre.substring(lastDot);
+                }
+
+                String tipoArchivo = determinarTipoArchivo(extension);
+
+                // Mostrar mensaje informativo en lugar del contenido
                 String mensaje = String.format(
                         """
                                 📄 Archivo subido: %s
+                                📎 Tipo: %s
                                 📊 Tamaño: %.2f MB (%,d bytes)
                                 ✅ Listo para cifrar""",
                         nombreArchivoOriginal,
+                        tipoArchivo,
                         tamanioMB,
                         tamanioBytes
                 );
                 txtEntrada.setText(mensaje);
 
-                logger.info("Archivo cargado: {} ({} bytes) - se usará el endpoint de archivo",
-                        archivo.getName(), tamanioBytes);
-            } catch (IOException e) {
-                logger.error("Error al leer archivo", e);
+                logger.info("Archivo cargado: {} ({} bytes, tipo: {}) - se usará el endpoint de archivo",
+                        archivo.getName(), tamanioBytes, tipoArchivo);
+            } catch (Exception e) {
+                logger.error("Error al cargar archivo", e);
                 archivoSubido = null;
                 nombreArchivoOriginal = null;
                 mostrarAlerta(
@@ -828,7 +869,9 @@ public class VentanaController {
         txtSalida.clear();
         lblMensajeEstado.setText("");
         archivoSalidaCifrado = null; // Limpiar contenido cifrado
+        archivoSalidaBinaria = null; // Limpiar bytes binarios
         esSalidaArchivo = false; // Resetear flag
+        esSalidaBinaria = false; // Resetear flag binario
         paqueteAesCifrado = null; // Limpiar paquete AES
     }
 
@@ -862,12 +905,44 @@ public class VentanaController {
     @FXML
     private void onDescargar() {
         // Determinar el contenido a guardar y el nombre del archivo
-        String contenido;
+        String contenidoTexto = null;
+        byte[] contenidoBinario = null;
         String nombreArchivoSugerido;
 
-        if (esSalidaArchivo && archivoSalidaCifrado != null && !archivoSalidaCifrado.isEmpty()) {
-            // Si es un archivo procesado, usar el contenido guardado
-            contenido = archivoSalidaCifrado;
+        // Verificar si tenemos datos binarios o de texto
+        if (esSalidaBinaria && archivoSalidaBinaria != null && archivoSalidaBinaria.length > 0) {
+            // Tenemos datos binarios (archivo descifrado)
+            contenidoBinario = archivoSalidaBinaria;
+
+            // Generar nombre de archivo basado en el original
+            if (nombreArchivoOriginal != null && !nombreArchivoOriginal.isEmpty()) {
+                // Obtener el nombre sin extensión
+                String nombreSinExtension = nombreArchivoOriginal;
+                String extension = ".bin";
+
+                int lastDot = nombreArchivoOriginal.lastIndexOf('.');
+                if (lastDot > 0) {
+                    nombreSinExtension = nombreArchivoOriginal.substring(0, lastDot);
+                    extension = nombreArchivoOriginal.substring(lastDot);
+                }
+
+                // Si es descifrado, eliminar el sufijo _encrypted si existe
+                if (!ultimaOperacionFueCifrado && nombreSinExtension.endsWith("_encrypted")) {
+                    nombreSinExtension = nombreSinExtension.substring(0, nombreSinExtension.length() - "_encrypted".length());
+                }
+
+                // Agregar sufijo según la operación
+                String sufijo = ultimaOperacionFueCifrado ? "_encrypted" : "_decrypted";
+                nombreArchivoSugerido = nombreSinExtension + sufijo + extension;
+            } else {
+                nombreArchivoSugerido = "archivo_decrypted.bin";
+            }
+
+            logger.info("Descargando archivo binario descifrado: {} -> {}", nombreArchivoOriginal, nombreArchivoSugerido);
+
+        } else if (esSalidaArchivo && archivoSalidaCifrado != null && !archivoSalidaCifrado.isEmpty()) {
+            // Tenemos datos de texto (archivo cifrado o texto normal)
+            contenidoTexto = archivoSalidaCifrado;
 
             // Generar nombre de archivo basado en el original y la operación
             if (nombreArchivoOriginal != null && !nombreArchivoOriginal.isEmpty()) {
@@ -900,12 +975,12 @@ public class VentanaController {
                     nombreArchivoOriginal, nombreArchivoSugerido);
         } else {
             // Comportamiento tradicional: guardar el texto del área de salida
-            contenido = txtSalida.getText();
+            contenidoTexto = txtSalida.getText();
             nombreArchivoSugerido = Mensajes.obtener("salida.archivo.nombre");
         }
 
         // Validar que hay contenido
-        if (contenido == null || contenido.isEmpty()) {
+        if ((contenidoTexto == null || contenidoTexto.isEmpty()) && contenidoBinario == null) {
             mostrarAlerta(
                     Mensajes.obtener("validacion.no.texto.descargar.titulo"),
                     Mensajes.obtener("validacion.no.texto.descargar.mensaje"),
@@ -917,18 +992,48 @@ public class VentanaController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(Mensajes.obtener("salida.titulo.dialogo.guardar"));
         fileChooser.setInitialFileName(nombreArchivoSugerido);
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter(Mensajes.obtener("entrada.filtro.archivo"), "*.txt")
-        );
+
+        // Determinar qué extensiones permitir según el metodo seleccionado y el tipo de archivo
+        String metodo = comboMetodo.getValue();
+        if (Mensajes.obtener("metodo.aes").equals(metodo) && esSalidaArchivo) {
+            // AES con archivo: permitir múltiples tipos de archivo
+            fileChooser.getExtensionFilters().addAll(
+                    new FileChooser.ExtensionFilter("Todos los archivos soportados",
+                            "*.txt", "*.pdf", "*.doc", "*.docx", "*.xls", "*.xlsx",
+                            "*.jpg", "*.jpeg", "*.png", "*.gif", "*.bmp",
+                            "*.zip", "*.rar", "*.7z",
+                            "*.csv", "*.json", "*.xml"),
+                    new FileChooser.ExtensionFilter("Archivos de texto (*.txt)", "*.txt"),
+                    new FileChooser.ExtensionFilter("Documentos (*.pdf, *.doc, *.docx)", "*.pdf", "*.doc", "*.docx"),
+                    new FileChooser.ExtensionFilter("Hojas de cálculo (*.xls, *.xlsx, *.csv)", "*.xls", "*.xlsx", "*.csv"),
+                    new FileChooser.ExtensionFilter("Imágenes (*.jpg, *.png, *.gif, *.bmp)", "*.jpg", "*.jpeg", "*.png", "*.gif", "*.bmp"),
+                    new FileChooser.ExtensionFilter("Archivos comprimidos (*.zip, *.rar, *.7z)", "*.zip", "*.rar", "*.7z"),
+                    new FileChooser.ExtensionFilter("Datos (*.json, *.xml)", "*.json", "*.xml")
+            );
+        } else {
+            // Vigenère o texto: solo archivos de texto
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter(Mensajes.obtener("entrada.filtro.archivo"), "*.txt")
+            );
+        }
 
         File archivo = fileChooser.showSaveDialog(root.getScene().getWindow());
 
         if (archivo != null) {
             try {
-                Files.writeString(archivo.toPath(), contenido);
+                // Escribir según el tipo de contenido
+                if (contenidoBinario != null) {
+                    // Escribir bytes binarios directamente
+                    Files.write(archivo.toPath(), contenidoBinario);
+                    logger.info("Archivo binario guardado: {} ({} bytes)", archivo.getAbsolutePath(), contenidoBinario.length);
+                } else {
+                    // Escribir como texto
+                    Files.writeString(archivo.toPath(), contenidoTexto);
+                    logger.info("Archivo de texto guardado: {}", archivo.getAbsolutePath());
+                }
+
                 lblMensajeEstado.setText(Mensajes.obtener("estado.archivo.guardado", archivo.getName()));
                 lblMensajeEstado.setStyle("-fx-text-fill: green;");
-                logger.info("Archivo guardado: {}", archivo.getAbsolutePath());
             } catch (IOException e) {
                 logger.error("Error al guardar archivo", e);
                 mostrarAlerta(
@@ -1174,6 +1279,36 @@ public class VentanaController {
     }
 
     // ==================== UTILIDADES ====================
+
+    /**
+     * Determina el tipo de archivo basado en su extensión.
+     *
+     * @param extension La extensión del archivo (incluye el punto, ej: ".pdf")
+     * @return Una descripción legible del tipo de archivo
+     */
+    private String determinarTipoArchivo(String extension) {
+        if (extension == null || extension.isEmpty()) {
+            return "Desconocido";
+        }
+
+        return switch (extension.toLowerCase()) {
+            case ".txt" -> "Texto";
+            case ".pdf" -> "PDF";
+            case ".doc", ".docx" -> "Word";
+            case ".xls", ".xlsx" -> "Excel";
+            case ".csv" -> "CSV";
+            case ".json" -> "JSON";
+            case ".xml" -> "XML";
+            case ".jpg", ".jpeg" -> "JPEG";
+            case ".png" -> "PNG";
+            case ".gif" -> "GIF";
+            case ".bmp" -> "BMP";
+            case ".zip" -> "ZIP";
+            case ".rar" -> "RAR";
+            case ".7z" -> "7-Zip";
+            default -> extension.substring(1).toUpperCase();
+        };
+    }
 
     /**
      * Valida que la clave de Vigenère no esté vacía.

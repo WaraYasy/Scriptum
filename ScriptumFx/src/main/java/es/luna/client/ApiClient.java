@@ -258,44 +258,44 @@ public class ApiClient {
                 // Generar boundary único para multipart
                 String boundary = "----WebKitFormBoundary" + UUID.randomUUID().toString().replace("-", "");
 
-                // Construir el body multipart manualmente
-                StringBuilder bodyBuilder = new StringBuilder();
+                // Leer contenido del archivo como bytes
+                byte[] fileBytes = Files.readAllBytes(file.toPath());
+
+                // Construir el body multipart manualmente con bytes
+                java.io.ByteArrayOutputStream bodyStream = new java.io.ByteArrayOutputStream();
 
                 // Agregar campos del formulario
                 if (formData != null) {
                     for (Map.Entry<String, String> entry : formData.entrySet()) {
-                        bodyBuilder.append("--").append(boundary).append("\r\n");
-                        bodyBuilder.append("Content-Disposition: form-data; name=\"")
-                                .append(entry.getKey()).append("\"\r\n\r\n");
-                        bodyBuilder.append(entry.getValue()).append("\r\n");
+                        bodyStream.write(("--" + boundary + "\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        bodyStream.write(("Content-Disposition: form-data; name=\"" + entry.getKey() + "\"\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        bodyStream.write((entry.getValue() + "\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
                     }
                 }
 
-                // Agregar archivo
-                bodyBuilder.append("--").append(boundary).append("\r\n");
-                bodyBuilder.append("Content-Disposition: form-data; name=\"file\"; filename=\"")
-                        .append(file.getName()).append("\"\r\n");
-                bodyBuilder.append("Content-Type: text/plain\r\n\r\n");
+                // Agregar archivo (con Content-Type correcto para binarios)
+                bodyStream.write(("--" + boundary + "\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                bodyStream.write(("Content-Disposition: form-data; name=\"file\"; filename=\"" + file.getName() + "\"\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                bodyStream.write("Content-Type: application/octet-stream\r\n\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
-                // Leer contenido del archivo
-                byte[] fileBytes = Files.readAllBytes(file.toPath());
-                String fileContent = new String(fileBytes, java.nio.charset.StandardCharsets.UTF_8);
-                bodyBuilder.append(fileContent).append("\r\n");
+                // Escribir los bytes del archivo directamente
+                bodyStream.write(fileBytes);
+                bodyStream.write("\r\n".getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
                 // Cerrar boundary
-                bodyBuilder.append("--").append(boundary).append("--\r\n");
+                bodyStream.write(("--" + boundary + "--\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
-                String body = bodyBuilder.toString();
+                byte[] bodyBytes = bodyStream.toByteArray();
 
-                logger.debug("POST multipart {} - Body size: {} bytes", endpoint, body.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
+                logger.debug("POST multipart {} - Body size: {} bytes (file: {} bytes)", endpoint, bodyBytes.length, fileBytes.length);
 
-                // Construir la petición HTTP
+                // Construir la petición HTTP con bytes
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(baseUrl + endpoint))
                         .timeout(DEFAULT_TIMEOUT)
                         .header("Content-Type", "multipart/form-data; boundary=" + boundary)
                         .header("Accept", "application/json")
-                        .POST(HttpRequest.BodyPublishers.ofString(body, java.nio.charset.StandardCharsets.UTF_8))
+                        .POST(HttpRequest.BodyPublishers.ofByteArray(bodyBytes))
                         .build();
 
                 logger.debug("POST multipart {} - Sending request to: {}", endpoint, request.uri());
