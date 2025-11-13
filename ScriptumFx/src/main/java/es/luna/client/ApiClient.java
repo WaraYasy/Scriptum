@@ -70,8 +70,6 @@ public class ApiClient {
                 // Serializar el request body a JSON
                 String jsonBody = gson.toJson(requestBody);
 
-                logger.debug("POST {} - Request Object: {}", endpoint, requestBody);
-                logger.debug("POST {} - JSON Body: {}", endpoint, jsonBody);
                 logger.debug("POST {} - Body size: {} bytes", endpoint, jsonBody.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
 
                 // Construir la petición HTTP
@@ -88,7 +86,7 @@ public class ApiClient {
                 // Enviar la petición
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-                logger.debug("POST {} - Status: {} - Response: {}", endpoint, response.statusCode(), response.body());
+                logger.debug("POST {} - Status: {}", endpoint, response.statusCode());
 
                 // Manejar respuestas de error HTTP
                 if (response.statusCode() >= 400) {
@@ -100,11 +98,14 @@ public class ApiClient {
                 logger.info("POST {} - Success", endpoint);
                 return responseObject;
 
+            } catch (ApiException e) {
+                // ApiException ya fue registrada en handleErrorResponse, solo relanzar
+                throw e;
             } catch (JsonSyntaxException e) {
-                logger.error("Error al parsear JSON en POST {}", endpoint, e);
+                logger.error("Error al parsear JSON en POST {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
             } catch (Exception e) {
-                logger.error("Error en petición POST {}", endpoint, e);
+                logger.error("Error inesperado en petición POST {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error en la petición HTTP: " + e.getMessage(), e);
             }
         });
@@ -134,7 +135,7 @@ public class ApiClient {
                 // Enviar la petición
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-                logger.debug("GET {} - Status: {} - Response: {}", endpoint, response.statusCode(), response.body());
+                logger.debug("GET {} - Status: {}", endpoint, response.statusCode());
 
                 // Manejar respuestas de error HTTP
                 if (response.statusCode() >= 400) {
@@ -146,11 +147,14 @@ public class ApiClient {
                 logger.info("GET {} - Success", endpoint);
                 return responseObject;
 
+            } catch (ApiException e) {
+                // ApiException ya fue registrada en handleErrorResponse, solo relanzar
+                throw e;
             } catch (JsonSyntaxException e) {
-                logger.error("Error al parsear JSON en GET {}", endpoint, e);
+                logger.error("Error al parsear JSON en GET {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
             } catch (Exception e) {
-                logger.error("Error en petición GET {}", endpoint, e);
+                logger.error("Error inesperado en petición GET {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error en la petición HTTP: " + e.getMessage(), e);
             }
         });
@@ -164,6 +168,7 @@ public class ApiClient {
      */
     private void handleErrorResponse(HttpResponse<String> response) throws ApiException {
         try {
+            int statusCode = response.statusCode();
             String responseBody = response.body();
             String errorMsg = null;
 
@@ -202,10 +207,18 @@ public class ApiClient {
 
             // Si no se pudo extraer mensaje, usar el cuerpo completo
             if (errorMsg == null || errorMsg.isEmpty()) {
-                errorMsg = "Error HTTP " + response.statusCode() + ": " + responseBody;
+                errorMsg = "Error HTTP " + statusCode + ": " + responseBody;
             }
 
-            logger.error("Error de API ({}): {}", response.statusCode(), errorMsg);
+            // Diferenciar entre errores de cliente (4xx) y servidor (5xx)
+            if (statusCode >= 400 && statusCode < 500) {
+                // Errores 4xx son de validación/cliente - WARN sin stack trace
+                logger.warn("Error de validación de API ({}): {}", statusCode, errorMsg);
+            } else {
+                // Errores 5xx son del servidor - ERROR
+                logger.error("Error del servidor API ({}): {}", statusCode, errorMsg);
+            }
+
             throw new ApiException(errorMsg);
 
         } catch (ApiException e) {

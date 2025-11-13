@@ -3,6 +3,7 @@ package es.luna.controller;
 import es.luna.config.ApiConfig;
 import es.luna.service.AesService;
 import es.luna.service.VigenereService;
+import es.luna.util.AlertaUtil;
 import es.luna.util.Mensajes;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -13,6 +14,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -775,6 +777,9 @@ public class VentanaController {
             temaClaro = !temaClaro;
             logger.info("Tema cambiado a: {}", temaClaro ? "claro" : "oscuro");
 
+            // Sincronizar tema con AlertaUtil
+            AlertaUtil.setTemaClaro(temaClaro);
+
         } catch (Exception e) {
             logger.error("Error al cambiar tema", e);
         }
@@ -784,29 +789,29 @@ public class VentanaController {
      * Muestra el diálogo "Acerca de".
      */
     private void mostrarAcercaDe() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(Mensajes.obtener("acerca.titulo"));
-        alert.setHeaderText(Mensajes.obtener("acerca.header"));
-        alert.setContentText(Mensajes.obtener("acerca.contenido"));
-        alert.showAndWait();
+        Window owner = root.getScene() != null ? root.getScene().getWindow() : null;
+        AlertaUtil.mostrarAlertaConHeader(
+            owner,
+            Alert.AlertType.INFORMATION,
+            Mensajes.obtener("acerca.titulo"),
+            Mensajes.obtener("acerca.header"),
+            Mensajes.obtener("acerca.contenido")
+        );
     }
 
     /**
      * Sale de la aplicación con confirmación.
      */
     private void salirAplicacion() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(Mensajes.obtener("salir.titulo"));
-        alert.setHeaderText(Mensajes.obtener("salir.header"));
-        alert.setContentText(Mensajes.obtener("salir.mensaje"));
+        Window owner = root.getScene() != null ? root.getScene().getWindow() : null;
+        boolean confirmado = AlertaUtil.mostrarConfirmacionConHeader(
+            owner,
+            Mensajes.obtener("salir.titulo"),
+            Mensajes.obtener("salir.header"),
+            Mensajes.obtener("salir.mensaje")
+        );
 
-        ButtonType buttonSalir = new ButtonType(Mensajes.obtener("salir.boton.salir"));
-        ButtonType buttonCancelar = new ButtonType(Mensajes.obtener("salir.boton.cancelar"));
-        alert.getButtonTypes().setAll(buttonSalir, buttonCancelar);
-
-        Optional<ButtonType> resultado = alert.showAndWait();
-
-        if (resultado.isPresent() && resultado.get() == buttonSalir) {
+        if (confirmado) {
             logger.info("Cerrando aplicación");
             System.exit(0);
         }
@@ -974,11 +979,22 @@ public class VentanaController {
      * Muestra un diálogo de alerta.
      */
     private void mostrarAlerta(String titulo, String mensaje, Alert.AlertType tipo) {
-        Alert alert = new Alert(tipo);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
+        Window owner = root.getScene() != null ? root.getScene().getWindow() : null;
+
+        switch (tipo) {
+            case WARNING:
+                AlertaUtil.mostrarAdvertencia(owner, titulo, mensaje);
+                break;
+            case ERROR:
+                AlertaUtil.mostrarError(owner, titulo, mensaje);
+                break;
+            case CONFIRMATION:
+                AlertaUtil.mostrarConfirmacion(owner, titulo, mensaje);
+                break;
+            default:
+                AlertaUtil.mostrarInfo(owner, titulo, mensaje);
+                break;
+        }
     }
 
     /**

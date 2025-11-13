@@ -57,7 +57,7 @@ public class VigenereService {
      * @return CompletableFuture con la respuesta del cifrado
      */
     public CompletableFuture<VigenereCifradoResponse> cifrarTexto(String texto, String clave) {
-        logger.debug("Cifrando texto con Vigenère - Texto length: {}, Clave: {}", texto.length(), clave);
+        logger.debug("Cifrando texto con Vigenère - Texto length: {}, Clave length: {}", texto.length(), clave.length());
 
         // Validaciones básicas
         if (texto.trim().isEmpty()) {
@@ -82,7 +82,7 @@ public class VigenereService {
                 VigenereCifradoResponse.class
         ).whenComplete((response, error) -> {
             if (error != null) {
-                logger.error("Error al cifrar texto con Vigenère", error);
+                logger.warn("Error al cifrar texto con Vigenère: {}", error.getMessage());
             } else {
                 logger.info("Texto cifrado exitosamente con Vigenère");
             }
@@ -97,7 +97,7 @@ public class VigenereService {
      * @return CompletableFuture con la respuesta del descifrado
      */
     public CompletableFuture<VigenereDescifradoResponse> descifrarTexto(String textoCifrado, String clave) {
-        logger.debug("Descifrando texto con Vigenère - Texto length: {}, Clave: {}", textoCifrado.length(), clave);
+        logger.debug("Descifrando texto con Vigenère - Texto length: {}, Clave length: {}", textoCifrado.length(), clave.length());
 
         // Validaciones básicas
         if (textoCifrado.trim().isEmpty()) {
@@ -122,7 +122,7 @@ public class VigenereService {
                 VigenereDescifradoResponse.class
         ).whenComplete((response, error) -> {
             if (error != null) {
-                logger.error("Error al descifrar texto con Vigenère", error);
+                logger.warn("Error al descifrar texto con Vigenère: {}", error.getMessage());
             } else {
                 logger.info("Texto descifrado exitosamente con Vigenère");
             }
