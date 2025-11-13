@@ -705,6 +705,9 @@ public class VentanaController {
             Mensajes.obtener("salida.resultado.descifrado")
         );
 
+        // Limpiar mensaje de estado al cambiar idioma
+        lblMensajeEstado.setText("");
+
         logger.debug("Textos de la interfaz actualizados");
     }
 
