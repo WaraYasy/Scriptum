@@ -332,6 +332,59 @@ public class ApiClient {
     }
 
     /**
+     * Realiza una petición POST con form data y obtiene respuesta binaria en base64.
+     * Usado para endpoints que devuelven archivos binarios directamente.
+     *
+     * @param endpoint el endpoint (ej: "/aes/descifrar/file")
+     * @param formData mapa con los campos del formulario
+     * @return CompletableFuture con el contenido binario en base64
+     */
+    public CompletableFuture<String> postFormAsync(String endpoint, Map<String, String> formData) {
+        return CompletableFuture.supplyAsync(() -> {
+            String url = baseUrl + endpoint;
+            logger.debug("POST form request to: {}", url);
+
+            try {
+                // Construir el body con application/x-www-form-urlencoded
+                StringBuilder bodyBuilder = new StringBuilder();
+                for (Map.Entry<String, String> entry : formData.entrySet()) {
+                    if (!bodyBuilder.isEmpty()) {
+                        bodyBuilder.append("&");
+                    }
+                    bodyBuilder.append(java.net.URLEncoder.encode(entry.getKey(), java.nio.charset.StandardCharsets.UTF_8));
+                    bodyBuilder.append("=");
+                    bodyBuilder.append(java.net.URLEncoder.encode(entry.getValue(), java.nio.charset.StandardCharsets.UTF_8));
+                }
+
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString(bodyBuilder.toString()))
+                        .build();
+
+                HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+                logger.debug("Response status: {}", response.statusCode());
+
+                // Verificar código de respuesta
+                if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                    // Convertir la respuesta binaria a base64
+                    String base64Content = java.util.Base64.getEncoder().encodeToString(response.body());
+                    logger.info("Binary response received successfully, size: {} bytes", response.body().length);
+                    return base64Content;
+                } else {
+                    String errorBody = new String(response.body(), java.nio.charset.StandardCharsets.UTF_8);
+                    logger.error("Error response ({}): {}", response.statusCode(), errorBody);
+                    throw new ApiException("HTTP " + response.statusCode() + ": " + errorBody);
+                }
+            } catch (Exception e) {
+                logger.error("Error in POST form request", e);
+                throw new ApiException("Error en petición POST form: " + e.getMessage(), e);
+            }
+        });
+    }
+
+    /**
      * Excepción personalizada para errores de la API.
      */
     public static class ApiException extends RuntimeException {

@@ -4,7 +4,6 @@ import es.luna.client.ApiClient;
 import es.luna.model.AesCifradoArchivoResponse;
 import es.luna.model.AesCifradoResponse;
 import es.luna.model.AesCifrarRequest;
-import es.luna.model.AesDescifradoArchivoResponse;
 import es.luna.model.AesDescifradoResponse;
 import es.luna.model.AesDescifrarRequest;
 import org.slf4j.Logger;
@@ -213,37 +212,19 @@ public class AesService {
 
     /**
      * Descifra un archivo cifrado con AES de forma asíncrona.
+     * Ahora usa el sistema de paquetes: solo necesita el paquete y el password.
      *
-     * @param archivoCifrado el archivo cifrado a descifrar
+     * @param paquete el paquete cifrado (obtenido al cifrar)
      * @param password el password usado para cifrar
-     * @param salt el salt en base64 obtenido al cifrar
-     * @param tipoAes el tipo de AES usado
-     * @return CompletableFuture con la respuesta del descifrado
+     * @return CompletableFuture con el contenido del archivo descifrado en base64
      */
-    public CompletableFuture<AesDescifradoArchivoResponse> descifrarArchivo(
-            File archivoCifrado,
-            String password,
-            String salt,
-            String tipoAes
-    ) {
-        long fileSize = archivoCifrado.length();
-        boolean willUseStreaming = fileSize >= STREAMING_THRESHOLD;
-
-        logger.debug("Descifrando archivo con AES - Archivo: {}, Tamaño: {} bytes, Tipo: {}",
-                archivoCifrado.getName(), fileSize, tipoAes);
-
-        if (willUseStreaming) {
-            logger.info("Archivo grande detectado ({} MB), el backend usará streaming automático",
-                    fileSize / (1024.0 * 1024.0));
-        } else {
-            logger.info("Archivo pequeño ({} MB), el backend procesará en memoria",
-                    fileSize / (1024.0 * 1024.0));
-        }
+    public CompletableFuture<String> descifrarArchivo(String paquete, String password) {
+        logger.debug("Descifrando archivo con AES usando paquete");
 
         // Validaciones básicas
-        if (!archivoCifrado.exists()) {
+        if (paquete == null || paquete.trim().isEmpty()) {
             return CompletableFuture.failedFuture(
-                    new IllegalArgumentException("El archivo no existe")
+                    new IllegalArgumentException("El paquete no puede estar vacío")
             );
         }
 
@@ -253,30 +234,21 @@ public class AesService {
             );
         }
 
-        if (salt == null || salt.trim().isEmpty()) {
-            return CompletableFuture.failedFuture(
-                    new IllegalArgumentException("El salt no puede estar vacío")
-            );
-        }
-
-        // Crear form data
+        // Crear form data con el paquete
         Map<String, String> formData = new HashMap<>();
+        formData.put("paquete", paquete);
         formData.put("password", password);
-        formData.put("salt", salt);
-        formData.put("tipo_aes", tipoAes);
 
-        // Realizar petición asíncrona multipart
-        return apiClient.postMultipartAsync(
+        // El endpoint devuelve un archivo binario, no JSON
+        // Necesitamos usar un metodo diferente que maneje respuestas binarias
+        return apiClient.postFormAsync(
                 BASE_ENDPOINT + "/descifrar/file",
-                archivoCifrado,
-                formData,
-                AesDescifradoArchivoResponse.class
+                formData
         ).whenComplete((response, error) -> {
             if (error != null) {
                 logger.warn("Error al descifrar archivo con AES: {}", error.getMessage());
             } else {
-                logger.info("Archivo descifrado exitosamente con AES (streaming: {})",
-                        willUseStreaming ? "sí" : "no");
+                logger.info("Archivo descifrado exitosamente con AES");
             }
         });
     }

@@ -40,68 +40,118 @@ public class VentanaController {
     private static final Logger logger = LoggerFactory.getLogger(VentanaController.class);
 
     // ========== Elementos del menú ==========
-    @FXML private VBox root;
-    @FXML private Menu menuArchivo;
-    @FXML private Menu menuIdioma;
-    @FXML private Menu menuAyuda;
-    @FXML private Menu menuClose;
-    @FXML private MenuItem menuIdiomaEspanol;
-    @FXML private MenuItem menuIdiomaIngles;
-    @FXML private MenuItem menuThemeToggle;
-    @FXML private MenuItem menuAbout;
-    @FXML private MenuItem menuExit;
+    @FXML
+    private VBox root;
+    @FXML
+    private Menu menuArchivo;
+    @FXML
+    private Menu menuIdioma;
+    @FXML
+    private Menu menuAyuda;
+    @FXML
+    private Menu menuClose;
+    @FXML
+    private MenuItem menuIdiomaEspanol;
+    @FXML
+    private MenuItem menuIdiomaIngles;
+    @FXML
+    private MenuItem menuThemeToggle;
+    @FXML
+    private MenuItem menuAbout;
+    @FXML
+    private MenuItem menuExit;
 
     // ========== Estado de la API ==========
-    @FXML private Label lblEstadoApiTitulo;
-    @FXML private Label lblEstadoApi;
-    @FXML private ProgressIndicator progressConexion;
+    @FXML
+    private Label lblEstadoApiTitulo;
+    @FXML
+    private Label lblEstadoApi;
+    @FXML
+    private ProgressIndicator progressConexion;
 
     // ========== Campos de entrada/salida ==========
-    @FXML private Label lblSeccionEntrada;
-    @FXML private Label lblEntradaDescripcion;
-    @FXML private TextArea txtEntrada;
-    @FXML private Label lblSeccionSalida;
-    @FXML private TextArea txtSalida;
-    @FXML private Button btnSubirArchivo;
-    @FXML private Button btnVaciarEntrada;
-    @FXML private Button btnCopiar;
-    @FXML private Button btnDescargar;
-    @FXML private Button btnVaciarSalida;
+    @FXML
+    private Label lblSeccionEntrada;
+    @FXML
+    private Label lblEntradaDescripcion;
+    @FXML
+    private TextArea txtEntrada;
+    @FXML
+    private Label lblSeccionSalida;
+    @FXML
+    private TextArea txtSalida;
+    @FXML
+    private Button btnSubirArchivo;
+    @FXML
+    private Button btnVaciarEntrada;
+    @FXML
+    private Button btnCopiar;
+    @FXML
+    private Button btnDescargar;
+    @FXML
+    private Button btnVaciarSalida;
 
     // ========== Configuración de cifrado ==========
-    @FXML private TitledPane titledPaneAjustes;
-    @FXML private Label lblAjustesDescripcion;
-    @FXML private Label lblModo;
-    @FXML private ComboBox<String> comboModo;
-    @FXML private Label lblMetodo;
-    @FXML private ComboBox<String> comboMetodo;
-    @FXML private Label lblDescripcionMetodo;
-    @FXML private Label lblAjustesAvanzados;
-    @FXML private Label lblResultado;
-    @FXML private ProgressIndicator progressOperacion;
+    @FXML
+    private TitledPane titledPaneAjustes;
+    @FXML
+    private Label lblAjustesDescripcion;
+    @FXML
+    private Label lblModo;
+    @FXML
+    private ComboBox<String> comboModo;
+    @FXML
+    private Label lblMetodo;
+    @FXML
+    private ComboBox<String> comboMetodo;
+    @FXML
+    private Label lblDescripcionMetodo;
+    @FXML
+    private Label lblAjustesAvanzados;
+    @FXML
+    private Label lblResultado;
+    @FXML
+    private ProgressIndicator progressOperacion;
 
     // ========== Campos específicos de Vigenère ==========
-    @FXML private VBox vboxClaveVigenere;
-    @FXML private Label lblClaveVigenere;
-    @FXML private TextField txtClaveVigenere;
-    @FXML private Label lblClaveVigenereDesc;
+    @FXML
+    private VBox vboxClaveVigenere;
+    @FXML
+    private Label lblClaveVigenere;
+    @FXML
+    private TextField txtClaveVigenere;
+    @FXML
+    private Label lblClaveVigenereDesc;
 
     // ========== Campos específicos de AES ==========
-    @FXML private VBox vboxCamposAes;
-    @FXML private Label lblPasswordAes;
-    @FXML private TextField txtPasswordAes;
-    @FXML private Label lblPasswordAesDesc;
-    @FXML private Label lblTipoAes;
-    @FXML private ComboBox<String> comboTipoAes;
-    @FXML private Label lblTipoAesDesc;
-    @FXML private VBox vboxSaltAes;
-    @FXML private Label lblSaltAes;
-    @FXML private TextField txtSaltAes;
-    @FXML private Label lblSaltAesDesc;
+    @FXML
+    private VBox vboxCamposAes;
+    @FXML
+    private Label lblPasswordAes;
+    @FXML
+    private TextField txtPasswordAes;
+    @FXML
+    private Label lblPasswordAesDesc;
+    @FXML
+    private Label lblTipoAes;
+    @FXML
+    private ComboBox<String> comboTipoAes;
+    @FXML
+    private Label lblTipoAesDesc;
+    @FXML
+    private VBox vboxSaltAes;
+    @FXML
+    private Label lblSaltAes;
+    @FXML
+    private TextField txtSaltAes;
+    @FXML
+    private Label lblSaltAesDesc;
 
     // ========== Botón de acción ==========
-    @FXML private Button btnAccion;
-    @FXML private Label lblMensajeEstado;
+    @FXML
+    private Button btnAccion;
+    @FXML
+    private Label lblMensajeEstado;
 
     // ========== Servicios ==========
     private VigenereService vigenereService;
@@ -110,6 +160,10 @@ public class VentanaController {
     // ========== Estado ==========
     private boolean temaClaro = true;
     private File archivoSubido = null; // Mantener referencia al archivo subido
+    private String nombreArchivoOriginal = null; // Nombre del archivo original
+    private String archivoSalidaCifrado = null; // Contenido cifrado del archivo
+    private boolean esSalidaArchivo = false; // Indica si la salida es un archivo cifrado
+    private String paqueteAesCifrado = null; // Paquete AES que contiene (archivo + metadatos)
 
     /**
      * Inicialización del controlador.
@@ -152,9 +206,9 @@ public class VentanaController {
         } catch (Exception e) {
             logger.error("Error al inicializar servicios", e);
             mostrarAlerta(
-                Mensajes.obtener("error.inicializacion.titulo"),
-                Mensajes.obtener("error.inicializacion.mensaje"),
-                Alert.AlertType.ERROR
+                    Mensajes.obtener("error.inicializacion.titulo"),
+                    Mensajes.obtener("error.inicializacion.mensaje"),
+                    Alert.AlertType.ERROR
             );
         }
     }
@@ -190,23 +244,23 @@ public class VentanaController {
     private void configurarCombos() {
         // Combo de modo (Cifrar/Descifrar)
         comboModo.setItems(FXCollections.observableArrayList(
-            Mensajes.obtener("modo.cifrar"),
-            Mensajes.obtener("modo.descifrar")
+                Mensajes.obtener("modo.cifrar"),
+                Mensajes.obtener("modo.descifrar")
         ));
         comboModo.setValue(Mensajes.obtener("modo.cifrar"));
 
         // Combo de metodo (Vigenère/AES)
         comboMetodo.setItems(FXCollections.observableArrayList(
-            Mensajes.obtener("metodo.vigenere"),
-            Mensajes.obtener("metodo.aes")
+                Mensajes.obtener("metodo.vigenere"),
+                Mensajes.obtener("metodo.aes")
         ));
         comboMetodo.setValue(Mensajes.obtener("metodo.vigenere"));
 
         // Combo de tipo AES
         comboTipoAes.setItems(FXCollections.observableArrayList(
-            Mensajes.obtener("aes.tipo.128"),
-            Mensajes.obtener("aes.tipo.192"),
-            Mensajes.obtener("aes.tipo.256")
+                Mensajes.obtener("aes.tipo.128"),
+                Mensajes.obtener("aes.tipo.192"),
+                Mensajes.obtener("aes.tipo.256")
         ));
         comboTipoAes.setValue(Mensajes.obtener("aes.tipo.256"));
 
@@ -253,23 +307,23 @@ public class VentanaController {
         progressConexion.setVisible(true);
 
         vigenereService.verificarConexion()
-            .thenAccept(conectado -> Platform.runLater(() -> {
-                progressConexion.setVisible(false);
-                if (conectado) {
-                    lblEstadoApi.setText(Mensajes.obtener("api.estado.conectada"));
-                    lblEstadoApi.setStyle("-fx-text-fill: green;");
-                    logger.info("Conexión con API exitosa");
-                } else {
-                    lblEstadoApi.setText(Mensajes.obtener("api.estado.desconectada"));
-                    lblEstadoApi.setStyle("-fx-text-fill: red;");
-                    logger.warn("No se pudo conectar con la API");
-                    mostrarAlerta(
-                        Mensajes.obtener("error.conexion.titulo"),
-                        Mensajes.obtener("error.conexion.mensaje", ApiConfig.API_BASE_URL),
-                        Alert.AlertType.WARNING
-                    );
-                }
-            }));
+                .thenAccept(conectado -> Platform.runLater(() -> {
+                    progressConexion.setVisible(false);
+                    if (conectado) {
+                        lblEstadoApi.setText(Mensajes.obtener("api.estado.conectada"));
+                        lblEstadoApi.setStyle("-fx-text-fill: green;");
+                        logger.info("Conexión con API exitosa");
+                    } else {
+                        lblEstadoApi.setText(Mensajes.obtener("api.estado.desconectada"));
+                        lblEstadoApi.setStyle("-fx-text-fill: red;");
+                        logger.warn("No se pudo conectar con la API");
+                        mostrarAlerta(
+                                Mensajes.obtener("error.conexion.titulo"),
+                                Mensajes.obtener("error.conexion.mensaje", ApiConfig.API_BASE_URL),
+                                Alert.AlertType.WARNING
+                        );
+                    }
+                }));
     }
 
     // ==================== EVENTOS DE LA UI ====================
@@ -369,9 +423,9 @@ public class VentanaController {
         String texto = txtEntrada.getText();
         if (texto == null || texto.trim().isEmpty()) {
             mostrarAlerta(
-                Mensajes.obtener("validacion.campo.vacio.titulo"),
-                Mensajes.obtener("validacion.campo.vacio.mensaje"),
-                Alert.AlertType.WARNING
+                    Mensajes.obtener("validacion.campo.vacio.titulo"),
+                    Mensajes.obtener("validacion.campo.vacio.mensaje"),
+                    Alert.AlertType.WARNING
             );
             return;
         }
@@ -413,11 +467,37 @@ public class VentanaController {
         }
 
         operacion.thenAccept(response -> Platform.runLater(() -> {
-                txtSalida.setText(response.getTextoCifrado());
-                mostrarExito(Mensajes.obtener("estado.cifrado.exitoso", response.getClaveUsada()));
-                logger.info("Cifrado Vigenère exitoso");
-            }))
-            .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
+                    // Guardar contenido cifrado
+                    archivoSalidaCifrado = response.getTextoCifrado();
+
+                    if (archivoSubido != null) {
+                        // Es un archivo - mostrar mensaje informativo
+                        esSalidaArchivo = true;
+                        long tamanioCifrado = archivoSalidaCifrado.length();
+                        double tamanioMB = tamanioCifrado / (1024.0 * 1024.0);
+                        String mensaje = String.format(
+                                """
+                                        🔒 Archivo cifrado con Vigenère
+                                        📄 Archivo original: %s
+                                        📊 Tamaño cifrado: %.2f MB (%,d caracteres)
+                                        🔑 Clave usada: %s
+                                        ✅ Usa el botón 'Descargar' para guardar el archivo cifrado""",
+                                nombreArchivoOriginal,
+                                tamanioMB,
+                                tamanioCifrado,
+                                response.getClaveUsada()
+                        );
+                        txtSalida.setText(mensaje);
+                    } else {
+                        // Es texto - mostrar contenido
+                        esSalidaArchivo = false;
+                        txtSalida.setText(archivoSalidaCifrado);
+                    }
+
+                    mostrarExito(Mensajes.obtener("estado.cifrado.exitoso", response.getClaveUsada()));
+                    logger.info("Cifrado Vigenère exitoso");
+                }))
+                .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
     }
 
     /**
@@ -441,11 +521,11 @@ public class VentanaController {
         }
 
         operacion.thenAccept(response -> Platform.runLater(() -> {
-                txtSalida.setText(response.getTextoDescifrado());
-                mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
-                logger.info("Descifrado Vigenère exitoso");
-            }))
-            .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.descifrar")));
+                    txtSalida.setText(response.getTextoDescifrado());
+                    mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
+                    logger.info("Descifrado Vigenère exitoso");
+                }))
+                .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.descifrar")));
     }
 
     /**
@@ -463,23 +543,51 @@ public class VentanaController {
         if (archivoSubido != null) {
             logger.info("Usando endpoint de archivo para cifrar con AES");
             aesService.cifrarArchivo(archivoSubido, password, tipoAes)
-                .thenAccept(response -> Platform.runLater(() -> {
-                    txtSalida.setText(response.getArchivoCifrado());
-                    mostrarExito(Mensajes.obtener("estado.cifrado.exitoso.aes", response.getTipoAes()));
-                    mostrarAlertaSaltConBotonCopiar(response.getSalt());
-                    logger.info("Cifrado AES de archivo exitoso");
-                }))
-                .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
+                    .thenAccept(response -> Platform.runLater(() -> {
+                        // Guardar paquete cifrado (contiene: archivo, salt, metadatos)
+                        paqueteAesCifrado = response.getPaquete();
+                        archivoSalidaCifrado = paqueteAesCifrado; // Para descarga
+                        esSalidaArchivo = true;
+
+                        // Obtener información del paquete
+                        String nombreOriginal = response.getNombreOriginal();
+                        Integer tamanioOriginal = response.getTamanioOriginalBytes();
+                        long tamanioPaquete = response.getTamanioPaqueteBytes();
+                        double tamanioMB = tamanioPaquete / (1024.0 * 1024.0);
+
+                        String mensaje = String.format(
+                                """
+                                        🔒 Archivo cifrado con AES
+                                        📄 Archivo original: %s
+                                        📊 Tamaño original: %,d bytes
+                                        📦 Tamaño del paquete: %.2f MB (%,d bytes)
+                                        ✅ El paquete contiene TODO lo necesario para descifrar
+                                        💾 Usa el botón 'Descargar' para guardar el paquete cifrado
+                                        
+                                        ℹ️  No necesitas guardar el salt por separado, está en el paquete""",
+                                nombreOriginal != null ? nombreOriginal : "desconocido",
+                                tamanioOriginal != null ? tamanioOriginal : 0,
+                                tamanioMB,
+                                tamanioPaquete
+                        );
+                        txtSalida.setText(mensaje);
+
+                        mostrarExito(Mensajes.obtener("estado.cifrado.exitoso.aes", tipoAes));
+                        logger.info("Cifrado AES de archivo exitoso con paquete");
+                    }))
+                    .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
         } else {
             logger.info("Usando endpoint de texto para cifrar con AES");
             aesService.cifrarTexto(texto, password, tipoAes)
-                .thenAccept(response -> Platform.runLater(() -> {
-                    txtSalida.setText(response.getTextoCifrado());
-                    mostrarExito(Mensajes.obtener("estado.cifrado.exitoso.aes", response.getTipoAes()));
-                    mostrarAlertaSaltConBotonCopiar(response.getSalt());
-                    logger.info("Cifrado AES exitoso");
-                }))
-                .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
+                    .thenAccept(response -> Platform.runLater(() -> {
+                        archivoSalidaCifrado = response.getTextoCifrado();
+                        esSalidaArchivo = false;
+                        txtSalida.setText(archivoSalidaCifrado);
+                        mostrarExito(Mensajes.obtener("estado.cifrado.exitoso.aes", response.getTipoAes()));
+                        mostrarAlertaSaltConBotonCopiar(response.getSalt());
+                        logger.info("Cifrado AES exitoso");
+                    }))
+                    .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
         }
     }
 
@@ -490,49 +598,122 @@ public class VentanaController {
         String password = validarPassword();
         if (password == null) return;
 
-        String salt = validarSalt();
-        if (salt == null) return;
-
-        // Validar que el texto cifrado tenga formato base64
-        if (validarFormatoBase64(textoCifrado, "texto cifrado")) return;
-        if (validarFormatoBase64(salt, "salt")) return;
-
         String tipoAes = comboTipoAes.getValue();
         mostrarCargando(true);
         lblMensajeEstado.setText(Mensajes.obtener("estado.descifrando.aes", tipoAes));
 
-        // Si hay un archivo subido, usar el endpoint de archivo
+        // Si hay un archivo subido, leer su contenido real (puede ser un paquete)
+        String contenidoReal = textoCifrado;
         if (archivoSubido != null) {
-            logger.info("Usando endpoint de archivo para descifrar con AES");
-            aesService.descifrarArchivo(archivoSubido, password, salt, tipoAes)
-                .thenAccept(response -> Platform.runLater(() -> {
-                    // El endpoint de archivo devuelve base64, necesitamos decodificarlo
-                    try {
-                        byte[] decodedBytes = java.util.Base64.getDecoder().decode(response.getArchivoDescifradoBase64());
-                        String textoDescifrado = new String(decodedBytes, java.nio.charset.StandardCharsets.UTF_8);
-                        txtSalida.setText(textoDescifrado);
-                        mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
-                        logger.info("Descifrado AES de archivo exitoso");
-                    } catch (IllegalArgumentException e) {
-                        logger.error("Error al decodificar base64 del archivo descifrado", e);
-                        mostrarAlerta(
-                            Mensajes.obtener("error.descifrar"),
-                            "Error al decodificar el archivo descifrado",
-                            Alert.AlertType.ERROR
-                        );
-                    }
-                }))
-                .exceptionally(this::manejarErrorAesDescifrado);
-        } else {
-            logger.info("Usando endpoint de texto para descifrar con AES");
-            aesService.descifrarTexto(textoCifrado, password, salt, tipoAes)
-                .thenAccept(response -> Platform.runLater(() -> {
-                    txtSalida.setText(response.getTextoDescifrado());
-                    mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
-                    logger.info("Descifrado AES exitoso");
-                }))
-                .exceptionally(this::manejarErrorAesDescifrado);
+            try {
+                contenidoReal = Files.readString(archivoSubido.toPath());
+                logger.info("Leyendo contenido real del archivo subido para descifrar: {} bytes", contenidoReal.length());
+            } catch (IOException e) {
+                logger.error("Error al leer archivo para descifrar", e);
+                mostrarCargando(false);
+                mostrarAlerta(
+                        Mensajes.obtener("error.archivo.leer.titulo"),
+                        Mensajes.obtener("error.archivo.leer.mensaje"),
+                        Alert.AlertType.ERROR
+                );
+                return;
+            }
         }
+
+        // Detectar si es un paquete AES
+        // Los paquetes empiezan con "SCRIPTUM" en el header, que en base64 es "U0NSSVBUVU0"
+        // También son considerablemente más largos que texto normal cifrado
+        boolean esPaquete = detectarPaqueteAes(contenidoReal);
+
+        if (esPaquete) {
+            // Es un paquete de archivo, no necesita salt por separado
+            logger.info("Detectado paquete AES, descifrando con sistema de paquetes");
+            aesService.descifrarArchivo(contenidoReal, password)
+                    .thenAccept(archivoDescifradoBase64 -> Platform.runLater(() -> {
+                        // El endpoint devuelve el archivo binario en base64
+                        try {
+                            byte[] decodedBytes = java.util.Base64.getDecoder().decode(archivoDescifradoBase64);
+                            String textoDescifrado = new String(decodedBytes, java.nio.charset.StandardCharsets.UTF_8);
+
+                            archivoSalidaCifrado = textoDescifrado;
+                            esSalidaArchivo = true;
+
+                            txtSalida.setText(textoDescifrado);
+                            mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
+                            logger.info("Descifrado AES de paquete exitoso");
+                        } catch (IllegalArgumentException e) {
+                            logger.error("Error al decodificar base64 del archivo descifrado", e);
+                            mostrarAlerta(
+                                    Mensajes.obtener("error.descifrar"),
+                                    "Error al decodificar el archivo descifrado",
+                                    Alert.AlertType.ERROR
+                            );
+                        }
+                    }))
+                    .exceptionally(this::manejarErrorAesDescifrado);
+        } else {
+            // Es texto normal, requiere salt
+            String salt = validarSalt();
+            if (salt == null) {
+                mostrarCargando(false);
+                return;
+            }
+
+            // Validar que el texto cifrado tenga formato base64
+            if (validarFormatoBase64(contenidoReal, "texto cifrado")) {
+                mostrarCargando(false);
+                return;
+            }
+            if (validarFormatoBase64(salt, "salt")) {
+                mostrarCargando(false);
+                return;
+            }
+
+            logger.info("Descifrando texto con AES (requiere salt)");
+            aesService.descifrarTexto(contenidoReal, password, salt, tipoAes)
+                    .thenAccept(response -> Platform.runLater(() -> {
+                        txtSalida.setText(response.getTextoDescifrado());
+                        mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
+                        logger.info("Descifrado AES de texto exitoso");
+                    }))
+                    .exceptionally(this::manejarErrorAesDescifrado);
+        }
+    }
+
+    /**
+     * Detecta si un texto cifrado es un paquete AES.
+     * Los paquetes tienen un header específico que empieza con "SCRIPTUM".
+     *
+     * @param textoCifrado el texto a analizar
+     * @return true si es un paquete AES, false si es texto normal cifrado
+     */
+    private boolean detectarPaqueteAes(String textoCifrado) {
+        if (textoCifrado == null || textoCifrado.isEmpty()) {
+            return false;
+        }
+
+        // Si tenemos el paquete guardado y coincide, es un paquete
+        if (textoCifrado.equals(paqueteAesCifrado)) {
+            logger.debug("Coincide con paquete AES guardado");
+            return true;
+        }
+
+        // Verificar el magic header "SCRIPTUM" en base64
+        // "SCRIPTUM" = U0NSSVBUVU0=
+        if (textoCifrado.startsWith("U0NSSVBUVU0")) {
+            logger.debug("Detectado header SCRIPTUM en el texto");
+            return true;
+        }
+
+        // Verificar longitud: los paquetes son mucho más largos (incluyen metadatos)
+        // Un texto cifrado normal de AES tiene ~200-500 caracteres en base64
+        // Un paquete tiene fácilmente >1000 caracteres por los metadatos
+        if (textoCifrado.length() > 800) {
+            logger.debug("Texto muy largo ({}), probablemente un paquete", textoCifrado.length());
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -543,24 +724,44 @@ public class VentanaController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(Mensajes.obtener("entrada.titulo.dialogo.archivo"));
         fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter(Mensajes.obtener("entrada.filtro.archivo"), "*.txt")
+                new FileChooser.ExtensionFilter(Mensajes.obtener("entrada.filtro.archivo"), "*.txt")
         );
 
         File archivo = fileChooser.showOpenDialog(root.getScene().getWindow());
 
         if (archivo != null) {
             try {
-                String contenido = Files.readString(archivo.toPath());
-                txtEntrada.setText(contenido);
-                archivoSubido = archivo; // Guardar referencia al archivo
-                logger.info("Archivo cargado: {} (se usará el endpoint de archivo)", archivo.getName());
+                // Validar que el archivo es accesible y legible
+                Files.readString(archivo.toPath());
+
+                // Guardar referencia al archivo y su nombre
+                archivoSubido = archivo;
+                nombreArchivoOriginal = archivo.getName();
+
+                // Mostrar mensaje informativo en lugar del contenido
+                long tamanioBytes = archivo.length();
+                double tamanioMB = tamanioBytes / (1024.0 * 1024.0);
+                String mensaje = String.format(
+                        """
+                                📄 Archivo subido: %s
+                                📊 Tamaño: %.2f MB (%,d bytes)
+                                ✅ Listo para cifrar""",
+                        nombreArchivoOriginal,
+                        tamanioMB,
+                        tamanioBytes
+                );
+                txtEntrada.setText(mensaje);
+
+                logger.info("Archivo cargado: {} ({} bytes) - se usará el endpoint de archivo",
+                        archivo.getName(), tamanioBytes);
             } catch (IOException e) {
                 logger.error("Error al leer archivo", e);
-                archivoSubido = null; // Limpiar referencia en caso de error
+                archivoSubido = null;
+                nombreArchivoOriginal = null;
                 mostrarAlerta(
-                    Mensajes.obtener("error.archivo.leer.titulo"),
-                    Mensajes.obtener("error.archivo.leer.mensaje"),
-                    Alert.AlertType.ERROR
+                        Mensajes.obtener("error.archivo.leer.titulo"),
+                        Mensajes.obtener("error.archivo.leer.mensaje"),
+                        Alert.AlertType.ERROR
                 );
             }
         }
@@ -573,6 +774,7 @@ public class VentanaController {
     private void onVaciarEntrada() {
         txtEntrada.clear();
         archivoSubido = null; // Limpiar referencia al archivo
+        nombreArchivoOriginal = null; // Limpiar nombre del archivo
     }
 
     /**
@@ -582,6 +784,9 @@ public class VentanaController {
     private void onVaciarSalida() {
         txtSalida.clear();
         lblMensajeEstado.setText("");
+        archivoSalidaCifrado = null; // Limpiar contenido cifrado
+        esSalidaArchivo = false; // Resetear flag
+        paqueteAesCifrado = null; // Limpiar paquete AES
     }
 
     /**
@@ -601,9 +806,9 @@ public class VentanaController {
             logger.info("Texto copiado al portapapeles");
         } else {
             mostrarAlerta(
-                Mensajes.obtener("validacion.no.texto.copiar.titulo"),
-                Mensajes.obtener("validacion.no.texto.copiar.mensaje"),
-                Alert.AlertType.WARNING
+                    Mensajes.obtener("validacion.no.texto.copiar.titulo"),
+                    Mensajes.obtener("validacion.no.texto.copiar.mensaje"),
+                    Alert.AlertType.WARNING
             );
         }
     }
@@ -613,37 +818,69 @@ public class VentanaController {
      */
     @FXML
     private void onDescargar() {
-        String texto = txtSalida.getText();
-        if (texto == null || texto.isEmpty()) {
+        // Determinar el contenido a guardar y el nombre del archivo
+        String contenido;
+        String nombreArchivoSugerido;
+
+        if (esSalidaArchivo && archivoSalidaCifrado != null && !archivoSalidaCifrado.isEmpty()) {
+            // Si es un archivo cifrado, usar el contenido del archivo
+            contenido = archivoSalidaCifrado;
+
+            // Generar nombre de archivo basado en el original
+            if (nombreArchivoOriginal != null && !nombreArchivoOriginal.isEmpty()) {
+                // Obtener el nombre sin extensión
+                String nombreSinExtension = nombreArchivoOriginal;
+                String extension = ".txt";
+
+                int lastDot = nombreArchivoOriginal.lastIndexOf('.');
+                if (lastDot > 0) {
+                    nombreSinExtension = nombreArchivoOriginal.substring(0, lastDot);
+                    extension = nombreArchivoOriginal.substring(lastDot);
+                }
+
+                nombreArchivoSugerido = nombreSinExtension + "_encrypted" + extension;
+            } else {
+                nombreArchivoSugerido = "archivo_encrypted.txt";
+            }
+
+            logger.info("Descargando archivo cifrado: {} -> {}", nombreArchivoOriginal, nombreArchivoSugerido);
+        } else {
+            // Comportamiento tradicional: guardar el texto del área de salida
+            contenido = txtSalida.getText();
+            nombreArchivoSugerido = Mensajes.obtener("salida.archivo.nombre");
+        }
+
+        // Validar que hay contenido
+        if (contenido == null || contenido.isEmpty()) {
             mostrarAlerta(
-                Mensajes.obtener("validacion.no.texto.descargar.titulo"),
-                Mensajes.obtener("validacion.no.texto.descargar.mensaje"),
-                Alert.AlertType.WARNING
+                    Mensajes.obtener("validacion.no.texto.descargar.titulo"),
+                    Mensajes.obtener("validacion.no.texto.descargar.mensaje"),
+                    Alert.AlertType.WARNING
             );
             return;
         }
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(Mensajes.obtener("salida.titulo.dialogo.guardar"));
-        fileChooser.setInitialFileName(Mensajes.obtener("salida.archivo.nombre"));
+        fileChooser.setInitialFileName(nombreArchivoSugerido);
         fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter(Mensajes.obtener("entrada.filtro.archivo"), "*.txt")
+                new FileChooser.ExtensionFilter(Mensajes.obtener("entrada.filtro.archivo"), "*.txt")
         );
 
         File archivo = fileChooser.showSaveDialog(root.getScene().getWindow());
 
         if (archivo != null) {
             try {
-                Files.writeString(archivo.toPath(), texto);
+                Files.writeString(archivo.toPath(), contenido);
                 lblMensajeEstado.setText(Mensajes.obtener("estado.archivo.guardado", archivo.getName()));
                 lblMensajeEstado.setStyle("-fx-text-fill: green;");
                 logger.info("Archivo guardado: {}", archivo.getAbsolutePath());
             } catch (IOException e) {
                 logger.error("Error al guardar archivo", e);
                 mostrarAlerta(
-                    Mensajes.obtener("error.archivo.guardar.titulo"),
-                    Mensajes.obtener("error.archivo.guardar.mensaje"),
-                    Alert.AlertType.ERROR
+                        Mensajes.obtener("error.archivo.guardar.titulo"),
+                        Mensajes.obtener("error.archivo.guardar.mensaje"),
+                        Alert.AlertType.ERROR
                 );
             }
         }
@@ -653,6 +890,7 @@ public class VentanaController {
 
     /**
      * Cambia el idioma de la aplicación y actualiza todos los textos.
+     *
      * @param codigoIdioma El código del idioma ("es" para español, "en" para inglés)
      */
     private void cambiarIdioma(String codigoIdioma) {
@@ -671,9 +909,9 @@ public class VentanaController {
         } catch (Exception e) {
             logger.error("Error al cambiar idioma", e);
             mostrarAlerta(
-                "Error",
-                "No se pudo cambiar el idioma",
-                Alert.AlertType.ERROR
+                    "Error",
+                    "No se pudo cambiar el idioma",
+                    Alert.AlertType.ERROR
             );
         }
     }
@@ -691,8 +929,8 @@ public class VentanaController {
 
         // Actualizar textos de los items del menú
         menuThemeToggle.setText(temaClaro ?
-            Mensajes.obtener("menu.tema.oscuro") :
-            Mensajes.obtener("menu.tema.claro")
+                Mensajes.obtener("menu.tema.oscuro") :
+                Mensajes.obtener("menu.tema.claro")
         );
         menuAbout.setText(Mensajes.obtener("menu.acerca"));
         menuExit.setText(Mensajes.obtener("menu.salir"));
@@ -701,12 +939,12 @@ public class VentanaController {
 
         // Actualizar estado de la API
         lblEstadoApi.setText(lblEstadoApi.getText().contains("Conectada") ||
-                            lblEstadoApi.getText().contains("Connected") ?
-            Mensajes.obtener("api.estado.conectada") :
-            lblEstadoApi.getText().contains("Verificando") ||
-                            lblEstadoApi.getText().contains("Checking") ?
-            Mensajes.obtener("api.estado.verificando") :
-            Mensajes.obtener("api.estado.desconectada")
+                lblEstadoApi.getText().contains("Connected") ?
+                Mensajes.obtener("api.estado.conectada") :
+                lblEstadoApi.getText().contains("Verificando") ||
+                        lblEstadoApi.getText().contains("Checking") ?
+                        Mensajes.obtener("api.estado.verificando") :
+                        Mensajes.obtener("api.estado.desconectada")
         );
 
         // Actualizar labels de secciones
@@ -761,14 +999,14 @@ public class VentanaController {
         // Actualizar botón de acción según el modo actual
         String modoActual = comboModo.getSelectionModel().getSelectedIndex() == 0 ? "cifrar" : "descifrar";
         btnAccion.setText(modoActual.equals("cifrar") ?
-            Mensajes.obtener("boton.cifrar") :
-            Mensajes.obtener("boton.descifrar")
+                Mensajes.obtener("boton.cifrar") :
+                Mensajes.obtener("boton.descifrar")
         );
 
         // Actualizar label de resultado según el modo actual
         lblResultado.setText(modoActual.equals("cifrar") ?
-            Mensajes.obtener("salida.resultado.cifrado") :
-            Mensajes.obtener("salida.resultado.descifrado")
+                Mensajes.obtener("salida.resultado.cifrado") :
+                Mensajes.obtener("salida.resultado.descifrado")
         );
 
         // Limpiar mensaje de estado al cambiar idioma
@@ -783,8 +1021,8 @@ public class VentanaController {
     private void actualizarComboModo() {
         int seleccionActual = comboModo.getSelectionModel().getSelectedIndex();
         comboModo.setItems(FXCollections.observableArrayList(
-            Mensajes.obtener("modo.cifrar"),
-            Mensajes.obtener("modo.descifrar")
+                Mensajes.obtener("modo.cifrar"),
+                Mensajes.obtener("modo.descifrar")
         ));
         comboModo.getSelectionModel().select(Math.max(seleccionActual, 0));
     }
@@ -795,8 +1033,8 @@ public class VentanaController {
     private void actualizarComboMetodo() {
         int seleccionActual = comboMetodo.getSelectionModel().getSelectedIndex();
         comboMetodo.setItems(FXCollections.observableArrayList(
-            Mensajes.obtener("metodo.vigenere"),
-            Mensajes.obtener("metodo.aes")
+                Mensajes.obtener("metodo.vigenere"),
+                Mensajes.obtener("metodo.aes")
         ));
         comboMetodo.getSelectionModel().select(Math.max(seleccionActual, 0));
     }
@@ -807,9 +1045,9 @@ public class VentanaController {
     private void actualizarComboTipoAes() {
         int seleccionActual = comboTipoAes.getSelectionModel().getSelectedIndex();
         comboTipoAes.setItems(FXCollections.observableArrayList(
-            Mensajes.obtener("aes.tipo.128"),
-            Mensajes.obtener("aes.tipo.192"),
-            Mensajes.obtener("aes.tipo.256")
+                Mensajes.obtener("aes.tipo.128"),
+                Mensajes.obtener("aes.tipo.192"),
+                Mensajes.obtener("aes.tipo.256")
         ));
         comboTipoAes.getSelectionModel().select(seleccionActual >= 0 ? seleccionActual : 2);
     }
@@ -855,11 +1093,11 @@ public class VentanaController {
     private void mostrarAcercaDe() {
         Window owner = root.getScene() != null ? root.getScene().getWindow() : null;
         AlertaUtil.mostrarAlertaConHeader(
-            owner,
-            Alert.AlertType.INFORMATION,
-            Mensajes.obtener("acerca.titulo"),
-            Mensajes.obtener("acerca.header"),
-            Mensajes.obtener("acerca.contenido")
+                owner,
+                Alert.AlertType.INFORMATION,
+                Mensajes.obtener("acerca.titulo"),
+                Mensajes.obtener("acerca.header"),
+                Mensajes.obtener("acerca.contenido")
         );
     }
 
@@ -869,10 +1107,10 @@ public class VentanaController {
     private void salirAplicacion() {
         Window owner = root.getScene() != null ? root.getScene().getWindow() : null;
         boolean confirmado = AlertaUtil.mostrarConfirmacionConHeader(
-            owner,
-            Mensajes.obtener("salir.titulo"),
-            Mensajes.obtener("salir.header"),
-            Mensajes.obtener("salir.mensaje")
+                owner,
+                Mensajes.obtener("salir.titulo"),
+                Mensajes.obtener("salir.header"),
+                Mensajes.obtener("salir.mensaje")
         );
 
         if (confirmado) {
@@ -885,15 +1123,16 @@ public class VentanaController {
 
     /**
      * Valida que la clave de Vigenère no esté vacía.
+     *
      * @return La clave si es válida, null si no lo es.
      */
     private String validarClave() {
         String clave = txtClaveVigenere.getText();
         if (clave == null || clave.trim().isEmpty()) {
             mostrarAlerta(
-                Mensajes.obtener("validacion.clave.vacia.titulo"),
-                Mensajes.obtener("validacion.clave.vacia.mensaje"),
-                Alert.AlertType.WARNING
+                    Mensajes.obtener("validacion.clave.vacia.titulo"),
+                    Mensajes.obtener("validacion.clave.vacia.mensaje"),
+                    Alert.AlertType.WARNING
             );
             return null;
         }
@@ -902,15 +1141,16 @@ public class VentanaController {
 
     /**
      * Valida que el password de AES tenga al menos 8 caracteres.
+     *
      * @return El password si es válido, null si no lo es.
      */
     private String validarPassword() {
         String password = txtPasswordAes.getText();
         if (password == null || password.length() < 8) {
             mostrarAlerta(
-                Mensajes.obtener("validacion.password.invalido.titulo"),
-                Mensajes.obtener("validacion.password.invalido.mensaje"),
-                Alert.AlertType.WARNING
+                    Mensajes.obtener("validacion.password.invalido.titulo"),
+                    Mensajes.obtener("validacion.password.invalido.mensaje"),
+                    Alert.AlertType.WARNING
             );
             return null;
         }
@@ -919,15 +1159,16 @@ public class VentanaController {
 
     /**
      * Valida que el salt no esté vacío.
+     *
      * @return El salt si es válido, null si no lo es.
      */
     private String validarSalt() {
         String salt = txtSaltAes.getText();
         if (salt == null || salt.trim().isEmpty()) {
             mostrarAlerta(
-                Mensajes.obtener("validacion.salt.vacio.titulo"),
-                Mensajes.obtener("validacion.salt.vacio.mensaje"),
-                Alert.AlertType.WARNING
+                    Mensajes.obtener("validacion.salt.vacio.titulo"),
+                    Mensajes.obtener("validacion.salt.vacio.mensaje"),
+                    Alert.AlertType.WARNING
             );
             return null;
         }
@@ -936,7 +1177,8 @@ public class VentanaController {
 
     /**
      * Valida que un texto tenga formato base64 válido.
-     * @param texto el texto a validar
+     *
+     * @param texto       el texto a validar
      * @param nombreCampo nombre del campo para el mensaje de error
      * @return true si hay error (inválido), false si es válido
      */
@@ -944,9 +1186,9 @@ public class VentanaController {
         // Patrón básico de base64: caracteres A-Za-z0-9+/= y longitud múltiplo de 4
         if (!texto.matches("^[A-Za-z0-9+/]+=*$")) {
             mostrarAlerta(
-                Mensajes.obtener("validacion.formato.invalido.titulo"),
-                Mensajes.obtener("validacion.base64.invalido.mensaje", nombreCampo),
-                Alert.AlertType.WARNING
+                    Mensajes.obtener("validacion.formato.invalido.titulo"),
+                    Mensajes.obtener("validacion.base64.invalido.mensaje", nombreCampo),
+                    Alert.AlertType.WARNING
             );
             return true; // Error: formato inválido
         }
@@ -954,9 +1196,9 @@ public class VentanaController {
         // Validar longitud (base64 debe ser múltiplo de 4)
         if ((texto.length() % 4) != 0) {
             mostrarAlerta(
-                Mensajes.obtener("validacion.formato.invalido.titulo"),
-                Mensajes.obtener("validacion.base64.incompleto.mensaje", nombreCampo),
-                Alert.AlertType.WARNING
+                    Mensajes.obtener("validacion.formato.invalido.titulo"),
+                    Mensajes.obtener("validacion.base64.incompleto.mensaje", nombreCampo),
+                    Alert.AlertType.WARNING
             );
             return true; // Error: longitud inválida
         }
@@ -975,6 +1217,7 @@ public class VentanaController {
 
     /**
      * Maneja errores de operaciones asíncronas de cifrado/descifrado.
+     *
      * @return null (requerido por CompletableFuture.exceptionally)
      */
     private Void manejarErrorOperacion(Throwable error, String tituloError) {
@@ -990,6 +1233,7 @@ public class VentanaController {
 
     /**
      * Maneja errores específicos del descifrado AES.
+     *
      * @return null (requerido por CompletableFuture.exceptionally)
      */
     private Void manejarErrorAesDescifrado(Throwable error) {
@@ -1002,17 +1246,17 @@ public class VentanaController {
                 lblMensajeEstado.setText(Mensajes.obtener("error.descifrar.aes.500.estado"));
                 lblMensajeEstado.setStyle("-fx-text-fill: red;");
                 mostrarAlerta(
-                    Mensajes.obtener("error.descifrar.aes.titulo"),
-                    Mensajes.obtener("error.descifrar.aes.500.mensaje"),
-                    Alert.AlertType.ERROR
+                        Mensajes.obtener("error.descifrar.aes.titulo"),
+                        Mensajes.obtener("error.descifrar.aes.500.mensaje"),
+                        Alert.AlertType.ERROR
                 );
             } else if (mensaje.contains("autenticación") || mensaje.contains("tag")) {
                 lblMensajeEstado.setText(Mensajes.obtener("error.descifrar.aes.auth.estado"));
                 lblMensajeEstado.setStyle("-fx-text-fill: red;");
                 mostrarAlerta(
-                    Mensajes.obtener("error.descifrar.aes.titulo"),
-                    Mensajes.obtener("error.descifrar.aes.mensaje"),
-                    Alert.AlertType.ERROR
+                        Mensajes.obtener("error.descifrar.aes.titulo"),
+                        Mensajes.obtener("error.descifrar.aes.mensaje"),
+                        Alert.AlertType.ERROR
                 );
             } else {
                 lblMensajeEstado.setText("✗ Error: " + mensaje);
