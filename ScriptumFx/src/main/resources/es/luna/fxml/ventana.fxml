@@ -96,13 +96,13 @@
                 <!-- Metodo de encriptado -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label fx:id="lblMetodo" text="%metodo.label" />
-                    <ComboBox fx:id="comboMetodo" prefWidth="250" promptText="%metodo.placeholder" onAction="#onMetodoChanged" />
+                    <ComboBox fx:id="comboMetodo" prefWidth="250" onAction="#onMetodoChanged" />
                 </VBox>
             </HBox>
 
             <!-- Descripción del metodo -->
             <HBox styleClass="description-panel">
-                <Label fx:id="lblDescripcionMetodo" text="%metodo.descripcion.default" wrapText="true" />
+                <Label fx:id="lblDescripcionMetodo" wrapText="true" />
             </HBox>
 
             <!-- Ajustes avanzados -->
