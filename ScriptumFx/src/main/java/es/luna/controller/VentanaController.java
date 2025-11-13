@@ -315,11 +315,11 @@ public class VentanaController {
                     progressConexion.setVisible(false);
                     if (conectado) {
                         lblEstadoApi.setText(Mensajes.obtener("api.estado.conectada"));
-                        lblEstadoApi.setStyle("-fx-text-fill: green;");
+                        lblEstadoApi.setStyle("-fx-text-fill: #478778;");
                         logger.info("Conexión con API exitosa");
                     } else {
                         lblEstadoApi.setText(Mensajes.obtener("api.estado.desconectada"));
-                        lblEstadoApi.setStyle("-fx-text-fill: red;");
+                        lblEstadoApi.setStyle("-fx-text-fill: #DC143C;");
                         logger.warn("No se pudo conectar con la API");
                         mostrarAlerta(
                                 Mensajes.obtener("error.conexion.titulo"),
