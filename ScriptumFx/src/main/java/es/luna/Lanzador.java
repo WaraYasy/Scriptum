@@ -7,7 +7,7 @@ package es.luna;
  * Es necesaria para evitar problemas cuando se ejecuta desde un JAR sin que JavaFX
  * esté dentro de module-path. Delega la ejecución a {@link ScriptumApp}.
  * </p>
- *
+ * @author Arantxa
  * @version 1.0
  * @since 2025-11-11
  */
