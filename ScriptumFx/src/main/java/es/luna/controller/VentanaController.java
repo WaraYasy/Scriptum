@@ -36,6 +36,10 @@ public class VentanaController {
 
     // ========== Elementos del menú ==========
     @FXML private VBox root;
+    @FXML private Menu menuArchivo;
+    @FXML private Menu menuIdioma;
+    @FXML private Menu menuAyuda;
+    @FXML private Menu menuClose;
     @FXML private MenuItem menuIdiomaEspanol;
     @FXML private MenuItem menuIdiomaIngles;
     @FXML private MenuItem menuThemeToggle;
@@ -613,7 +617,13 @@ public class VentanaController {
      * Mantiene el estado de la aplicación (texto ingresado, selecciones, etc.)
      */
     private void actualizarTextosInterfaz() {
-        // Actualizar textos del menú
+        // Actualizar textos de los menús principales
+        menuArchivo.setText(Mensajes.obtener("menu.archivo"));
+        menuIdioma.setText(Mensajes.obtener("menu.idioma"));
+        menuAyuda.setText(Mensajes.obtener("menu.ayuda"));
+        menuClose.setText(Mensajes.obtener("menu.cerrar"));
+
+        // Actualizar textos de los items del menú
         menuThemeToggle.setText(temaClaro ?
             Mensajes.obtener("menu.tema.oscuro") :
             Mensajes.obtener("menu.tema.claro")
@@ -632,6 +642,31 @@ public class VentanaController {
             Mensajes.obtener("api.estado.verificando") :
             Mensajes.obtener("api.estado.desconectada")
         );
+
+        // Actualizar labels de secciones
+        lblSeccionEntrada.setText(Mensajes.obtener("seccion.entrada"));
+        lblSeccionSalida.setText(Mensajes.obtener("seccion.salida"));
+        lblEntradaDescripcion.setText(Mensajes.obtener("entrada.descripcion"));
+
+        // Actualizar TitledPane y labels de ajustes
+        titledPaneAjustes.setText(Mensajes.obtener("ajustes.titulo"));
+        lblAjustesDescripcion.setText(Mensajes.obtener("ajustes.descripcion"));
+        lblModo.setText(Mensajes.obtener("modo.label"));
+        lblMetodo.setText(Mensajes.obtener("metodo.label"));
+        lblAjustesAvanzados.setText(Mensajes.obtener("ajustes.avanzados"));
+        lblEstadoApiTitulo.setText(Mensajes.obtener("api.estado.label"));
+
+        // Actualizar labels de Vigenère
+        lblClaveVigenere.setText(Mensajes.obtener("vigenere.clave.label"));
+        lblClaveVigenereDesc.setText(Mensajes.obtener("vigenere.clave.descripcion"));
+
+        // Actualizar labels de AES
+        lblPasswordAes.setText(Mensajes.obtener("aes.password.label"));
+        lblPasswordAesDesc.setText(Mensajes.obtener("aes.password.descripcion"));
+        lblTipoAes.setText(Mensajes.obtener("aes.tipo.label"));
+        lblTipoAesDesc.setText(Mensajes.obtener("aes.tipo.descripcion"));
+        lblSaltAes.setText(Mensajes.obtener("aes.salt.label"));
+        lblSaltAesDesc.setText(Mensajes.obtener("aes.salt.descripcion"));
 
         // Actualizar botones de entrada
         btnSubirArchivo.setText(Mensajes.obtener("entrada.boton.subir"));

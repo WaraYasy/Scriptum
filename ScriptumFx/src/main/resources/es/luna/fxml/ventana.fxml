@@ -18,14 +18,14 @@
 <VBox fx:id="root" styleClass="root" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="es.luna.controller.VentanaController">
     <!-- MenuBar -->
     <MenuBar styleClass="menu-bar">
-        <Menu text="%menu.archivo">
-            <Menu text="%menu.idioma">
+        <Menu fx:id="menuArchivo" text="%menu.archivo">
+            <Menu fx:id="menuIdioma" text="%menu.idioma">
                 <MenuItem fx:id="menuIdiomaEspanol" text="%menu.idioma.espanol" />
                 <MenuItem fx:id="menuIdiomaIngles" text="%menu.idioma.ingles" />
             </Menu>
             <MenuItem fx:id="menuThemeToggle" text="%menu.tema.oscuro" />
         </Menu>
-        <Menu text="%menu.ayuda">
+        <Menu fx:id="menuAyuda" text="%menu.ayuda">
             <MenuItem fx:id="menuAbout" text="%menu.acerca" />
         </Menu>
         <Menu fx:id="menuClose" styleClass="close-menu" text="%menu.cerrar">
