@@ -324,18 +324,18 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
 
 
 # ============================================================================
-# ENDPOINTS DE CIFRADO - ARCHIVOS (PAQUETE ÚNICO)
+# ENDPOINTS DE CIFRADO - ARCHIVOS
 # ============================================================================
 
 @router.post(
-    "/cifrar/file/paquete",
+    "/cifrar/file",
     response_model=CifradoAESArchivoPaqueteResponse,
     responses={
         400: {"model": ErrorAESResponse, "description": "Error en la validación"},
         413: {"model": ErrorAESResponse, "description": "Archivo demasiado grande"},
         500: {"model": ErrorAESResponse, "description": "Error interno del servidor"}
     },
-    summary="Cifrar archivo (Paquete único - RECOMENDADO)",
+    summary="Cifrar archivo con AES",
     description="""
     Cifra un archivo y devuelve UN SOLO PAQUETE con TODO incluido.
 
@@ -355,7 +355,7 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
     **Uso:**
     ```javascript
     // Cifrar
-    const response = await fetch('/aes/cifrar/file/paquete', {
+    const response = await fetch('/aes/cifrar/file', {
         method: 'POST',
         body: formData  // file + password
     })
@@ -379,7 +379,7 @@ async def descifrar_texto_endpoint(request: DescifrarTextoAESRequest):
     - Tamaño máximo: 100 MB
     """
 )
-async def cifrar_archivo_paquete_endpoint(
+async def cifrar_archivo_endpoint(
     file: UploadFile = File(..., description="Archivo a cifrar"),
     password: str = Form(..., min_length=8, description="Password para el cifrado"),
     tipo_aes: TipoAES = Form(default="AES-256", description="Tipo de AES")
@@ -415,7 +415,7 @@ async def cifrar_archivo_paquete_endpoint(
         # Resetear posición del archivo para procesar
         await file.seek(0)
 
-        logger.info("Cifrado con paquete - Archivo: %s, Tamaño: %d bytes (%d MB)",
+        logger.info("Cifrando archivo: %s, Tamaño: %d bytes (%d MB)",
                    filename, file_size, file_size // (1024 * 1024))
 
         # Obtener MIME type
@@ -485,19 +485,19 @@ async def cifrar_archivo_paquete_endpoint(
     except (ValueError, HTTPException):
         raise
     except Exception as e:
-        manejar_error(e, "cifrar archivo con paquete")
+        manejar_error(e, "cifrar archivo")
 
 
 @router.post(
-    "/descifrar/file/paquete",
+    "/descifrar/file",
     responses={
         200: {"description": "Archivo descifrado", "content": {"application/octet-stream": {}}},
         400: {"model": ErrorAESResponse, "description": "Error en validación o password incorrecto"},
         500: {"model": ErrorAESResponse, "description": "Error interno del servidor"}
     },
-    summary="Descifrar archivo desde paquete único",
+    summary="Descifrar archivo con AES",
     description="""
-    Descifra un archivo desde un paquete único y devuelve el archivo original.
+    Descifra un archivo y devuelve el archivo original.
 
     **¿Qué necesitas?**
     - El paquete (obtenido al cifrar)
@@ -519,7 +519,7 @@ async def cifrar_archivo_paquete_endpoint(
     formData.append('paquete', paquete)  // Paquete guardado
     formData.append('password', 'pass123')
 
-    const response = await fetch('/aes/descifrar/file/paquete', {
+    const response = await fetch('/aes/descifrar/file', {
         method: 'POST',
         body: formData
     })
@@ -539,18 +539,18 @@ async def cifrar_archivo_paquete_endpoint(
     ```
     """
 )
-async def descifrar_archivo_paquete_endpoint(
+async def descifrar_archivo_endpoint(
     paquete: str = Form(..., description="Paquete cifrado (obtenido al cifrar)"),
     password: str = Form(..., min_length=8, description="Password usado para cifrar")
 ):
     """
-    Descifra un archivo desde un paquete único.
+    Descifra un archivo.
 
     Extrae metadatos del paquete, descifra el archivo y lo devuelve
     con su nombre y tipo MIME originales.
     """
     try:
-        logger.info("Descifrando archivo desde paquete")
+        logger.info("Descifrando archivo")
 
         # Extraer datos del paquete
         datos = extraer_paquete_archivo_cifrado(paquete)
@@ -586,7 +586,7 @@ async def descifrar_archivo_paquete_endpoint(
         )
 
     except ValueError as e:
-        logger.warning("Error al extraer/descifrar paquete")
+        logger.warning("Error al extraer/descifrar archivo")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": f"Paquete inválido o corrupto: {str(e)}"}
@@ -594,7 +594,7 @@ async def descifrar_archivo_paquete_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        manejar_error(e, "descifrar archivo desde paquete")
+        manejar_error(e, "descifrar archivo")
 
 
 # ============================================================================

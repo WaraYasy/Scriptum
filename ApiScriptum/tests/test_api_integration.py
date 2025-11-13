@@ -447,7 +447,7 @@ class TestAESArchivos:
     """Tests para cifrado y descifrado de archivos con AES"""
 
     def test_cifrar_archivo_con_metadata(self, client, sample_archivo_txt, sample_password):
-        """Test de cifrado de archivo que devuelve metadata"""
+        """Test de cifrado de archivo que devuelve paquete con metadata"""
         with open(sample_archivo_txt, 'rb') as f:
             response = client.post(
                 "/aes/cifrar/file",
@@ -461,15 +461,15 @@ class TestAESArchivos:
         assert response.status_code == status.HTTP_200_OK
 
         data = response.json()
-        assert "archivo_cifrado" in data
-        assert "salt" in data
-        assert "nombre_original" in data
-        assert data["nombre_original"] == "test.txt"
-        assert "mime_type" in data
-        assert "tamanio_original_bytes" in data
+        assert "paquete" in data
+        assert "tamanio_paquete_bytes" in data
+        assert "info" in data
+        assert data["info"]["nombre_original"] == "test.txt"
+        assert data["info"]["mime_type"] == "text/plain"
+        assert data["info"]["tamanio_original_bytes"] > 0
 
     def test_cifrar_descifrar_archivo_ciclo_completo(self, client, sample_archivo_txt):
-        """Test de ciclo completo con archivos"""
+        """Test de ciclo completo con archivos usando paquete"""
         password = "password_archivo_123"
 
         # Leer contenido original
@@ -486,29 +486,28 @@ class TestAESArchivos:
 
         assert response_cifrar.status_code == status.HTTP_200_OK
         data_cifrar = response_cifrar.json()
+        paquete = data_cifrar["paquete"]
 
-        # 2. Guardar archivo cifrado
-        archivo_cifrado = io.BytesIO(data_cifrar["archivo_cifrado"].encode('utf-8'))
-
-        # 3. Descifrar
+        # 2. Descifrar usando el paquete
         response_descifrar = client.post(
             "/aes/descifrar/file",
-            files={"file": ("cifrado.txt", archivo_cifrado, "text/plain")},
             data={
-                "password": password,
-                "salt": data_cifrar["salt"],
-                "tipo_aes": "AES-256"
+                "paquete": paquete,
+                "password": password
             }
         )
 
         assert response_descifrar.status_code == status.HTTP_200_OK
-        data_descifrar = response_descifrar.json()
 
-        # 4. Decodificar el archivo descifrado
-        archivo_descifrado_bytes = base64.b64decode(data_descifrar["archivo_descifrado_base64"])
+        # 3. El archivo descifrado viene como bytes directamente
+        archivo_descifrado_bytes = response_descifrar.content
 
-        # 5. Verificar que coincide con el original
+        # 4. Verificar que coincide con el original
         assert archivo_descifrado_bytes == contenido_original
+
+        # 5. Verificar headers
+        assert "Content-Disposition" in response_descifrar.headers
+        assert "test.txt" in response_descifrar.headers["Content-Disposition"]
 
     def test_cifrar_archivo_pdf(self, client, sample_archivo_pdf, sample_password):
         """Test de cifrado de archivo PDF"""
@@ -521,7 +520,7 @@ class TestAESArchivos:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["mime_type"] == "application/pdf"
+        assert data["info"]["mime_type"] == "application/pdf"
 
     def test_cifrar_archivo_extension_no_soportada(self, client, tmp_path, sample_password):
         """Test que extensión no soportada devuelve error"""
@@ -551,7 +550,7 @@ class TestAESPaquetes:
         """Test de cifrado con paquete único"""
         with open(sample_archivo_txt, 'rb') as f:
             response = client.post(
-                "/aes/cifrar/file/paquete",
+                "/aes/cifrar/file",
                 files={"file": ("test.txt", f, "text/plain")},
                 data={"password": sample_password, "tipo_aes": "AES-256"}
             )
@@ -576,7 +575,7 @@ class TestAESPaquetes:
         # 1. Cifrar con paquete
         with open(sample_archivo_txt, 'rb') as f:
             response_cifrar = client.post(
-                "/aes/cifrar/file/paquete",
+                "/aes/cifrar/file",
                 files={"file": ("test.txt", f, "text/plain")},
                 data={"password": password, "tipo_aes": "AES-256"}
             )
@@ -586,7 +585,7 @@ class TestAESPaquetes:
 
         # 2. Descifrar desde paquete
         response_descifrar = client.post(
-            "/aes/descifrar/file/paquete",
+            "/aes/descifrar/file",
             data={"paquete": paquete, "password": password}
         )
 
@@ -605,7 +604,7 @@ class TestAESPaquetes:
         # 1. Cifrar
         with open(sample_archivo_txt, 'rb') as f:
             response_cifrar = client.post(
-                "/aes/cifrar/file/paquete",
+                "/aes/cifrar/file",
                 files={"file": ("test.txt", f, "text/plain")},
                 data={"password": "password_correcto", "tipo_aes": "AES-256"}
             )
@@ -614,7 +613,7 @@ class TestAESPaquetes:
 
         # 2. Intentar descifrar con password incorrecto
         response_descifrar = client.post(
-            "/aes/descifrar/file/paquete",
+            "/aes/descifrar/file",
             data={"paquete": paquete, "password": "password_incorrecto"}
         )
 
@@ -625,7 +624,7 @@ class TestAESPaquetes:
         paquete_invalido = "paquete_invalido_base64"
 
         response = client.post(
-            "/aes/descifrar/file/paquete",
+            "/aes/descifrar/file",
             data={"paquete": paquete_invalido, "password": "password123"}
         )
 

@@ -144,7 +144,7 @@ class TestCaracteresEspeciales:
         # Cifrar
         with open(archivo, 'rb') as f:
             response_cifrar = client.post(
-                "/aes/cifrar/file/paquete",
+                "/aes/cifrar/file",
                 files={"file": ("saltos.txt", f, "text/plain")},
                 data={"password": sample_password, "tipo_aes": "AES-256"}
             )
@@ -154,7 +154,7 @@ class TestCaracteresEspeciales:
         # Descifrar
         paquete = response_cifrar.json()["paquete"]
         response_descifrar = client.post(
-            "/aes/descifrar/file/paquete",
+            "/aes/descifrar/file",
             data={"paquete": paquete, "password": sample_password}
         )
 
@@ -322,13 +322,14 @@ class TestMimeTypes:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         # Debería usar el default
-        assert "mime_type" in data
+        assert "info" in data
+        assert "mime_type" in data["info"]
 
     def test_paquete_preserva_mime_type(self, client, sample_archivo_pdf, sample_password):
         """Test que el paquete preserva el MIME type original"""
         with open(sample_archivo_pdf, 'rb') as f:
             response_cifrar = client.post(
-                "/aes/cifrar/file/paquete",
+                "/aes/cifrar/file",
                 files={"file": ("test.pdf", f, "application/pdf")},
                 data={"password": sample_password, "tipo_aes": "AES-256"}
             )
@@ -339,7 +340,7 @@ class TestMimeTypes:
 
         # Descifrar y verificar MIME type
         response_descifrar = client.post(
-            "/aes/descifrar/file/paquete",
+            "/aes/descifrar/file",
             data={"paquete": paquete, "password": sample_password}
         )
 
