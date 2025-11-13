@@ -4,6 +4,7 @@ module es.luna {
     requires org.slf4j;
     requires com.google.gson;
     requires java.net.http;
+    requires org.kordamp.ikonli.javafx;
 
     opens es.luna to javafx.fxml;
     opens es.luna.model to com.google.gson;

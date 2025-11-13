@@ -17,6 +17,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -339,12 +340,18 @@ public class VentanaController {
         String modo = comboModo.getValue();
         String metodo = comboMetodo.getValue();
 
-        // Actualizar texto del botón
+        // Actualizar texto e icono del botón
         if (Mensajes.obtener("modo.cifrar").equals(modo)) {
             btnAccion.setText(Mensajes.obtener("boton.cifrar"));
+            FontIcon lockIcon = new FontIcon("fas-lock");
+            lockIcon.setIconSize(16);
+            btnAccion.setGraphic(lockIcon);
             lblResultado.setText(Mensajes.obtener("salida.resultado.cifrado"));
         } else {
             btnAccion.setText(Mensajes.obtener("boton.descifrar"));
+            FontIcon unlockIcon = new FontIcon("fas-unlock");
+            unlockIcon.setIconSize(16);
+            btnAccion.setGraphic(unlockIcon);
             lblResultado.setText(Mensajes.obtener("salida.resultado.descifrado"));
         }
 
@@ -507,11 +514,11 @@ public class VentanaController {
                         double tamanioMB = tamanioCifrado / (1024.0 * 1024.0);
                         String mensaje = String.format(
                                 """
-                                        🔒 Archivo cifrado con Vigenère
-                                        📄 Archivo original: %s
-                                        📊 Tamaño cifrado: %.2f MB (%,d caracteres)
-                                        🔑 Clave usada: %s
-                                        ✅ Usa el botón 'Descargar' para guardar el archivo cifrado""",
+                                        Archivo cifrado con Vigenère
+                                        Archivo original: %s
+                                        Tamaño cifrado: %.2f MB (%,d caracteres)
+                                        Clave usada: %s
+                                        Usa el botón 'Descargar' para guardar el archivo cifrado""",
                                 nombreArchivoOriginal,
                                 tamanioMB,
                                 tamanioCifrado,
@@ -562,10 +569,10 @@ public class VentanaController {
                         double tamanioMB = tamanioDescifrado / (1024.0 * 1024.0);
                         String mensaje = String.format(
                                 """
-                                        🔓 Archivo descifrado con Vigenère
-                                        📄 Archivo original: %s
-                                        📊 Tamaño descifrado: %.2f MB (%,d caracteres)
-                                        ✅ Usa el botón 'Descargar' para guardar el archivo descifrado""",
+                                        Archivo descifrado con Vigenère
+                                        Archivo original: %s
+                                        Tamaño descifrado: %.2f MB (%,d caracteres)
+                                        Usa el botón 'Descargar' para guardar el archivo descifrado""",
                                 nombreArchivoOriginal,
                                 tamanioMB,
                                 tamanioDescifrado
@@ -613,14 +620,14 @@ public class VentanaController {
 
                         String mensaje = String.format(
                                 """
-                                        🔒 Archivo cifrado con AES
-                                        📄 Archivo original: %s
-                                        📊 Tamaño original: %,d bytes
-                                        📦 Tamaño del paquete: %.2f MB (%,d bytes)
-                                        ✅ El paquete contiene TODO lo necesario para descifrar
-                                        💾 Usa el botón 'Descargar' para guardar el paquete cifrado
-                                        
-                                        ℹ️  No necesitas guardar el salt por separado, está en el paquete""",
+                                        Archivo cifrado con AES
+                                        Archivo original: %s
+                                        Tamaño original: %,d bytes
+                                        Tamaño del paquete: %.2f MB (%,d bytes)
+                                        El paquete contiene TODO lo necesario para descifrar
+                                        Usa el botón 'Descargar' para guardar el paquete cifrado
+
+                                        Nota: No necesitas guardar el salt por separado, está en el paquete""",
                                 nombreOriginal != null ? nombreOriginal : "desconocido",
                                 tamanioOriginal != null ? tamanioOriginal : 0,
                                 tamanioMB,
@@ -702,10 +709,10 @@ public class VentanaController {
                             double tamanioMB = tamanioDescifrado / (1024.0 * 1024.0);
                             String mensaje = String.format(
                                     """
-                                            🔓 Archivo descifrado con AES
-                                            📄 Archivo original: %s
-                                            📊 Tamaño descifrado: %.2f MB (%,d bytes)
-                                            ✅ Usa el botón 'Descargar' para guardar el archivo descifrado""",
+                                            Archivo descifrado con AES
+                                            Archivo original: %s
+                                            Tamaño descifrado: %.2f MB (%,d bytes)
+                                            Usa el botón 'Descargar' para guardar el archivo descifrado""",
                                     nombreArchivoOriginal != null ? nombreArchivoOriginal : "desconocido",
                                     tamanioMB,
                                     tamanioDescifrado
@@ -851,10 +858,10 @@ public class VentanaController {
                 // Mostrar mensaje informativo en lugar del contenido
                 String mensaje = String.format(
                         """
-                                📄 Archivo subido: %s
-                                📎 Tipo: %s
-                                📊 Tamaño: %.2f MB (%,d bytes)
-                                ✅ Listo para cifrar""",
+                                Archivo subido: %s
+                                Tipo: %s
+                                Tamaño: %.2f MB (%,d bytes)
+                                Listo para cifrar""",
                         nombreArchivoOriginal,
                         tipoArchivo,
                         tamanioMB,
@@ -1183,10 +1190,17 @@ public class VentanaController {
 
         // Actualizar botón de acción según el modo actual
         String modoActual = comboModo.getSelectionModel().getSelectedIndex() == 0 ? "cifrar" : "descifrar";
-        btnAccion.setText(modoActual.equals("cifrar") ?
-                Mensajes.obtener("boton.cifrar") :
-                Mensajes.obtener("boton.descifrar")
-        );
+        if (modoActual.equals("cifrar")) {
+            btnAccion.setText(Mensajes.obtener("boton.cifrar"));
+            FontIcon lockIcon = new FontIcon("fas-lock");
+            lockIcon.setIconSize(16);
+            btnAccion.setGraphic(lockIcon);
+        } else {
+            btnAccion.setText(Mensajes.obtener("boton.descifrar"));
+            FontIcon unlockIcon = new FontIcon("fas-unlock");
+            unlockIcon.setIconSize(16);
+            btnAccion.setGraphic(unlockIcon);
+        }
 
         // Actualizar label de resultado según el modo actual
         lblResultado.setText(modoActual.equals("cifrar") ?

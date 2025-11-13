@@ -135,10 +135,19 @@
     -fx-cursor: hand;
 }
 
+.btn-primary .ikonli-font-icon {
+    -fx-icon-color: #8b6914;
+    -fx-icon-size: 16px;
+}
+
 .btn-primary:hover {
     -fx-background-color: #ead9c3;
     -fx-border-color: #a07d42;
     -fx-text-fill: #6b4d0e;
+}
+
+.btn-primary:hover .ikonli-font-icon {
+    -fx-icon-color: #6b4d0e;
 }
 
 .btn-primary:pressed {
@@ -160,10 +169,19 @@
     -fx-cursor: hand;
 }
 
+.btn-secondary .ikonli-font-icon {
+    -fx-icon-color: #5a4d44;
+    -fx-icon-size: 16px;
+}
+
 .btn-secondary:hover {
     -fx-background-color: #ddd7cf;
     -fx-border-color: #a89f98;
     -fx-text-fill: #4a3d34;
+}
+
+.btn-secondary:hover .ikonli-font-icon {
+    -fx-icon-color: #4a3d34;
 }
 
 .btn-secondary:pressed {
