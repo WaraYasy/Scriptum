@@ -433,6 +433,32 @@ public class VentanaController {
             return;
         }
 
+        // Validar tamaño del texto solo si NO es un archivo subido
+        // (los archivos se validan en el backend según el límite de streaming)
+        if (archivoSubido == null) {
+            final int LIMITE_CARACTERES = 1_000_000; // 1 millón de caracteres
+            if (texto.length() > LIMITE_CARACTERES) {
+                double tamanoMB = texto.length() / (1024.0 * 1024.0);
+                mostrarAlerta(
+                        "Texto demasiado largo",
+                        String.format(
+                                """
+                                        El texto ingresado es demasiado largo para procesar.
+                                        
+                                        • Tamaño actual: %,d caracteres (%.2f MB)
+                                        • Límite máximo: %,d caracteres
+                                        
+                                        Para textos grandes, usa la opción 'Subir archivo' en su lugar.""",
+                                texto.length(),
+                                tamanoMB,
+                                LIMITE_CARACTERES
+                        ),
+                        Alert.AlertType.WARNING
+                );
+                return;
+            }
+        }
+
         // Ejecutar la operación correspondiente
         if (Mensajes.obtener("metodo.vigenere").equals(metodo)) {
             if (Mensajes.obtener("modo.cifrar").equals(modo)) {
@@ -1412,10 +1438,32 @@ public class VentanaController {
     private Void manejarErrorOperacion(Throwable error, String tituloError) {
         Platform.runLater(() -> {
             String mensaje = obtenerMensajeError(error);
-            lblMensajeEstado.setText("✗ Error: " + mensaje);
-            lblMensajeEstado.setStyle("-fx-text-fill: red;");
+            String mensajeCompleto = error.getCause() != null ? error.getCause().getMessage() : error.getMessage();
             mostrarCargando(false);
-            mostrarAlerta(tituloError, mensaje, Alert.AlertType.ERROR);
+
+            // Detectar error 422 (texto demasiado largo)
+            if (mensajeCompleto != null && (mensajeCompleto.contains("422") ||
+                mensajeCompleto.contains("Unprocessable Entity") ||
+                mensajeCompleto.contains("demasiado largo") ||
+                mensajeCompleto.contains("too large"))) {
+                lblMensajeEstado.setText("✗ Texto demasiado largo");
+                lblMensajeEstado.setStyle("-fx-text-fill: red;");
+                mostrarAlerta(
+                        "Texto demasiado largo",
+                        """
+                                El texto es demasiado grande para procesarlo directamente.
+                                
+                                Recomendaciones:
+                                • Usa la opción 'Subir archivo' para textos muy largos
+                                • Reduce el tamaño del texto (máximo 1,000,000 caracteres)
+                                • Divide el texto en partes más pequeñas""",
+                        Alert.AlertType.WARNING
+                );
+            } else {
+                lblMensajeEstado.setText("✗ Error: " + mensaje);
+                lblMensajeEstado.setStyle("-fx-text-fill: red;");
+                mostrarAlerta(tituloError, mensaje, Alert.AlertType.ERROR);
+            }
         });
         return null;
     }
