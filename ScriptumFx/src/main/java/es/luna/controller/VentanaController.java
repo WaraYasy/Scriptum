@@ -163,6 +163,7 @@ public class VentanaController {
     private String nombreArchivoOriginal = null; // Nombre del archivo original
     private String archivoSalidaCifrado = null; // Contenido cifrado del archivo
     private boolean esSalidaArchivo = false; // Indica si la salida es un archivo cifrado
+    private boolean ultimaOperacionFueCifrado = true; // true = cifrado, false = descifrado
     private String paqueteAesCifrado = null; // Paquete AES que contiene (archivo + metadatos)
 
     /**
@@ -473,6 +474,7 @@ public class VentanaController {
                     if (archivoSubido != null) {
                         // Es un archivo - mostrar mensaje informativo
                         esSalidaArchivo = true;
+                        ultimaOperacionFueCifrado = true;
                         long tamanioCifrado = archivoSalidaCifrado.length();
                         double tamanioMB = tamanioCifrado / (1024.0 * 1024.0);
                         String mensaje = String.format(
@@ -521,7 +523,32 @@ public class VentanaController {
         }
 
         operacion.thenAccept(response -> Platform.runLater(() -> {
-                    txtSalida.setText(response.getTextoDescifrado());
+                    // Guardar contenido descifrado
+                    archivoSalidaCifrado = response.getTextoDescifrado();
+
+                    if (archivoSubido != null) {
+                        // Es un archivo - mostrar mensaje informativo
+                        esSalidaArchivo = true;
+                        ultimaOperacionFueCifrado = false;
+                        long tamanioDescifrado = archivoSalidaCifrado.length();
+                        double tamanioMB = tamanioDescifrado / (1024.0 * 1024.0);
+                        String mensaje = String.format(
+                                """
+                                        🔓 Archivo descifrado con Vigenère
+                                        📄 Archivo original: %s
+                                        📊 Tamaño descifrado: %.2f MB (%,d caracteres)
+                                        ✅ Usa el botón 'Descargar' para guardar el archivo descifrado""",
+                                nombreArchivoOriginal,
+                                tamanioMB,
+                                tamanioDescifrado
+                        );
+                        txtSalida.setText(mensaje);
+                    } else {
+                        // Es texto - mostrar contenido
+                        esSalidaArchivo = false;
+                        txtSalida.setText(archivoSalidaCifrado);
+                    }
+
                     mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
                     logger.info("Descifrado Vigenère exitoso");
                 }))
@@ -548,6 +575,7 @@ public class VentanaController {
                         paqueteAesCifrado = response.getPaquete();
                         archivoSalidaCifrado = paqueteAesCifrado; // Para descarga
                         esSalidaArchivo = true;
+                        ultimaOperacionFueCifrado = true;
 
                         // Obtener información del paquete
                         String nombreOriginal = response.getNombreOriginal();
@@ -637,8 +665,23 @@ public class VentanaController {
 
                             archivoSalidaCifrado = textoDescifrado;
                             esSalidaArchivo = true;
+                            ultimaOperacionFueCifrado = false;
 
-                            txtSalida.setText(textoDescifrado);
+                            // Mostrar mensaje informativo en lugar del contenido
+                            long tamanioDescifrado = textoDescifrado.length();
+                            double tamanioMB = tamanioDescifrado / (1024.0 * 1024.0);
+                            String mensaje = String.format(
+                                    """
+                                            🔓 Archivo descifrado con AES
+                                            📄 Archivo original: %s
+                                            📊 Tamaño descifrado: %.2f MB (%,d bytes)
+                                            ✅ Usa el botón 'Descargar' para guardar el archivo descifrado""",
+                                    nombreArchivoOriginal != null ? nombreArchivoOriginal : "desconocido",
+                                    tamanioMB,
+                                    tamanioDescifrado
+                            );
+                            txtSalida.setText(mensaje);
+
                             mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
                             logger.info("Descifrado AES de paquete exitoso");
                         } catch (IllegalArgumentException e) {
@@ -823,10 +866,10 @@ public class VentanaController {
         String nombreArchivoSugerido;
 
         if (esSalidaArchivo && archivoSalidaCifrado != null && !archivoSalidaCifrado.isEmpty()) {
-            // Si es un archivo cifrado, usar el contenido del archivo
+            // Si es un archivo procesado, usar el contenido guardado
             contenido = archivoSalidaCifrado;
 
-            // Generar nombre de archivo basado en el original
+            // Generar nombre de archivo basado en el original y la operación
             if (nombreArchivoOriginal != null && !nombreArchivoOriginal.isEmpty()) {
                 // Obtener el nombre sin extensión
                 String nombreSinExtension = nombreArchivoOriginal;
@@ -838,12 +881,23 @@ public class VentanaController {
                     extension = nombreArchivoOriginal.substring(lastDot);
                 }
 
-                nombreArchivoSugerido = nombreSinExtension + "_encrypted" + extension;
+                // Si es descifrado, eliminar el sufijo _encrypted si existe
+                if (!ultimaOperacionFueCifrado && nombreSinExtension.endsWith("_encrypted")) {
+                    nombreSinExtension = nombreSinExtension.substring(0, nombreSinExtension.length() - "_encrypted".length());
+                }
+
+                // Agregar sufijo según la operación
+                String sufijo = ultimaOperacionFueCifrado ? "_encrypted" : "_decrypted";
+                nombreArchivoSugerido = nombreSinExtension + sufijo + extension;
             } else {
-                nombreArchivoSugerido = "archivo_encrypted.txt";
+                // Nombre genérico según la operación
+                String sufijo = ultimaOperacionFueCifrado ? "_encrypted" : "_decrypted";
+                nombreArchivoSugerido = "archivo" + sufijo + ".txt";
             }
 
-            logger.info("Descargando archivo cifrado: {} -> {}", nombreArchivoOriginal, nombreArchivoSugerido);
+            logger.info("Descargando archivo {}: {} -> {}",
+                    ultimaOperacionFueCifrado ? "cifrado" : "descifrado",
+                    nombreArchivoOriginal, nombreArchivoSugerido);
         } else {
             // Comportamiento tradicional: guardar el texto del área de salida
             contenido = txtSalida.getText();
