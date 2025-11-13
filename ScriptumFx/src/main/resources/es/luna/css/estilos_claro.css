@@ -4,7 +4,7 @@
 
 /* Contenedor principal - Interfaz gubernamental clara con detalles dorados */
 .root {
-    -fx-background-color: #f5f3f0;
+    -fx-background-color: #F3F3F3;
     -fx-font-family: "Segoe UI", "Arial", sans-serif;
 }
 
@@ -15,7 +15,7 @@
 /* MenuBar principal */
 .menu-bar {
     -fx-background-color: #ffffff;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 0 0 1px 0;
     -fx-padding: 0;
 }
@@ -27,16 +27,16 @@
 }
 
 .menu-bar > .container > .menu-button:hover {
-    -fx-background-color: #f5e6d3;
+    -fx-background-color: #936265;
 }
 
 .menu-bar > .container > .menu-button > .label {
-    -fx-text-fill: #4a4038;
+    -fx-text-fill: #401819;
     -fx-font-size: 13px;
 }
 
 .menu-bar > .container > .menu-button:hover > .label {
-    -fx-text-fill: #8b6914;
+    -fx-text-fill: #F0E8D5;
 }
 
 /* Menú especial de "Cerrar" */
@@ -59,7 +59,7 @@
 /* Popup de contexto del menú */
 .context-menu {
     -fx-background-color: #ffffff;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 1px;
     -fx-background-radius: 4px;
     -fx-padding: 4;
@@ -73,16 +73,16 @@
 }
 
 .menu-item:hover {
-    -fx-background-color: #faf8f5;
+    -fx-background-color: #936265;
 }
 
 .menu-item .label {
-    -fx-text-fill: #4a4038;
+    -fx-text-fill: #401819;
     -fx-font-size: 13px;
 }
 
 .menu-item:hover .label {
-    -fx-text-fill: #8b6914;
+    -fx-text-fill: #F0E8D5;
 }
 
 /* ===================================
@@ -123,11 +123,11 @@
 
 /* Botones primarios - Acci�n principal */
 .btn-primary {
-    -fx-background-color: #f5e6d3;
-    -fx-text-fill: #8b6914;
+    -fx-background-color: #5c3133;
+    -fx-text-fill: #F0E8D5;
     -fx-font-weight: 500;
     -fx-font-size: 13px;
-    -fx-border-color: #b8935a;
+    -fx-border-color: #401819;
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
@@ -136,32 +136,32 @@
 }
 
 .btn-primary .ikonli-font-icon {
-    -fx-icon-color: #8b6914;
+    -fx-icon-color: #F0E8D5;
     -fx-icon-size: 16px;
 }
 
 .btn-primary:hover {
-    -fx-background-color: #ead9c3;
-    -fx-border-color: #a07d42;
-    -fx-text-fill: #6b4d0e;
+    -fx-background-color: #401819;
+    -fx-border-color: #240000;
+    -fx-text-fill: #ffffff;
 }
 
 .btn-primary:hover .ikonli-font-icon {
-    -fx-icon-color: #6b4d0e;
+    -fx-icon-color: #ffffff;
 }
 
 .btn-primary:pressed {
-    -fx-background-color: #dcc9b3;
-    -fx-border-color: #8b6914;
+    -fx-background-color: #240000;
+    -fx-border-color: #240000;
 }
 
 /* Botones secundarios - Acciones auxiliares */
 .btn-secondary {
-    -fx-background-color: #e8e4df;
-    -fx-text-fill: #5a4d44;
+    -fx-background-color: #78494c;
+    -fx-text-fill: #F0E8D5;
     -fx-font-weight: 500;
     -fx-font-size: 13px;
-    -fx-border-color: #b8b0a8;
+    -fx-border-color: #5c3133;
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
@@ -170,23 +170,23 @@
 }
 
 .btn-secondary .ikonli-font-icon {
-    -fx-icon-color: #5a4d44;
+    -fx-icon-color: #F0E8D5;
     -fx-icon-size: 16px;
 }
 
 .btn-secondary:hover {
-    -fx-background-color: #ddd7cf;
-    -fx-border-color: #a89f98;
-    -fx-text-fill: #4a3d34;
+    -fx-background-color: #5c3133;
+    -fx-border-color: #401819;
+    -fx-text-fill: #ffffff;
 }
 
 .btn-secondary:hover .ikonli-font-icon {
-    -fx-icon-color: #4a3d34;
+    -fx-icon-color: #ffffff;
 }
 
 .btn-secondary:pressed {
-    -fx-background-color: #cdc7bf;
-    -fx-border-color: #b8b0a8;
+    -fx-background-color: #401819;
+    -fx-border-color: #240000;
 }
 
 /* ===================================
@@ -198,7 +198,7 @@
     -fx-padding: 24;
     -fx-background-color: #ffffff;
     -fx-background-radius: 6px;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 1px;
     -fx-border-radius: 6px;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 12, 0, 0, 4);
@@ -209,7 +209,7 @@
     -fx-background-color: #faf8f5;
     -fx-padding: 12 16 12 16;
     -fx-background-radius: 4px;
-    -fx-border-color: #b8935a;
+    -fx-border-color: #78494c;
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
 }
@@ -227,7 +227,7 @@
 .text-area {
     -fx-background-color: #fcfaf8;
     -fx-text-fill: #3a3028;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
@@ -237,7 +237,7 @@
 }
 
 .text-area:focused {
-    -fx-border-color: #b8935a;
+    -fx-border-color: #78494c;
     -fx-border-width: 2px;
     -fx-effect: dropshadow(gaussian, rgba(184, 147, 90, 0.2), 8, 0, 0, 0);
 }
@@ -260,12 +260,12 @@
 }
 
 .text-area .scroll-bar .thumb {
-    -fx-background-color: #d4c9bb;
+    -fx-background-color: #936265;
     -fx-background-radius: 4px;
 }
 
 .text-area .scroll-bar .thumb:hover {
-    -fx-background-color: #c4b9ab;
+    -fx-background-color: #78494c;
 }
 
 /* ===================================
@@ -276,7 +276,7 @@
 .text-field {
     -fx-background-color: #fcfaf8;
     -fx-text-fill: #8b6914;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
@@ -287,7 +287,7 @@
 }
 
 .text-field:focused {
-    -fx-border-color: #b8935a;
+    -fx-border-color: #78494c;
     -fx-border-width: 2px;
     -fx-effect: dropshadow(gaussian, rgba(184, 147, 90, 0.2), 8, 0, 0, 0);
 }
@@ -299,14 +299,14 @@
 /* ComboBox - Selector de m�todos y modos */
 .combo-box {
     -fx-background-color: #fcfaf8;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
 }
 
 .combo-box:focused {
-    -fx-border-color: #b8935a;
+    -fx-border-color: #78494c;
     -fx-border-width: 2px;
 }
 
@@ -331,7 +331,7 @@
 /* ComboBox popup */
 .combo-box-popup .list-view {
     -fx-background-color: #ffffff;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 1px;
     -fx-background-radius: 4px;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 10, 0, 0, 4);
@@ -344,12 +344,13 @@
 }
 
 .combo-box-popup .list-view .list-cell:hover {
-    -fx-background-color: #faf8f5;
+    -fx-background-color: #936265;
+    -fx-text-fill: #F0E8D5;
 }
 
 .combo-box-popup .list-view .list-cell:selected {
-    -fx-background-color: #f5e6d3;
-    -fx-text-fill: #8b6914;
+    -fx-background-color: #78494c;
+    -fx-text-fill: #F0E8D5;
 }
 
 /* ===================================
@@ -373,7 +374,7 @@
 }
 
 .separator .line {
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 0.5px 0 0 0;
     -fx-opacity: 0.8;
 }
@@ -385,7 +386,7 @@
 /* Estado de carga o procesamiento */
 .processing {
     -fx-background-color: rgba(184, 147, 90, 0.1);
-    -fx-border-color: #b8935a;
+    -fx-border-color: #78494c;
 }
 
 /* Estado de error */
@@ -409,16 +410,16 @@
 }
 
 .scroll-bar .thumb {
-    -fx-background-color: #d4c9bb;
+    -fx-background-color: #936265;
     -fx-background-radius: 4px;
 }
 
 .scroll-bar .thumb:hover {
-    -fx-background-color: #c4b9ab;
+    -fx-background-color: #78494c;
 }
 
 .scroll-bar .thumb:pressed {
-    -fx-background-color: #b4a99b;
+    -fx-background-color: #5c3133;
 }
 
 .scroll-bar .track {
@@ -437,7 +438,7 @@
 
 /* Acento dorado para elementos importantes */
 .gold-accent {
-    -fx-border-color: #b8935a;
+    -fx-border-color: #78494c;
     -fx-effect: dropshadow(gaussian, rgba(184, 147, 90, 0.2), 6, 0, 0, 0);
 }
 
@@ -454,7 +455,7 @@
 /* TitledPane principal */
 .titled-pane {
     -fx-background-color: #ffffff;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #936265;
     -fx-border-width: 1px;
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
@@ -463,19 +464,25 @@
 
 /* Título del TitledPane */
 .titled-pane > .title {
-    -fx-background-color: #f5e6d3;
+    -fx-background-color: #936265;
     -fx-background-radius: 6px 6px 0 0;
     -fx-padding: 12 16 12 16;
-    -fx-border-color: #d4c9bb;
+    -fx-border-color: #78494c;
     -fx-border-width: 0 0 1px 0;
 }
 
 /* Texto del título */
 .titled-pane > .title > .text {
-    -fx-fill: #8b6914;
+    -fx-fill: #F0E8D5;
     -fx-font-size: 15px;
     -fx-font-weight: 600;
     -fx-letter-spacing: 0.5px;
+}
+
+/* Icono del TitledPane */
+.titled-pane > .title .ikonli-font-icon {
+    -fx-icon-color: #F0E8D5;
+    -fx-icon-size: 16px;
 }
 
 /* Flecha del TitledPane */
@@ -485,23 +492,23 @@
 }
 
 .titled-pane > .title > .arrow-button > .arrow {
-    -fx-background-color: #8b6914;
+    -fx-background-color: #F0E8D5;
     -fx-padding: 4;
     -fx-shape: "M 0 0 L 4 4 L 8 0 Z";
 }
 
 /* Hover en el título */
 .titled-pane > .title:hover {
-    -fx-background-color: #ead9c3;
+    -fx-background-color: #78494c;
     -fx-cursor: hand;
 }
 
 .titled-pane > .title:hover > .text {
-    -fx-fill: #6b4d0e;
+    -fx-fill: #ffffff;
 }
 
 .titled-pane > .title:hover > .arrow-button > .arrow {
-    -fx-background-color: #6b4d0e;
+    -fx-background-color: #ffffff;
 }
 
 /* Contenido del TitledPane */
