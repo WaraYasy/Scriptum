@@ -1296,7 +1296,22 @@ public class VentanaController {
             mostrarCargando(false);
 
             // Mensajes específicos según el tipo de error
-            if (mensaje.contains("500") || mensaje.contains("Internal Server Error")) {
+            if (mensaje.contains("Paquete inválido") || mensaje.contains("Paquete base64 inválido") ||
+                mensaje.contains("corrupto") || mensaje.contains("ASCII characters")) {
+                lblMensajeEstado.setText("✗ Archivo no válido para descifrar");
+                lblMensajeEstado.setStyle("-fx-text-fill: red;");
+                mostrarAlerta(
+                        "Error al descifrar archivo",
+                        """
+                                El archivo seleccionado no es un paquete cifrado válido.
+                                
+                                Asegúrate de que:
+                                • El archivo fue cifrado con esta aplicación
+                                • El archivo no está corrupto o modificado
+                                • Estás usando el archivo correcto""",
+                        Alert.AlertType.ERROR
+                );
+            } else if (mensaje.contains("500") || mensaje.contains("Internal Server Error")) {
                 lblMensajeEstado.setText(Mensajes.obtener("error.descifrar.aes.500.estado"));
                 lblMensajeEstado.setStyle("-fx-text-fill: red;");
                 mostrarAlerta(
@@ -1331,10 +1346,43 @@ public class VentanaController {
 
     /**
      * Extrae el mensaje de error de una excepción.
+     * Intenta extraer el mensaje real del JSON de error de la API.
      */
     private String obtenerMensajeError(Throwable error) {
         Throwable causa = error.getCause();
-        return Objects.requireNonNullElse(causa, error).getMessage();
+        String mensajeCompleto = Objects.requireNonNullElse(causa, error).getMessage();
+
+        if (mensajeCompleto == null) {
+            return "Error desconocido";
+        }
+
+        // Intentar extraer el mensaje del JSON de error
+        // Formato esperado: {"detail":{"error":"mensaje real"}}
+        try {
+            // Buscar el patrón "error":"mensaje"
+            int errorStart = mensajeCompleto.indexOf("\"error\":\"");
+            if (errorStart != -1) {
+                errorStart += "\"error\":\"".length();
+                int errorEnd = mensajeCompleto.indexOf("\"", errorStart);
+                if (errorEnd != -1) {
+                    return mensajeCompleto.substring(errorStart, errorEnd);
+                }
+            }
+
+            // Si no se encuentra el patrón de error, buscar "detail" directamente
+            int detailStart = mensajeCompleto.indexOf("\"detail\":\"");
+            if (detailStart != -1) {
+                detailStart += "\"detail\":\"".length();
+                int detailEnd = mensajeCompleto.indexOf("\"", detailStart);
+                if (detailEnd != -1) {
+                    return mensajeCompleto.substring(detailStart, detailEnd);
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("No se pudo extraer mensaje de error del JSON, usando mensaje completo", e);
+        }
+
+        return mensajeCompleto;
     }
 
     /**
