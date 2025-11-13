@@ -822,10 +822,10 @@ def crear_paquete_archivo_cifrado(
 
     # MIME type (longitud + contenido)
     paquete.extend(struct.pack('>H', len(mime_bytes)))            # 2 bytes
-    paquete.extend(mime_bytes)                                     # M bytes
+    paquete.extend(mime_bytes)                                    
 
     # BODY (contenido cifrado)
-    paquete.extend(contenido_bytes)                                # Resto
+    paquete.extend(contenido_bytes)                               
 
     # Convertir todo a base64
     paquete_base64 = base64.b64encode(bytes(paquete)).decode('ascii')
