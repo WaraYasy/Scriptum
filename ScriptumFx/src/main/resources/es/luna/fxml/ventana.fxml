@@ -43,13 +43,6 @@
             <Insets bottom="30" left="30" right="30" top="30" />
         </padding>
 
-        <!-- Estado de conexión con la API -->
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <Label fx:id="lblEstadoApiTitulo" text="%api.estado.label" />
-            <Label fx:id="lblEstadoApi" text="%api.estado.verificando" />
-            <ProgressIndicator fx:id="progressConexion" prefHeight="20" prefWidth="20" visible="false" />
-        </HBox>
-
         <!-- Sección de Entrada y Salida -->
     <HBox spacing="20">
         <!-- Entrada -->
@@ -104,6 +97,9 @@
 
     <!-- Ajustes de encriptado (Desplegable) -->
     <TitledPane fx:id="titledPaneAjustes" text="%ajustes.titulo" expanded="true" collapsible="true">
+        <graphic>
+            <FontIcon iconLiteral="fas-cog" iconSize="16" />
+        </graphic>
         <VBox spacing="15" style="-fx-padding: 24;">
             <Label fx:id="lblAjustesDescripcion" text="%ajustes.descripcion" />
 
@@ -169,5 +165,13 @@
             </HBox>
         </VBox>
     </TitledPane>
+
+        <!-- Estado de conexión con la API -->
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Label fx:id="lblEstadoApiTitulo" text="%api.estado.label" />
+            <Label fx:id="lblEstadoApi" text="%api.estado.verificando" />
+            <ProgressIndicator fx:id="progressConexion" prefHeight="20" prefWidth="20" visible="false" />
+        </HBox>
+
     </VBox>
 </VBox>
