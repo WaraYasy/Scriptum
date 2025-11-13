@@ -19,7 +19,7 @@ def test_crear_y_extraer_paquete_basico():
     tipo_aes = "AES-256"
 
     # Cifrar archivo
-    contenido_cifrado, salt = cifrar_archivo(
+    contenido_cifrado, salt, sha256_hash = cifrar_archivo(
         contenido_original,
         password,
         tipo_aes
@@ -31,7 +31,8 @@ def test_crear_y_extraer_paquete_basico():
         salt=salt,
         tipo_aes=tipo_aes,
         nombre_archivo="prueba.txt",
-        mime_type="text/plain"
+        mime_type="text/plain",
+        sha256_hash=sha256_hash
     )
 
     # Verificar que el paquete es un string base64
@@ -66,7 +67,7 @@ def test_paquete_ciclo_completo():
     mime = "application/pdf"
 
     # 1. CIFRAR
-    contenido_cifrado, salt = cifrar_archivo(
+    contenido_cifrado, salt, sha256_hash = cifrar_archivo(
         contenido_original,
         password,
         tipo_aes
@@ -78,7 +79,8 @@ def test_paquete_ciclo_completo():
         salt=salt,
         tipo_aes=tipo_aes,
         nombre_archivo=nombre,
-        mime_type=mime
+        mime_type=mime,
+        sha256_hash=sha256_hash
     )
 
     print(f"📦 Paquete creado: {len(paquete)} caracteres")
@@ -111,11 +113,11 @@ def test_paquete_con_diferentes_tipos_aes():
 
     for tipo_aes in ["AES-128", "AES-192", "AES-256"]:
         # Cifrar
-        contenido_cifrado, salt = cifrar_archivo(contenido, password, tipo_aes)
+        contenido_cifrado, salt, sha256_hash = cifrar_archivo(contenido, password, tipo_aes)
 
         # Empaquetar
         paquete = crear_paquete_archivo_cifrado(
-            contenido_cifrado, salt, tipo_aes, nombre, mime
+            contenido_cifrado, salt, tipo_aes, nombre, mime, sha256_hash
         )
 
         # Extraer
@@ -151,10 +153,10 @@ def test_paquete_con_nombres_especiales():
     ]
 
     for nombre in nombres_especiales:
-        contenido_cifrado, salt = cifrar_archivo(contenido, password, tipo_aes)
+        contenido_cifrado, salt, sha256_hash = cifrar_archivo(contenido, password, tipo_aes)
 
         paquete = crear_paquete_archivo_cifrado(
-            contenido_cifrado, salt, tipo_aes, nombre, "application/octet-stream"
+            contenido_cifrado, salt, tipo_aes, nombre, "application/octet-stream", sha256_hash
         )
 
         datos = extraer_paquete_archivo_cifrado(paquete)
@@ -171,7 +173,7 @@ def test_paquete_con_imagen():
     tipo_aes = "AES-256"
 
     # Cifrar
-    cifrado, salt = cifrar_archivo(imagen_bytes, password, tipo_aes)
+    cifrado, salt, sha256_hash = cifrar_archivo(imagen_bytes, password, tipo_aes)
 
     # Empaquetar
     paquete = crear_paquete_archivo_cifrado(
@@ -179,7 +181,8 @@ def test_paquete_con_imagen():
         salt=salt,
         tipo_aes=tipo_aes,
         nombre_archivo="foto_vacaciones.jpg",
-        mime_type="image/jpeg"
+        mime_type="image/jpeg",
+        sha256_hash=sha256_hash
     )
 
     # Extraer
@@ -207,10 +210,10 @@ def test_paquete_formato_binario():
     password = "pass1234"
     tipo_aes = "AES-256"
 
-    cifrado, salt = cifrar_archivo(contenido, password, tipo_aes)
+    cifrado, salt, sha256_hash = cifrar_archivo(contenido, password, tipo_aes)
 
     paquete = crear_paquete_archivo_cifrado(
-        cifrado, salt, tipo_aes, "test.txt", "text/plain"
+        cifrado, salt, tipo_aes, "test.txt", "text/plain", sha256_hash
     )
 
     # Decodificar base64 para ver el contenido binario
@@ -229,7 +232,11 @@ def test_paquete_formato_binario():
     salt_en_paquete = paquete_bytes[10:26]
     assert len(salt_en_paquete) == 16
 
-    print(f"✅ Formato binario correcto - Magic: {paquete_bytes[0:8]}")
+    # Verificar que tiene SHA256 (32 bytes en posición 26-57)
+    sha256_en_paquete = paquete_bytes[26:58]
+    assert len(sha256_en_paquete) == 32
+
+    print(f"✅ Formato binario correcto - Magic: {paquete_bytes[0:8]}, SHA256: ✓")
 
 
 def test_paquete_invalido():
@@ -252,11 +259,11 @@ def test_comparacion_tamaño_vs_json():
     password = "pass1234"
     tipo_aes = "AES-256"
 
-    cifrado, salt = cifrar_archivo(contenido, password, tipo_aes)
+    cifrado, salt, sha256_hash = cifrar_archivo(contenido, password, tipo_aes)
 
     # Paquete binario
     paquete_binario = crear_paquete_archivo_cifrado(
-        cifrado, salt, tipo_aes, "archivo.bin", "application/octet-stream"
+        cifrado, salt, tipo_aes, "archivo.bin", "application/octet-stream", sha256_hash
     )
 
     # Equivalente JSON (aproximado)

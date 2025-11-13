@@ -55,7 +55,7 @@ def test_archivo_pequeno():
     print(f"\n🔐 Cifrando...")
     inicio = time.time()
 
-    cifrado, salt = cifrar_archivo(contenido, password, "AES-256")
+    cifrado, salt, sha256_hash = cifrar_archivo(contenido, password, "AES-256")
 
     tiempo_cifrado = time.time() - inicio
 
@@ -110,7 +110,7 @@ def test_archivo_grande_streaming():
     print(f"\n🔐 Cifrando con streaming...")
     inicio = time.time()
 
-    cifrado, salt = cifrar_archivo_stream(archivo_stream, password, "AES-256")
+    cifrado, salt, sha256_hash = cifrar_archivo_stream(archivo_stream, password, "AES-256")
 
     tiempo_cifrado = time.time() - inicio
 
@@ -160,7 +160,7 @@ def test_comparacion_metodos():
     # MÉTODO 1: En memoria
     print(f"\n🔹 MÉTODO 1: En Memoria")
     inicio = time.time()
-    cifrado1, salt1 = cifrar_archivo(contenido, password, "AES-256")
+    cifrado1, salt1, sha256_hash1 = cifrar_archivo(contenido, password, "AES-256")
     tiempo1 = time.time() - inicio
     print(f"   Tiempo: {tiempo1:.2f} segundos")
     print(f"   Velocidad: {tamanio_mb / tiempo1:.2f} MB/s")
@@ -169,7 +169,7 @@ def test_comparacion_metodos():
     print(f"\n🔹 MÉTODO 2: Streaming")
     archivo_stream = io.BytesIO(contenido)
     inicio = time.time()
-    cifrado2, salt2 = cifrar_archivo_stream(archivo_stream, password, "AES-256")
+    cifrado2, salt2, sha256_hash2 = cifrar_archivo_stream(archivo_stream, password, "AES-256")
     tiempo2 = time.time() - inicio
     print(f"   Tiempo: {tiempo2:.2f} segundos")
     print(f"   Velocidad: {tamanio_mb / tiempo2:.2f} MB/s")
@@ -221,7 +221,7 @@ def test_archivo_muy_grande():
     print(f"\n🔐 Cifrando con streaming...")
     inicio = time.time()
 
-    cifrado, salt = cifrar_archivo_stream(archivo_stream, password, "AES-256")
+    cifrado, salt, sha256_hash = cifrar_archivo_stream(archivo_stream, password, "AES-256")
 
     tiempo_cifrado = time.time() - inicio
 
