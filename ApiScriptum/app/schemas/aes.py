@@ -160,11 +160,13 @@ class CifradoAESArchivoPaqueteResponse(BaseModel):
         - Archivo cifrado
         - Salt para descifrar
         - Tipo de AES usado
+        - Hash SHA256 del archivo original (verificación de integridad)
         - Nombre original del archivo
         - MIME type del archivo
 
         El usuario solo necesita guardar este campo.
         Para descifrar, envía el paquete + password al endpoint de descifrado.
+        El hash SHA256 se verifica automáticamente al descifrar.
         """
     )
     tamanio_paquete_bytes: int = Field(

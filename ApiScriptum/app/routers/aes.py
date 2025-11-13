@@ -20,14 +20,12 @@ from app.schemas.aes import (
 from app.services.aes import (
     cifrar_texto,
     descifrar_texto,
-    cifrar_archivo,
-    descifrar_archivo,
-    crear_paquete_archivo_cifrado,
-    extraer_paquete_archivo_cifrado,
+    cifrar_y_empaquetar_archivo,
+    cifrar_y_empaquetar_archivo_stream,
+    desempaquetar_y_descifrar_archivo,
     validar_password,
     SMALL_FILE_THRESHOLD
 )
-from app.services.aes import cifrar_archivo_stream_async
 # ============================================================================
 # LOGGING
 # ============================================================================
@@ -427,10 +425,13 @@ async def cifrar_archivo_endpoint(
             logger.info("Usando método en memoria (archivo < 10 MB)")
             contenido = await validar_y_leer_archivo(file)
 
-            archivo_cifrado, salt_resultado = cifrar_archivo(
-                contenido,
-                password,
-                tipo_aes
+            # Cifrar y empaquetar en una sola operación
+            paquete = cifrar_y_empaquetar_archivo(
+                contenido_archivo=contenido,
+                password=password,
+                nombre_archivo=filename,
+                mime_type=mime_type,
+                tipo_aes=tipo_aes
             )
 
             tamanio_original = len(contenido)
@@ -449,22 +450,16 @@ async def cifrar_archivo_endpoint(
                     }
                 )
 
-            archivo_cifrado, salt_resultado = await cifrar_archivo_stream_async(
-                file,
-                password,
-                tipo_aes
+            # Cifrar y empaquetar con streaming en una sola operación
+            paquete = await cifrar_y_empaquetar_archivo_stream(
+                file_upload=file,
+                password=password,
+                nombre_archivo=filename,
+                mime_type=mime_type,
+                tipo_aes=tipo_aes
             )
 
             tamanio_original = file_size
-
-        # Crear paquete único con metadatos
-        paquete = crear_paquete_archivo_cifrado(
-            contenido_cifrado=archivo_cifrado,
-            salt=salt_resultado,
-            tipo_aes=tipo_aes,
-            nombre_archivo=filename,
-            mime_type=mime_type
-        )
 
         # Calcular tamaño del paquete (antes de base64)
 
@@ -552,24 +547,9 @@ async def descifrar_archivo_endpoint(
     try:
         logger.info("Descifrando archivo")
 
-        # Extraer datos del paquete
-        datos = extraer_paquete_archivo_cifrado(paquete)
-
-        contenido_cifrado = datos["contenido_cifrado"]
-        salt = datos["salt"]
-        tipo_aes = datos["tipo_aes"]
-        metadata = datos["metadata"]
-
-        logger.info("Paquete extraído: archivo=%s, tipo=%s, aes=%s",
-                   metadata["nombre_original"], metadata["mime_type"], tipo_aes)
-
-        # Descifrar el archivo
-        archivo_descifrado = descifrar_archivo(
-            contenido_cifrado,
-            password,
-            salt,
-            tipo_aes
-        )
+        # Desempaquetar y descifrar en una sola operación
+        # (incluye verificación automática de hash SHA256)
+        archivo_descifrado, metadata = desempaquetar_y_descifrar_archivo(paquete, password)
 
         logger.info("Archivo descifrado exitosamente: %s (%d bytes)",
                    metadata["nombre_original"], len(archivo_descifrado))
@@ -581,7 +561,9 @@ async def descifrar_archivo_endpoint(
             headers={
                 "Content-Disposition": f'attachment; filename="{metadata["nombre_original"]}"',
                 "X-Original-Filename": metadata["nombre_original"],
-                "X-Original-MimeType": metadata["mime_type"]
+                "X-Original-MimeType": metadata["mime_type"],
+                "X-SHA256-Verified": "true",  # Indica que el hash fue verificado
+                "X-AES-Type": metadata["tipo_aes"]  # Tipo de AES usado
             }
         )
 
