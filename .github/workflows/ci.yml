@@ -33,7 +33,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('ApiScriptum/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
 
@@ -44,7 +44,7 @@ jobs:
 
     - name: Run pylint on app
       run: |
-        python -m pylint app --exit-zero --output-format=text
+        python -m pylint ApiScriptum/app --exit-zero --output-format=text
       continue-on-error: true
 
   # Job 2: Tests unitarios y de integración
@@ -69,28 +69,29 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}-${{ matrix.python-version }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('ApiScriptum/requirements.txt') }}-${{ matrix.python-version }}
         restore-keys: |
           ${{ runner.os }}-pip-
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f ApiScriptum/requirements.txt ]; then pip install -r ApiScriptum/requirements.txt; fi
         pip install pytest pytest-cov httpx
 
     - name: Create log directory
-      run: mkdir -p var/logs
+      run: mkdir -p ApiScriptum/var/logs
 
     - name: Run tests - Quick (no lentos)
       run: |
+        cd ApiScriptum
         python -m pytest tests/ -v --tb=short -m "not lento" --cov=app --cov-report=xml --cov-report=term
 
     - name: Upload coverage to Codecov
       if: matrix.python-version == '3.13'
       uses: codecov/codecov-action@v3
       with:
-        file: ./coverage.xml
+        file: ./ApiScriptum/coverage.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
@@ -114,21 +115,22 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('ApiScriptum/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f ApiScriptum/requirements.txt ]; then pip install -r ApiScriptum/requirements.txt; fi
         pip install pytest pytest-cov httpx
 
     - name: Create log directory
-      run: mkdir -p var/logs
+      run: mkdir -p ApiScriptum/var/logs
 
     - name: Run all tests (including slow ones)
       run: |
+        cd ApiScriptum
         python -m pytest tests/ -v --tb=short --cov=app --cov-report=html --cov-report=term
 
     - name: Archive coverage report
@@ -136,7 +138,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: coverage-report
-        path: htmlcov/
+        path: ApiScriptum/htmlcov/
         retention-days: 30
 
   # Job 4: Validación de seguridad
@@ -160,12 +162,12 @@ jobs:
 
     - name: Run safety check (dependencies)
       run: |
-        if [ -f requirements.txt ]; then safety check --file requirements.txt --output text; fi
+        if [ -f ApiScriptum/requirements.txt ]; then safety check --file ApiScriptum/requirements.txt --output text; fi
       continue-on-error: true
 
     - name: Run bandit (code security)
       run: |
-        bandit -r app/ -f txt -o bandit-report.txt || true
+        bandit -r ApiScriptum/app/ -f txt -o bandit-report.txt || true
         cat bandit-report.txt
       continue-on-error: true
 
@@ -182,7 +184,7 @@ jobs:
     - name: Check if Dockerfile exists
       id: check_dockerfile
       run: |
-        if [ -f Dockerfile ]; then
+        if [ -f ApiScriptum/Dockerfile ]; then
           echo "exists=true" >> $GITHUB_OUTPUT
         else
           echo "exists=false" >> $GITHUB_OUTPUT
@@ -195,6 +197,7 @@ jobs:
     - name: Build Docker image
       if: steps.check_dockerfile.outputs.exists == 'true'
       run: |
+        cd ApiScriptum
         docker build -t scriptum-api:test .
 
     - name: Test Docker image

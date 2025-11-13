@@ -54,11 +54,11 @@ Para reportes de cobertura en Codecov:
 
 ### 2. Requirements.txt
 
-Asegúrate de tener un `requirements.txt` en la raíz del proyecto:
+Asegúrate de tener un `requirements.txt` en la carpeta ApiScriptum:
 
 ```bash
 # Generar requirements.txt
-pip freeze > requirements.txt
+pip freeze > ApiScriptum/requirements.txt
 ```
 
 ### 3. Estructura del Proyecto
@@ -71,20 +71,22 @@ El CI espera esta estructura:
 │   └── workflows/
 │       ├── ci.yml
 │       └── quick-test.yml
-├── app/
-│   ├── __init__.py
-│   ├── routers/
-│   ├── services/
-│   └── schemas/
-├── tests/
-│   ├── conftest.py
-│   ├── test_api_integration.py
-│   ├── test_edge_cases.py
-│   ├── test_empaquetado.py
-│   └── test_streaming.py
-├── requirements.txt
-├── pytest.ini
-└── main.py
+├── ApiScriptum/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── routers/
+│   │   ├── services/
+│   │   └── schemas/
+│   ├── tests/
+│   │   ├── conftest.py
+│   │   ├── test_api_integration.py
+│   │   ├── test_edge_cases.py
+│   │   ├── test_empaquetado.py
+│   │   └── test_streaming.py
+│   ├── requirements.txt
+│   ├── pytest.ini
+│   └── main.py
+└── ScriptumFx/
 ```
 
 ## Ejecutar Localmente
@@ -93,26 +95,28 @@ Puedes ejecutar las mismas validaciones localmente:
 
 ### Tests rápidos
 ```bash
+cd ApiScriptum
 pytest tests/ -v -m "not lento"
 ```
 
 ### Tests completos con cobertura
 ```bash
+cd ApiScriptum
 pytest tests/ -v --cov=app --cov-report=html
 ```
 
 ### Linting
 ```bash
-pylint app
+pylint ApiScriptum/app
 ```
 
 ### Seguridad
 ```bash
 # Dependencias
-safety check --file requirements.txt
+safety check --file ApiScriptum/requirements.txt
 
 # Código
-bandit -r app/
+bandit -r ApiScriptum/app/
 ```
 
 ## Solución de Problemas
