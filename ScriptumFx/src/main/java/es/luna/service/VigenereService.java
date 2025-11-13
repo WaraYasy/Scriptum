@@ -8,6 +8,9 @@ import es.luna.model.VigenereDescifrarRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -66,7 +69,7 @@ public class VigenereService {
             );
         }
 
-        if (clave == null || clave.trim().isEmpty()) {
+        if (clave.trim().isEmpty()) {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("La clave no puede estar vacía")
             );
@@ -106,7 +109,7 @@ public class VigenereService {
             );
         }
 
-        if (clave == null || clave.trim().isEmpty()) {
+        if (clave.trim().isEmpty()) {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("La clave no puede estar vacía")
             );
@@ -125,6 +128,90 @@ public class VigenereService {
                 logger.warn("Error al descifrar texto con Vigenère: {}", error.getMessage());
             } else {
                 logger.info("Texto descifrado exitosamente con Vigenère");
+            }
+        });
+    }
+
+    /**
+     * Cifra un archivo usando el algoritmo Vigenère de forma asíncrona.
+     *
+     * @param archivo el archivo a cifrar
+     * @param clave la clave para el cifrado
+     * @return CompletableFuture con la respuesta del cifrado
+     */
+    public CompletableFuture<VigenereCifradoResponse> cifrarArchivo(File archivo, String clave) {
+        logger.debug("Cifrando archivo con Vigenère - Archivo: {}, Clave length: {}", archivo.getName(), clave.length());
+
+        // Validaciones básicas
+        if (!archivo.exists()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("El archivo no existe")
+            );
+        }
+
+        if (clave.trim().isEmpty()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("La clave no puede estar vacía")
+            );
+        }
+
+        // Crear form data
+        Map<String, String> formData = new HashMap<>();
+        formData.put("clave", clave);
+
+        // Realizar petición asíncrona multipart
+        return apiClient.postMultipartAsync(
+                BASE_ENDPOINT + "/cifrar/file",
+                archivo,
+                formData,
+                VigenereCifradoResponse.class
+        ).whenComplete((response, error) -> {
+            if (error != null) {
+                logger.warn("Error al cifrar archivo con Vigenère: {}", error.getMessage());
+            } else {
+                logger.info("Archivo cifrado exitosamente con Vigenère");
+            }
+        });
+    }
+
+    /**
+     * Descifra un archivo cifrado con Vigenère de forma asíncrona.
+     *
+     * @param archivoCifrado el archivo cifrado a descifrar
+     * @param clave la clave para el descifrado
+     * @return CompletableFuture con la respuesta del descifrado
+     */
+    public CompletableFuture<VigenereDescifradoResponse> descifrarArchivo(File archivoCifrado, String clave) {
+        logger.debug("Descifrando archivo con Vigenère - Archivo: {}, Clave length: {}", archivoCifrado.getName(), clave.length());
+
+        // Validaciones básicas
+        if (!archivoCifrado.exists()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("El archivo no existe")
+            );
+        }
+
+        if (clave.trim().isEmpty()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("La clave no puede estar vacía")
+            );
+        }
+
+        // Crear form data
+        Map<String, String> formData = new HashMap<>();
+        formData.put("clave", clave);
+
+        // Realizar petición asíncrona multipart
+        return apiClient.postMultipartAsync(
+                BASE_ENDPOINT + "/descifrar/file",
+                archivoCifrado,
+                formData,
+                VigenereDescifradoResponse.class
+        ).whenComplete((response, error) -> {
+            if (error != null) {
+                logger.warn("Error al descifrar archivo con Vigenère: {}", error.getMessage());
+            } else {
+                logger.info("Archivo descifrado exitosamente con Vigenère");
             }
         });
     }

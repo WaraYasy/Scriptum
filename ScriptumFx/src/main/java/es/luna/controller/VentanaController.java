@@ -1,6 +1,8 @@
 package es.luna.controller;
 
 import es.luna.config.ApiConfig;
+import es.luna.model.VigenereCifradoResponse;
+import es.luna.model.VigenereDescifradoResponse;
 import es.luna.service.AesService;
 import es.luna.service.VigenereService;
 import es.luna.util.AlertaUtil;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Controlador para la ventana principal de ScriptumFX.
@@ -106,6 +109,7 @@ public class VentanaController {
 
     // ========== Estado ==========
     private boolean temaClaro = true;
+    private File archivoSubido = null; // Mantener referencia al archivo subido
 
     /**
      * Inicialización del controlador.
@@ -398,8 +402,17 @@ public class VentanaController {
         mostrarCargando(true);
         lblMensajeEstado.setText(Mensajes.obtener("estado.cifrando.vigenere"));
 
-        vigenereService.cifrarTexto(texto, clave)
-            .thenAccept(response -> Platform.runLater(() -> {
+        // Si hay un archivo subido, usar el endpoint de archivo
+        CompletableFuture<VigenereCifradoResponse> operacion;
+        if (archivoSubido != null) {
+            logger.info("Usando endpoint de archivo para cifrar con Vigenère");
+            operacion = vigenereService.cifrarArchivo(archivoSubido, clave);
+        } else {
+            logger.info("Usando endpoint de texto para cifrar con Vigenère");
+            operacion = vigenereService.cifrarTexto(texto, clave);
+        }
+
+        operacion.thenAccept(response -> Platform.runLater(() -> {
                 txtSalida.setText(response.getTextoCifrado());
                 mostrarExito(Mensajes.obtener("estado.cifrado.exitoso", response.getClaveUsada()));
                 logger.info("Cifrado Vigenère exitoso");
@@ -417,8 +430,17 @@ public class VentanaController {
         mostrarCargando(true);
         lblMensajeEstado.setText(Mensajes.obtener("estado.descifrando.vigenere"));
 
-        vigenereService.descifrarTexto(textoCifrado, clave)
-            .thenAccept(response -> Platform.runLater(() -> {
+        // Si hay un archivo subido, usar el endpoint de archivo
+        CompletableFuture<VigenereDescifradoResponse> operacion;
+        if (archivoSubido != null) {
+            logger.info("Usando endpoint de archivo para descifrar con Vigenère");
+            operacion = vigenereService.descifrarArchivo(archivoSubido, clave);
+        } else {
+            logger.info("Usando endpoint de texto para descifrar con Vigenère");
+            operacion = vigenereService.descifrarTexto(textoCifrado, clave);
+        }
+
+        operacion.thenAccept(response -> Platform.runLater(() -> {
                 txtSalida.setText(response.getTextoDescifrado());
                 mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
                 logger.info("Descifrado Vigenère exitoso");
@@ -437,14 +459,28 @@ public class VentanaController {
         mostrarCargando(true);
         lblMensajeEstado.setText(Mensajes.obtener("estado.cifrando.aes", tipoAes));
 
-        aesService.cifrarTexto(texto, password, tipoAes)
-            .thenAccept(response -> Platform.runLater(() -> {
-                txtSalida.setText(response.getTextoCifrado());
-                mostrarExito(Mensajes.obtener("estado.cifrado.exitoso.aes", response.getTipoAes()));
-                mostrarAlertaSaltConBotonCopiar(response.getSalt());
-                logger.info("Cifrado AES exitoso");
-            }))
-            .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
+        // Si hay un archivo subido, usar el endpoint de archivo
+        if (archivoSubido != null) {
+            logger.info("Usando endpoint de archivo para cifrar con AES");
+            aesService.cifrarArchivo(archivoSubido, password, tipoAes)
+                .thenAccept(response -> Platform.runLater(() -> {
+                    txtSalida.setText(response.getArchivoCifrado());
+                    mostrarExito(Mensajes.obtener("estado.cifrado.exitoso.aes", response.getTipoAes()));
+                    mostrarAlertaSaltConBotonCopiar(response.getSalt());
+                    logger.info("Cifrado AES de archivo exitoso");
+                }))
+                .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
+        } else {
+            logger.info("Usando endpoint de texto para cifrar con AES");
+            aesService.cifrarTexto(texto, password, tipoAes)
+                .thenAccept(response -> Platform.runLater(() -> {
+                    txtSalida.setText(response.getTextoCifrado());
+                    mostrarExito(Mensajes.obtener("estado.cifrado.exitoso.aes", response.getTipoAes()));
+                    mostrarAlertaSaltConBotonCopiar(response.getSalt());
+                    logger.info("Cifrado AES exitoso");
+                }))
+                .exceptionally(error -> manejarErrorOperacion(error, Mensajes.obtener("error.cifrar")));
+        }
     }
 
     /**
@@ -465,13 +501,38 @@ public class VentanaController {
         mostrarCargando(true);
         lblMensajeEstado.setText(Mensajes.obtener("estado.descifrando.aes", tipoAes));
 
-        aesService.descifrarTexto(textoCifrado, password, salt, tipoAes)
-            .thenAccept(response -> Platform.runLater(() -> {
-                txtSalida.setText(response.getTextoDescifrado());
-                mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
-                logger.info("Descifrado AES exitoso");
-            }))
-            .exceptionally(this::manejarErrorAesDescifrado);
+        // Si hay un archivo subido, usar el endpoint de archivo
+        if (archivoSubido != null) {
+            logger.info("Usando endpoint de archivo para descifrar con AES");
+            aesService.descifrarArchivo(archivoSubido, password, salt, tipoAes)
+                .thenAccept(response -> Platform.runLater(() -> {
+                    // El endpoint de archivo devuelve base64, necesitamos decodificarlo
+                    try {
+                        byte[] decodedBytes = java.util.Base64.getDecoder().decode(response.getArchivoDescifradoBase64());
+                        String textoDescifrado = new String(decodedBytes, java.nio.charset.StandardCharsets.UTF_8);
+                        txtSalida.setText(textoDescifrado);
+                        mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
+                        logger.info("Descifrado AES de archivo exitoso");
+                    } catch (IllegalArgumentException e) {
+                        logger.error("Error al decodificar base64 del archivo descifrado", e);
+                        mostrarAlerta(
+                            Mensajes.obtener("error.descifrar"),
+                            "Error al decodificar el archivo descifrado",
+                            Alert.AlertType.ERROR
+                        );
+                    }
+                }))
+                .exceptionally(this::manejarErrorAesDescifrado);
+        } else {
+            logger.info("Usando endpoint de texto para descifrar con AES");
+            aesService.descifrarTexto(textoCifrado, password, salt, tipoAes)
+                .thenAccept(response -> Platform.runLater(() -> {
+                    txtSalida.setText(response.getTextoDescifrado());
+                    mostrarExito(Mensajes.obtener("estado.descifrado.exitoso"));
+                    logger.info("Descifrado AES exitoso");
+                }))
+                .exceptionally(this::manejarErrorAesDescifrado);
+        }
     }
 
     /**
@@ -491,9 +552,11 @@ public class VentanaController {
             try {
                 String contenido = Files.readString(archivo.toPath());
                 txtEntrada.setText(contenido);
-                logger.info("Archivo cargado: {}", archivo.getName());
+                archivoSubido = archivo; // Guardar referencia al archivo
+                logger.info("Archivo cargado: {} (se usará el endpoint de archivo)", archivo.getName());
             } catch (IOException e) {
                 logger.error("Error al leer archivo", e);
+                archivoSubido = null; // Limpiar referencia en caso de error
                 mostrarAlerta(
                     Mensajes.obtener("error.archivo.leer.titulo"),
                     Mensajes.obtener("error.archivo.leer.mensaje"),
@@ -509,6 +572,7 @@ public class VentanaController {
     @FXML
     private void onVaciarEntrada() {
         txtEntrada.clear();
+        archivoSubido = null; // Limpiar referencia al archivo
     }
 
     /**

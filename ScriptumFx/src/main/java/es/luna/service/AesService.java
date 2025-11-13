@@ -1,13 +1,18 @@
 package es.luna.service;
 
 import es.luna.client.ApiClient;
+import es.luna.model.AesCifradoArchivoResponse;
 import es.luna.model.AesCifradoResponse;
 import es.luna.model.AesCifrarRequest;
+import es.luna.model.AesDescifradoArchivoResponse;
 import es.luna.model.AesDescifradoResponse;
 import es.luna.model.AesDescifrarRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -142,6 +147,107 @@ public class AesService {
                 logger.warn("Error al descifrar texto con AES: {}", error.getMessage());
             } else {
                 logger.info("Texto descifrado exitosamente con AES");
+            }
+        });
+    }
+
+    /**
+     * Cifra un archivo usando el algoritmo AES de forma asíncrona.
+     *
+     * @param archivo el archivo a cifrar
+     * @param password el password para derivar la clave
+     * @param tipoAes el tipo de AES (AES-128, AES-192, AES-256)
+     * @return CompletableFuture con la respuesta del cifrado
+     */
+    public CompletableFuture<AesCifradoArchivoResponse> cifrarArchivo(File archivo, String password, String tipoAes) {
+        logger.debug("Cifrando archivo con AES - Archivo: {}, Tipo: {}", archivo.getName(), tipoAes);
+
+        // Validaciones básicas
+        if (!archivo.exists()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("El archivo no existe")
+            );
+        }
+
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("El password debe tener al menos " + MIN_PASSWORD_LENGTH + " caracteres")
+            );
+        }
+
+        // Crear form data
+        Map<String, String> formData = new HashMap<>();
+        formData.put("password", password);
+        formData.put("tipo_aes", tipoAes);
+
+        // Realizar petición asíncrona multipart
+        return apiClient.postMultipartAsync(
+                BASE_ENDPOINT + "/cifrar/file",
+                archivo,
+                formData,
+                AesCifradoArchivoResponse.class
+        ).whenComplete((response, error) -> {
+            if (error != null) {
+                logger.warn("Error al cifrar archivo con AES: {}", error.getMessage());
+            } else {
+                logger.info("Archivo cifrado exitosamente con AES-{}", tipoAes);
+            }
+        });
+    }
+
+    /**
+     * Descifra un archivo cifrado con AES de forma asíncrona.
+     *
+     * @param archivoCifrado el archivo cifrado a descifrar
+     * @param password el password usado para cifrar
+     * @param salt el salt en base64 obtenido al cifrar
+     * @param tipoAes el tipo de AES usado
+     * @return CompletableFuture con la respuesta del descifrado
+     */
+    public CompletableFuture<AesDescifradoArchivoResponse> descifrarArchivo(
+            File archivoCifrado,
+            String password,
+            String salt,
+            String tipoAes
+    ) {
+        logger.debug("Descifrando archivo con AES - Archivo: {}, Tipo: {}", archivoCifrado.getName(), tipoAes);
+
+        // Validaciones básicas
+        if (!archivoCifrado.exists()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("El archivo no existe")
+            );
+        }
+
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("El password debe tener al menos " + MIN_PASSWORD_LENGTH + " caracteres")
+            );
+        }
+
+        if (salt == null || salt.trim().isEmpty()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("El salt no puede estar vacío")
+            );
+        }
+
+        // Crear form data
+        Map<String, String> formData = new HashMap<>();
+        formData.put("password", password);
+        formData.put("salt", salt);
+        formData.put("tipo_aes", tipoAes);
+
+        // Realizar petición asíncrona multipart
+        return apiClient.postMultipartAsync(
+                BASE_ENDPOINT + "/descifrar/file",
+                archivoCifrado,
+                formData,
+                AesDescifradoArchivoResponse.class
+        ).whenComplete((response, error) -> {
+            if (error != null) {
+                logger.warn("Error al descifrar archivo con AES: {}", error.getMessage());
+            } else {
+                logger.info("Archivo descifrado exitosamente con AES");
             }
         });
     }

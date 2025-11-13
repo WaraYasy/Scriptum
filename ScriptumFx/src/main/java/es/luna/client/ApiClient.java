@@ -6,11 +6,16 @@ import com.google.gson.JsonSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.time.Duration;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -229,6 +234,101 @@ public class ApiClient {
             logger.error(errorMsg);
             throw new ApiException(errorMsg);
         }
+    }
+
+    /**
+     * Realiza una petición POST multipart/form-data de forma asíncrona.
+     * Útil para enviar archivos al servidor.
+     *
+     * @param endpoint el endpoint a llamar (ej: "/vigenere/cifrar/file")
+     * @param file el archivo a enviar
+     * @param formData campos adicionales del formulario (ej: clave, password, etc.)
+     * @param responseClass la clase del objeto response esperado
+     * @param <T> el tipo del response
+     * @return CompletableFuture con el objeto response deserializado
+     */
+    public <T> CompletableFuture<T> postMultipartAsync(
+            String endpoint,
+            File file,
+            Map<String, String> formData,
+            Class<T> responseClass
+    ) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                // Generar boundary único para multipart
+                String boundary = "----WebKitFormBoundary" + UUID.randomUUID().toString().replace("-", "");
+
+                // Construir el body multipart manualmente
+                StringBuilder bodyBuilder = new StringBuilder();
+
+                // Agregar campos del formulario
+                if (formData != null) {
+                    for (Map.Entry<String, String> entry : formData.entrySet()) {
+                        bodyBuilder.append("--").append(boundary).append("\r\n");
+                        bodyBuilder.append("Content-Disposition: form-data; name=\"")
+                                .append(entry.getKey()).append("\"\r\n\r\n");
+                        bodyBuilder.append(entry.getValue()).append("\r\n");
+                    }
+                }
+
+                // Agregar archivo
+                bodyBuilder.append("--").append(boundary).append("\r\n");
+                bodyBuilder.append("Content-Disposition: form-data; name=\"file\"; filename=\"")
+                        .append(file.getName()).append("\"\r\n");
+                bodyBuilder.append("Content-Type: text/plain\r\n\r\n");
+
+                // Leer contenido del archivo
+                byte[] fileBytes = Files.readAllBytes(file.toPath());
+                String fileContent = new String(fileBytes, java.nio.charset.StandardCharsets.UTF_8);
+                bodyBuilder.append(fileContent).append("\r\n");
+
+                // Cerrar boundary
+                bodyBuilder.append("--").append(boundary).append("--\r\n");
+
+                String body = bodyBuilder.toString();
+
+                logger.debug("POST multipart {} - Body size: {} bytes", endpoint, body.getBytes(java.nio.charset.StandardCharsets.UTF_8).length);
+
+                // Construir la petición HTTP
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + endpoint))
+                        .timeout(DEFAULT_TIMEOUT)
+                        .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                        .header("Accept", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(body, java.nio.charset.StandardCharsets.UTF_8))
+                        .build();
+
+                logger.debug("POST multipart {} - Sending request to: {}", endpoint, request.uri());
+
+                // Enviar la petición
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+                logger.debug("POST multipart {} - Status: {}", endpoint, response.statusCode());
+
+                // Manejar respuestas de error HTTP
+                if (response.statusCode() >= 400) {
+                    handleErrorResponse(response);
+                }
+
+                // Deserializar el response body
+                T responseObject = gson.fromJson(response.body(), responseClass);
+                logger.info("POST multipart {} - Success", endpoint);
+                return responseObject;
+
+            } catch (ApiException e) {
+                // ApiException ya fue registrada en handleErrorResponse, solo relanzar
+                throw e;
+            } catch (JsonSyntaxException e) {
+                logger.error("Error al parsear JSON en POST multipart {}: {}", endpoint, e.getMessage());
+                throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
+            } catch (IOException e) {
+                logger.error("Error de I/O al leer archivo en POST multipart {}: {}", endpoint, e.getMessage());
+                throw new ApiException("Error al leer el archivo: " + e.getMessage(), e);
+            } catch (Exception e) {
+                logger.error("Error inesperado en petición POST multipart {}: {}", endpoint, e.getMessage());
+                throw new ApiException("Error en la petición HTTP: " + e.getMessage(), e);
+            }
+        });
     }
 
     /**
