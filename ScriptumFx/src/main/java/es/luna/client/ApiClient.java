@@ -109,9 +109,28 @@ public class ApiClient {
             } catch (JsonSyntaxException e) {
                 logger.error("Error al parsear JSON en POST {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
+            } catch (IOException e) {
+                logger.error("Error de I/O en POST {}: {}", endpoint, e.getClass().getSimpleName(), e);
+
+                // Determinar el tipo de error de I/O
+                String tipoError = e.getClass().getSimpleName();
+                String mensajeError;
+
+                if (tipoError.contains("UnknownHost") || tipoError.contains("NoRouteToHost")) {
+                    mensajeError = "No se puede conectar al servidor. Verifica tu conexión a internet.";
+                } else if (tipoError.contains("ConnectException") || tipoError.contains("SocketTimeout")) {
+                    mensajeError = "Error de conexión con el servidor. Verifica tu conexión a internet o que el servidor esté disponible.";
+                } else if (e.getMessage() != null && !e.getMessage().isEmpty()) {
+                    mensajeError = "Error de red: " + e.getMessage();
+                } else {
+                    mensajeError = "Error de conexión. Verifica tu conexión a internet.";
+                }
+
+                throw new ApiException(mensajeError, e);
             } catch (Exception e) {
                 logger.error("Error inesperado en petición POST {}: {}", endpoint, e.getMessage());
-                throw new ApiException("Error en la petición HTTP: " + e.getMessage(), e);
+                String mensaje = e.getMessage() != null ? e.getMessage() : "Error desconocido en la petición";
+                throw new ApiException("Error en la petición HTTP: " + mensaje, e);
             }
         });
     }
@@ -158,9 +177,28 @@ public class ApiClient {
             } catch (JsonSyntaxException e) {
                 logger.error("Error al parsear JSON en GET {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
+            } catch (IOException e) {
+                logger.error("Error de I/O en GET {}: {}", endpoint, e.getClass().getSimpleName(), e);
+
+                // Determinar el tipo de error de I/O
+                String tipoError = e.getClass().getSimpleName();
+                String mensajeError;
+
+                if (tipoError.contains("UnknownHost") || tipoError.contains("NoRouteToHost")) {
+                    mensajeError = "No se puede conectar al servidor. Verifica tu conexión a internet.";
+                } else if (tipoError.contains("ConnectException") || tipoError.contains("SocketTimeout")) {
+                    mensajeError = "Error de conexión con el servidor. Verifica tu conexión a internet o que el servidor esté disponible.";
+                } else if (e.getMessage() != null && !e.getMessage().isEmpty()) {
+                    mensajeError = "Error de red: " + e.getMessage();
+                } else {
+                    mensajeError = "Error de conexión. Verifica tu conexión a internet.";
+                }
+
+                throw new ApiException(mensajeError, e);
             } catch (Exception e) {
                 logger.error("Error inesperado en petición GET {}: {}", endpoint, e.getMessage());
-                throw new ApiException("Error en la petición HTTP: " + e.getMessage(), e);
+                String mensaje = e.getMessage() != null ? e.getMessage() : "Error desconocido en la petición";
+                throw new ApiException("Error en la petición HTTP: " + mensaje, e);
             }
         });
     }
@@ -322,11 +360,27 @@ public class ApiClient {
                 logger.error("Error al parsear JSON en POST multipart {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
             } catch (IOException e) {
-                logger.error("Error de I/O al leer archivo en POST multipart {}: {}", endpoint, e.getMessage());
-                throw new ApiException("Error al leer el archivo: " + e.getMessage(), e);
+                logger.error("Error de I/O en POST multipart {}: {}", endpoint, e.getClass().getSimpleName(), e);
+
+                // Determinar el tipo de error de I/O
+                String tipoError = e.getClass().getSimpleName();
+                String mensajeError;
+
+                if (tipoError.contains("UnknownHost") || tipoError.contains("NoRouteToHost")) {
+                    mensajeError = "No se puede conectar al servidor. Verifica tu conexión a internet.";
+                } else if (tipoError.contains("ConnectException") || tipoError.contains("SocketTimeout")) {
+                    mensajeError = "Error de conexión con el servidor. Verifica tu conexión a internet o que el servidor esté disponible.";
+                } else if (e.getMessage() != null && !e.getMessage().isEmpty()) {
+                    mensajeError = "Error de red: " + e.getMessage();
+                } else {
+                    mensajeError = "Error de conexión. Verifica tu conexión a internet.";
+                }
+
+                throw new ApiException(mensajeError, e);
             } catch (Exception e) {
                 logger.error("Error inesperado en petición POST multipart {}: {}", endpoint, e.getMessage());
-                throw new ApiException("Error en la petición HTTP: " + e.getMessage(), e);
+                String mensaje = e.getMessage() != null ? e.getMessage() : "Error desconocido en la petición";
+                throw new ApiException("Error en la petición HTTP: " + mensaje, e);
             }
         });
     }
@@ -377,9 +431,31 @@ public class ApiClient {
                     logger.error("Error response ({}): {}", response.statusCode(), errorBody);
                     throw new ApiException("HTTP " + response.statusCode() + ": " + errorBody);
                 }
+            } catch (ApiException e) {
+                // ApiException ya tiene un mensaje apropiado, solo relanzar
+                throw e;
+            } catch (IOException e) {
+                logger.error("Error de I/O en POST form request: {}", e.getClass().getSimpleName(), e);
+
+                // Determinar el tipo de error de I/O
+                String tipoError = e.getClass().getSimpleName();
+                String mensajeError;
+
+                if (tipoError.contains("UnknownHost") || tipoError.contains("NoRouteToHost")) {
+                    mensajeError = "No se puede conectar al servidor. Verifica tu conexión a internet.";
+                } else if (tipoError.contains("ConnectException") || tipoError.contains("SocketTimeout")) {
+                    mensajeError = "Error de conexión con el servidor. Verifica tu conexión a internet o que el servidor esté disponible.";
+                } else if (e.getMessage() != null && !e.getMessage().isEmpty()) {
+                    mensajeError = "Error de red: " + e.getMessage();
+                } else {
+                    mensajeError = "Error de conexión. Verifica tu conexión a internet.";
+                }
+
+                throw new ApiException(mensajeError, e);
             } catch (Exception e) {
-                logger.error("Error in POST form request", e);
-                throw new ApiException("Error en petición POST form: " + e.getMessage(), e);
+                logger.error("Error inesperado en POST form request", e);
+                String mensaje = e.getMessage() != null ? e.getMessage() : "Error desconocido en la petición";
+                throw new ApiException("Error en petición POST form: " + mensaje, e);
             }
         });
     }

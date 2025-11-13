@@ -1441,8 +1441,20 @@ public class VentanaController {
             String mensajeCompleto = error.getCause() != null ? error.getCause().getMessage() : error.getMessage();
             mostrarCargando(false);
 
+            // Detectar errores de conexión
+            if (mensaje.contains("conexión") || mensaje.contains("internet") || mensaje.contains("conectar al servidor") || mensaje.contains("servidor esté disponible")) {
+                lblMensajeEstado.setText("✗ Error de conexión");
+                lblMensajeEstado.setStyle("-fx-text-fill: red;");
+                mostrarAlerta(
+                        "Error de conexión",
+                        mensaje + "\n\nPor favor verifica:\n" +
+                        "• Tu conexión a internet está activa\n" +
+                        "• El servidor está disponible\n" +
+                        "• No hay problemas de firewall",
+                        Alert.AlertType.ERROR
+                );
             // Detectar error 422 (texto demasiado largo)
-            if (mensajeCompleto != null && (mensajeCompleto.contains("422") ||
+            } else if (mensajeCompleto != null && (mensajeCompleto.contains("422") ||
                 mensajeCompleto.contains("Unprocessable Entity") ||
                 mensajeCompleto.contains("demasiado largo") ||
                 mensajeCompleto.contains("too large"))) {
@@ -1452,7 +1464,7 @@ public class VentanaController {
                         "Texto demasiado largo",
                         """
                                 El texto es demasiado grande para procesarlo directamente.
-                                
+
                                 Recomendaciones:
                                 • Usa la opción 'Subir archivo' para textos muy largos
                                 • Reduce el tamaño del texto (máximo 1,000,000 caracteres)
