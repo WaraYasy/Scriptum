@@ -2,11 +2,12 @@
 SCRIPTUM API - Main Application
 API de cifrado y descifrado con múltiples algoritmos
 """
+import os
+import logging
+import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-import logging
-import os
+
 
 from app.routers import health, vigenere, aes
 from app.config import settings
