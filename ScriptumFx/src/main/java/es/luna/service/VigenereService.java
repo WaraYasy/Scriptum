@@ -65,7 +65,7 @@ public class VigenereService {
      * @return CompletableFuture con la respuesta del cifrado
      */
     public CompletableFuture<VigenereCifradoResponse> cifrarTexto(String texto, String clave) {
-        logger.debug("Cifrando texto con Vigenère - Texto length: {}, Clave length: {}", texto.length(), clave.length());
+        logger.debug("Cifrando texto con Vigenère - Texto length: {}", texto.length());
 
         // Validaciones básicas
         if (texto.trim().isEmpty()) {
@@ -105,7 +105,7 @@ public class VigenereService {
      * @return CompletableFuture con la respuesta del descifrado
      */
     public CompletableFuture<VigenereDescifradoResponse> descifrarTexto(String textoCifrado, String clave) {
-        logger.debug("Descifrando texto con Vigenère - Texto length: {}, Clave length: {}", textoCifrado.length(), clave.length());
+        logger.debug("Descifrando texto con Vigenère - Texto cifrado length: {}", textoCifrado.length());
 
         // Validaciones básicas
         if (textoCifrado.trim().isEmpty()) {
@@ -165,8 +165,8 @@ public class VigenereService {
             String magicHeader,
             boolean addHeader
     ) {
-        logger.debug("Cifrando archivo con Vigenère - Archivo: {}, Tamaño: {} bytes, Clave length: {}",
-                archivo.getName(), archivo.length(), clave.length());
+        logger.debug("Cifrando archivo con Vigenère - Archivo: {}, Tamaño: {} bytes",
+                archivo.getName(), archivo.length());
 
         // Validaciones básicas
         if (!archivo.exists()) {
@@ -274,8 +274,8 @@ public class VigenereService {
             String magicHeader,
             boolean skipCanary
     ) {
-        logger.debug("Descifrando archivo con Vigenère - Archivo: {}, Tamaño: {} bytes, Clave length: {}",
-                archivoCifrado.getName(), archivoCifrado.length(), clave.length());
+        logger.debug("Descifrando archivo con Vigenère - Archivo: {}, Tamaño: {} bytes",
+                archivoCifrado.getName(), archivoCifrado.length());
 
         // Validaciones básicas
         if (!archivoCifrado.exists()) {
