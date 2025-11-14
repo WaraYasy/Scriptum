@@ -12,6 +12,8 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.VBox;
@@ -61,6 +63,10 @@ public class VentanaController {
     private MenuItem menuAbout;
     @FXML
     private MenuItem menuExit;
+
+    // ========== Icono del tema ==========
+    @FXML
+    private ImageView iconoTema;
 
     // ========== Estado de la API ==========
     @FXML
@@ -352,6 +358,9 @@ public class VentanaController {
                     scene.getStylesheets().add(cssClaro.toExternalForm());
                     logger.info("Tema claro inicial aplicado");
                 }
+
+                // Actualizar icono del tema
+                actualizarIconoTema();
             }
         } catch (Exception e) {
             logger.error("Error al aplicar tema inicial", e);
@@ -1334,11 +1343,37 @@ public class VentanaController {
             temaClaro = !temaClaro;
             logger.info("Tema cambiado a: {}", temaClaro ? "claro" : "oscuro");
 
+            // Actualizar icono del tema
+            actualizarIconoTema();
+
             // Sincronizar tema con AlertaUtil
             AlertaUtil.setTemaClaro(temaClaro);
 
         } catch (Exception e) {
             logger.error("Error al cambiar tema", e);
+        }
+    }
+
+    /**
+     * Actualiza el icono del tema según el tema actual.
+     */
+    private void actualizarIconoTema() {
+        try {
+            if (iconoTema != null) {
+                String rutaIcono = temaClaro ?
+                    "/es/luna/img/Icono-Claro.png" :
+                    "/es/luna/img/Icono-Oscuro.png";
+
+                var imagenUrl = getClass().getResource(rutaIcono);
+                if (imagenUrl != null) {
+                    iconoTema.setImage(new Image(imagenUrl.toExternalForm()));
+                    logger.debug("Icono del tema actualizado: {}", temaClaro ? "claro" : "oscuro");
+                } else {
+                    logger.warn("No se pudo encontrar el icono: {}", rutaIcono);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error al actualizar icono del tema", e);
         }
     }
 
