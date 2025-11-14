@@ -48,15 +48,130 @@ public class VigenereDescifradoLargeResponse {
 
     // Getters
 
+    /**
+     * Obtiene el texto descifrado resultante.
+     *
+     * @return el texto descifrado
+     */
     public String getTextoDescifrado() {
         return textoDescifrado;
     }
 
+    /**
+     * Establece el texto descifrado.
+     *
+     * @param textoDescifrado el texto descifrado
+     */
+    public void setTextoDescifrado(String textoDescifrado) {
+        this.textoDescifrado = textoDescifrado;
+    }
+
+    /**
+     * Obtiene la clave usada (formateada) en el descifrado.
+     *
+     * @return la clave usada
+     */
     public String getClaveUsada() {
         return claveUsada;
     }
 
+    /**
+     * Establece la clave usada.
+     *
+     * @param claveUsada la clave usada
+     */
+    public void setClaveUsada(String claveUsada) {
+        this.claveUsada = claveUsada;
+    }
+
+    /**
+     * Obtiene el tamaño del archivo en bytes.
+     *
+     * @return el tamaño en bytes
+     */
+    public long getTamanioArchivoBytes() {
+        return tamanioArchivoBytes;
+    }
+
+    /**
+     * Establece el tamaño del archivo en bytes.
+     *
+     * @param tamanioArchivoBytes el tamaño en bytes
+     */
+    public void setTamanioArchivoBytes(long tamanioArchivoBytes) {
+        this.tamanioArchivoBytes = tamanioArchivoBytes;
+    }
+
+    /**
+     * Obtiene el tamaño del archivo en megabytes.
+     *
+     * @return el tamaño en MB
+     */
+    public double getTamanioArchivoMb() {
+        return tamanioArchivoMb;
+    }
+
+    /**
+     * Establece el tamaño del archivo en MB.
+     *
+     * @param tamanioArchivoMb el tamaño en MB
+     */
+    public void setTamanioArchivoMb(double tamanioArchivoMb) {
+        this.tamanioArchivoMb = tamanioArchivoMb;
+    }
+
+    /**
+     * Obtiene el número de bloques procesados durante el descifrado.
+     *
+     * @return el número de bloques
+     */
+    public int getBloquesProcesados() {
+        return bloquesProcesados;
+    }
+
+    /**
+     * Establece el número de bloques procesados.
+     *
+     * @param bloquesProcesados el número de bloques
+     */
+    public void setBloquesProcesados(int bloquesProcesados) {
+        this.bloquesProcesados = bloquesProcesados;
+    }
+
+    /**
+     * Obtiene el estado del canary check realizado durante el descifrado.
+     * El canary check verifica que la clave usada sea correcta.
+     *
+     * @return el estado del canary check
+     */
+    public String getCanaryCheck() {
+        return canaryCheck;
+    }
+
+    /**
+     * Establece el estado del canary check.
+     *
+     * @param canaryCheck el estado del canary check
+     */
+    public void setCanaryCheck(String canaryCheck) {
+        this.canaryCheck = canaryCheck;
+    }
+
+    /**
+     * Obtiene el mensaje informativo del descifrado.
+     *
+     * @return el mensaje
+     */
     public String getMensaje() {
         return mensaje;
+    }
+
+    /**
+     * Establece el mensaje informativo.
+     *
+     * @param mensaje el mensaje
+     */
+    public void setMensaje(String mensaje) {
+        this.mensaje = mensaje;
     }
 }

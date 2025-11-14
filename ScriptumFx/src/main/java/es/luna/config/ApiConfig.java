@@ -20,6 +20,14 @@ public class ApiConfig {
     private static final Logger logger = LoggerFactory.getLogger(ApiConfig.class);
     private static final Properties properties = new Properties();
 
+    /**
+     * Constructor privado para evitar instanciación.
+     * Esta es una clase de utilidad con solo miembros estáticos.
+     */
+    private ApiConfig() {
+        throw new UnsupportedOperationException("Esta es una clase de utilidad y no puede ser instanciada");
+    }
+
     // Cargar propiedades al inicializar la clase
     static {
         try (InputStream input = ApiConfig.class.getClassLoader()

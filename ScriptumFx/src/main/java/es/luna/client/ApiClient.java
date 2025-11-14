@@ -469,10 +469,22 @@ public class ApiClient {
      * Excepción personalizada para errores de la API.
      */
     public static class ApiException extends RuntimeException {
+        
+        /**
+         * Constructor con mensaje de error.
+         *
+         * @param message el mensaje descriptivo del error
+         */
         public ApiException(String message) {
             super(message);
         }
 
+        /**
+         * Constructor con mensaje de error y causa.
+         *
+         * @param message el mensaje descriptivo del error
+         * @param cause la causa raíz de la excepción
+         */
         public ApiException(String message, Throwable cause) {
             super(message, cause);
         }

@@ -32,19 +32,57 @@ public class VigenereCifradoResponse {
 
     // Getters y Setters
 
+    /**
+     * Obtiene el texto cifrado resultante.
+     *
+     * @return el texto cifrado
+     */
     public String getTextoCifrado() {
         return textoCifrado;
     }
 
+    /**
+     * Establece el texto cifrado.
+     *
+     * @param textoCifrado el texto cifrado
+     */
     public void setTextoCifrado(String textoCifrado) {
         this.textoCifrado = textoCifrado;
     }
 
+    /**
+     * Obtiene la clave utilizada (formateada) en el cifrado.
+     *
+     * @return la clave usada
+     */
     public String getClaveUsada() {
         return claveUsada;
     }
 
+    /**
+     * Establece la clave utilizada.
+     *
+     * @param claveUsada la clave usada
+     */
     public void setClaveUsada(String claveUsada) {
         this.claveUsada = claveUsada;
+    }
+
+    /**
+     * Obtiene la longitud del texto original antes del cifrado.
+     *
+     * @return la longitud del texto original
+     */
+    public int getTextoOriginalLength() {
+        return textoOriginalLength;
+    }
+
+    /**
+     * Establece la longitud del texto original.
+     *
+     * @param textoOriginalLength la longitud del texto original
+     */
+    public void setTextoOriginalLength(int textoOriginalLength) {
+        this.textoOriginalLength = textoOriginalLength;
     }
 }

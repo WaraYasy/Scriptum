@@ -360,7 +360,7 @@ public class VigenereService {
     /**
      * Verifica la conectividad con el backend.
      *
-     * @return CompletableFuture<Boolean> true si la conexión es exitosa
+     * @return CompletableFuture que retorna true si la conexión es exitosa, false en caso contrario
      */
     public CompletableFuture<Boolean> verificarConexion() {
         logger.debug("Verificando conexión con la API");

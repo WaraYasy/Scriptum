@@ -48,15 +48,129 @@ public class VigenereCifradoLargeResponse {
 
     // Getters
 
+    /**
+     * Obtiene el texto cifrado resultante.
+     *
+     * @return el texto cifrado
+     */
     public String getTextoCifrado() {
         return textoCifrado;
     }
 
+    /**
+     * Establece el texto cifrado.
+     *
+     * @param textoCifrado el texto cifrado
+     */
+    public void setTextoCifrado(String textoCifrado) {
+        this.textoCifrado = textoCifrado;
+    }
+
+    /**
+     * Obtiene la clave usada (formateada) en el cifrado.
+     *
+     * @return la clave usada
+     */
     public String getClaveUsada() {
         return claveUsada;
     }
 
+    /**
+     * Establece la clave usada.
+     *
+     * @param claveUsada la clave usada
+     */
+    public void setClaveUsada(String claveUsada) {
+        this.claveUsada = claveUsada;
+    }
+
+    /**
+     * Obtiene el tamaño del archivo en bytes.
+     *
+     * @return el tamaño en bytes
+     */
+    public long getTamanioArchivoBytes() {
+        return tamanioArchivoBytes;
+    }
+
+    /**
+     * Establece el tamaño del archivo en bytes.
+     *
+     * @param tamanioArchivoBytes el tamaño en bytes
+     */
+    public void setTamanioArchivoBytes(long tamanioArchivoBytes) {
+        this.tamanioArchivoBytes = tamanioArchivoBytes;
+    }
+
+    /**
+     * Obtiene el tamaño del archivo en megabytes.
+     *
+     * @return el tamaño en MB
+     */
+    public double getTamanioArchivoMb() {
+        return tamanioArchivoMb;
+    }
+
+    /**
+     * Establece el tamaño del archivo en MB.
+     *
+     * @param tamanioArchivoMb el tamaño en MB
+     */
+    public void setTamanioArchivoMb(double tamanioArchivoMb) {
+        this.tamanioArchivoMb = tamanioArchivoMb;
+    }
+
+    /**
+     * Obtiene el número de bloques procesados durante el cifrado.
+     *
+     * @return el número de bloques
+     */
+    public int getBloquesProcesados() {
+        return bloquesProcesados;
+    }
+
+    /**
+     * Establece el número de bloques procesados.
+     *
+     * @param bloquesProcesados el número de bloques
+     */
+    public void setBloquesProcesados(int bloquesProcesados) {
+        this.bloquesProcesados = bloquesProcesados;
+    }
+
+    /**
+     * Indica si se agregó un magic header al archivo cifrado.
+     *
+     * @return true si se agregó header, false en caso contrario
+     */
+    public boolean isMagicHeaderAgregado() {
+        return magicHeaderAgregado;
+    }
+
+    /**
+     * Establece si se agregó magic header.
+     *
+     * @param magicHeaderAgregado true si se agregó header
+     */
+    public void setMagicHeaderAgregado(boolean magicHeaderAgregado) {
+        this.magicHeaderAgregado = magicHeaderAgregado;
+    }
+
+    /**
+     * Obtiene el mensaje informativo del cifrado.
+     *
+     * @return el mensaje
+     */
     public String getMensaje() {
         return mensaje;
+    }
+
+    /**
+     * Establece el mensaje informativo.
+     *
+     * @param mensaje el mensaje
+     */
+    public void setMensaje(String mensaje) {
+        this.mensaje = mensaje;
     }
 }

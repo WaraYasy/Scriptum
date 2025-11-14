@@ -32,7 +32,57 @@ public class AesDescifradoResponse {
 
     // Getters y Setters
 
+    /**
+     * Obtiene el texto descifrado original.
+     *
+     * @return el texto descifrado
+     */
     public String getTextoDescifrado() {
         return textoDescifrado;
+    }
+
+    /**
+     * Establece el texto descifrado.
+     *
+     * @param textoDescifrado el texto descifrado
+     */
+    public void setTextoDescifrado(String textoDescifrado) {
+        this.textoDescifrado = textoDescifrado;
+    }
+
+    /**
+     * Obtiene el tipo de AES usado en el descifrado.
+     *
+     * @return el tipo de AES
+     */
+    public String getTipoAes() {
+        return tipoAes;
+    }
+
+    /**
+     * Establece el tipo de AES usado.
+     *
+     * @param tipoAes el tipo de AES
+     */
+    public void setTipoAes(String tipoAes) {
+        this.tipoAes = tipoAes;
+    }
+
+    /**
+     * Obtiene el tamaño del texto descifrado en bytes.
+     *
+     * @return el tamaño en bytes
+     */
+    public int getTamanioBytes() {
+        return tamanioBytes;
+    }
+
+    /**
+     * Establece el tamaño del texto descifrado en bytes.
+     *
+     * @param tamanioBytes el tamaño en bytes
+     */
+    public void setTamanioBytes(int tamanioBytes) {
+        this.tamanioBytes = tamanioBytes;
     }
 }

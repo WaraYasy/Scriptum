@@ -23,6 +23,14 @@ public class ScriptumApp extends Application {
     private static final Logger logger = LoggerFactory.getLogger(ScriptumApp.class);
 
     /**
+     * Constructor público por defecto.
+     * Requerido por el framework JavaFX para instanciar la aplicación.
+     */
+    public ScriptumApp() {
+        // Constructor vacío requerido por JavaFX
+    }
+
+    /**
      * Metodo de inicio de la aplicación JavaFX.
      * <p>
      * Es llamado automáticamente por el sistema de lanzamiento de JavaFX tras invocar {@link #launch(String...)}.

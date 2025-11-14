@@ -42,6 +42,14 @@ public class VentanaController {
 
     private static final Logger logger = LoggerFactory.getLogger(VentanaController.class);
 
+    /**
+     * Constructor público por defecto.
+     * JavaFX utiliza este constructor al cargar el controlador desde el archivo FXML.
+     */
+    public VentanaController() {
+        // Constructor vacío requerido por JavaFX
+    }
+
     // ========== Elementos del menú ==========
     @FXML
     private VBox root;

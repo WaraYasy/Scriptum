@@ -39,18 +39,38 @@ public class VigenereCifrarRequest {
 
     // Getters y Setters
 
+    /**
+     * Obtiene el texto a cifrar.
+     *
+     * @return el texto a cifrar
+     */
     public String getTexto() {
         return texto;
     }
 
+    /**
+     * Establece el texto a cifrar.
+     *
+     * @param texto el texto a cifrar
+     */
     public void setTexto(String texto) {
         this.texto = texto;
     }
 
+    /**
+     * Obtiene la clave para el cifrado.
+     *
+     * @return la clave
+     */
     public String getClave() {
         return clave;
     }
 
+    /**
+     * Establece la clave para el cifrado.
+     *
+     * @param clave la clave
+     */
     public void setClave(String clave) {
         this.clave = clave;
     }

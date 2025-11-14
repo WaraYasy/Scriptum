@@ -14,6 +14,14 @@ package es.luna;
 public class Lanzador {
 
     /**
+     * Constructor privado para evitar instanciación.
+     * Esta clase solo contiene el método main para lanzar la aplicación.
+     */
+    private Lanzador() {
+        throw new UnsupportedOperationException("Esta es una clase lanzadora y no debe ser instanciada");
+    }
+
+    /**
      * Metodo principal que lanza la aplicación JavaFX.
      * <p>
      * Invoca a la función main de {@link ScriptumApp}, permitiendo que la aplicación

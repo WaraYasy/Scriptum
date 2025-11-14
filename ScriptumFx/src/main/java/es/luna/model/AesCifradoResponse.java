@@ -32,14 +32,30 @@ public class AesCifradoResponse {
 
     // Getters
 
+    /**
+     * Obtiene el texto cifrado en formato base64.
+     *
+     * @return el texto cifrado
+     */
     public String getTextoCifrado() {
         return textoCifrado;
     }
 
+    /**
+     * Obtiene el salt usado en el cifrado.
+     * Este salt es necesario para descifrar el texto.
+     *
+     * @return el salt en formato base64
+     */
     public String getSalt() {
         return salt;
     }
 
+    /**
+     * Obtiene el tipo de AES usado en el cifrado.
+     *
+     * @return el tipo de AES (AES-128, AES-192, AES-256)
+     */
     public String getTipoAes() {
         return tipoAes;
     }
