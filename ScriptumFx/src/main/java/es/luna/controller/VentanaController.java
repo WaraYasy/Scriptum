@@ -168,6 +168,8 @@ public class VentanaController {
     private boolean esSalidaBinaria = false; // Indica si la salida contiene datos binarios
     private boolean ultimaOperacionFueCifrado = true; // true = cifrado, false = descifrado
     private String paqueteAesCifrado = null; // Paquete AES que contiene (archivo + metadatos)
+    private Double alturaVentanaContraida = null; // Altura de la ventana cuando el TitledPane está contraído
+    private Double alturaVentanaExpandida = null; // Altura de la ventana cuando el TitledPane está expandido
 
     /**
      * Inicialización del controlador.
@@ -280,7 +282,61 @@ public class VentanaController {
         root.sceneProperty().addListener((obs, oldVal, newScene) -> {
             if (newScene != null) {
                 aplicarTemaInicial();
+                configurarAjusteAutomaticoVentana();
             }
+        });
+    }
+
+    /**
+     * Configura el ajuste automático de la ventana cuando se expande/contrae el TitledPane.
+     */
+    private void configurarAjusteAutomaticoVentana() {
+        // Guardar la altura inicial (expandida) después de que la ventana se muestre
+        javafx.animation.PauseTransition pauseInicial = new javafx.animation.PauseTransition(javafx.util.Duration.millis(500));
+        pauseInicial.setOnFinished(e -> {
+            var stage = (javafx.stage.Stage) root.getScene().getWindow();
+            if (stage != null) {
+                alturaVentanaExpandida = stage.getHeight();
+                logger.debug("Altura inicial guardada (expandida): {}", alturaVentanaExpandida);
+            }
+        });
+        pauseInicial.play();
+
+        titledPaneAjustes.expandedProperty().addListener((obs, wasExpanded, isExpanded) -> {
+            var stage = (javafx.stage.Stage) root.getScene().getWindow();
+            if (stage == null || stage.isMaximized()) {
+                return;
+            }
+
+            // Calcular la altura objetivo
+            double targetHeight;
+            if (isExpanded) {
+                // Expandido: usar altura expandida guardada
+                if (alturaVentanaExpandida != null) {
+                    targetHeight = alturaVentanaExpandida;
+                } else {
+                    // Primera vez expandiendo, usar altura actual
+                    alturaVentanaExpandida = stage.getHeight();
+                    return;
+                }
+            } else {
+                // Contraído: calcular y guardar altura contraída si no existe
+                if (alturaVentanaContraida == null) {
+                    double contentHeight = titledPaneAjustes.getContent().getBoundsInLocal().getHeight();
+                    alturaVentanaContraida = stage.getHeight() - contentHeight;
+                    logger.debug("Altura contraída calculada: {}", alturaVentanaContraida);
+                }
+                targetHeight = alturaVentanaContraida;
+            }
+
+            // Simplemente ajustar sin animación (más confiable)
+            javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(javafx.util.Duration.millis(200));
+            pause.setOnFinished(event -> {
+                stage.setHeight(targetHeight);
+                logger.debug("Ventana ajustada - TitledPane {} - altura: {}",
+                    isExpanded ? "expandido" : "contraído", targetHeight);
+            });
+            pause.play();
         });
     }
 
