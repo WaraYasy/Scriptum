@@ -36,16 +36,52 @@ app = FastAPI(
     }
 )
 
+# Headers sensibles que no deben ser registrados
+SENSITIVE_HEADERS = {
+    'authorization',
+    'cookie',
+    'x-api-key',
+    'x-auth-token',
+    'x-csrf-token',
+    'proxy-authorization',
+    'www-authenticate',
+    'set-cookie'
+}
+
+def anonymize_ip(client_host: str) -> str:
+    """Anonimiza la dirección IP del cliente"""
+    if not client_host:
+        return "unknown"
+    # Anonimizar los últimos octetos de IPv4 o segmentos de IPv6
+    parts = client_host.split('.')
+    if len(parts) == 4:  # IPv4
+        return f"{parts[0]}.{parts[1]}.xxx.xxx"
+    else:  # IPv6 u otro formato
+        return "xxx.xxx.xxx.xxx"
+
+def sanitize_url(url: str) -> str:
+    """Elimina query parameters de la URL"""
+    return str(url).split('?')[0]
+
 # Middleware para logging de requests
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(f"=== Incoming Request ===")
     logger.info(f"Method: {request.method}")
-    logger.info(f"URL: {request.url}")
-    logger.info(f"Client: {request.client}")
-    logger.info(f"Headers:")
+    logger.info(f"URL: {sanitize_url(str(request.url))}")
+
+    # Anonimizar IP del cliente
+    if request.client:
+        anonymized_ip = anonymize_ip(request.client.host)
+        logger.info(f"Client: {anonymized_ip}")
+
+    # Registrar solo headers no sensibles
+    logger.info(f"Headers (filtered):")
     for name, value in request.headers.items():
-        logger.info(f"  {name}: {value}")
+        if name.lower() not in SENSITIVE_HEADERS:
+            logger.info(f"  {name}: {value}")
+        else:
+            logger.info(f"  {name}: [FILTERED]")
 
     response = await call_next(request)
 

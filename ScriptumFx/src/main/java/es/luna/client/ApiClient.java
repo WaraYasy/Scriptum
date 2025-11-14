@@ -110,7 +110,8 @@ public class ApiClient {
                 logger.error("Error al parsear JSON en POST {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
             } catch (IOException e) {
-                logger.error("Error de I/O en POST {}: {}", endpoint, e.getClass().getSimpleName(), e);
+                // Registrar solo el tipo de error, no el stack trace completo
+                logger.error("Error de I/O en POST {}: {}", endpoint, e.getClass().getSimpleName());
 
                 // Determinar el tipo de error de I/O
                 String tipoError = e.getClass().getSimpleName();
@@ -178,7 +179,8 @@ public class ApiClient {
                 logger.error("Error al parsear JSON en GET {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
             } catch (IOException e) {
-                logger.error("Error de I/O en GET {}: {}", endpoint, e.getClass().getSimpleName(), e);
+                // Registrar solo el tipo de error, no el stack trace completo
+                logger.error("Error de I/O en GET {}: {}", endpoint, e.getClass().getSimpleName());
 
                 // Determinar el tipo de error de I/O
                 String tipoError = e.getClass().getSimpleName();
@@ -360,7 +362,8 @@ public class ApiClient {
                 logger.error("Error al parsear JSON en POST multipart {}: {}", endpoint, e.getMessage());
                 throw new ApiException("Error al parsear la respuesta JSON: " + e.getMessage(), e);
             } catch (IOException e) {
-                logger.error("Error de I/O en POST multipart {}: {}", endpoint, e.getClass().getSimpleName(), e);
+                // Registrar solo el tipo de error, no el stack trace completo
+                logger.error("Error de I/O en POST multipart {}: {}", endpoint, e.getClass().getSimpleName());
 
                 // Determinar el tipo de error de I/O
                 String tipoError = e.getClass().getSimpleName();
@@ -435,7 +438,8 @@ public class ApiClient {
                 // ApiException ya tiene un mensaje apropiado, solo relanzar
                 throw e;
             } catch (IOException e) {
-                logger.error("Error de I/O en POST form request: {}", e.getClass().getSimpleName(), e);
+                // Registrar solo el tipo de error, no el stack trace completo
+                logger.error("Error de I/O en POST form request: {}", e.getClass().getSimpleName());
 
                 // Determinar el tipo de error de I/O
                 String tipoError = e.getClass().getSimpleName();
@@ -453,7 +457,8 @@ public class ApiClient {
 
                 throw new ApiException(mensajeError, e);
             } catch (Exception e) {
-                logger.error("Error inesperado en POST form request", e);
+                // Registrar solo el mensaje de error, no el stack trace completo
+                logger.error("Error inesperado en POST form request: {}", e.getMessage());
                 String mensaje = e.getMessage() != null ? e.getMessage() : "Error desconocido en la petición";
                 throw new ApiException("Error en petición POST form: " + mensaje, e);
             }
