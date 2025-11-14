@@ -45,8 +45,8 @@ public class ScriptumApp extends Application {
     public void start(Stage primaryStage) throws Exception {
         try {
             // Cargar archivo FXML con la definición de la interfaz
-            logger.debug("Cargando archivo FXML: fxml/Ventana.fxml");
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/es/luna/fxml/Ventana.fxml"));
+            logger.debug("Cargando archivo FXML: fxml/ventana.fxml");
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/es/luna/fxml/ventana.fxml"));
 
             // Asignar ResourceBundle para internacionalización
             fxmlLoader.setResources(Mensajes.getResourceBundle());
