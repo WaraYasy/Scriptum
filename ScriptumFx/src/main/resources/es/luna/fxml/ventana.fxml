@@ -111,7 +111,7 @@
                 <!-- Modo -->
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label fx:id="lblModo" text="%modo.label" />
-                    <ComboBox fx:id="comboModo" prefWidth="250" promptText="%modo.placeholder" onAction="#onModoChanged" />
+                    <ComboBox fx:id="comboModo" prefWidth="250" onAction="#onModoChanged" />
                 </VBox>
 
                 <!-- Metodo de encriptado -->
@@ -151,7 +151,7 @@
                 <!-- Tipo de AES -->
                 <VBox spacing="5">
                     <Label fx:id="lblTipoAes" text="%aes.tipo.label" />
-                    <ComboBox fx:id="comboTipoAes" prefWidth="250" promptText="%aes.tipo.placeholder" />
+                    <ComboBox fx:id="comboTipoAes" prefWidth="250" />
                     <Label fx:id="lblTipoAesDesc" styleClass="field-description" text="%aes.tipo.descripcion" />
                 </VBox>
 
