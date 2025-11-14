@@ -202,6 +202,9 @@ public class VentanaController {
         // Configurar combos
         configurarCombos();
 
+        // Configurar tooltips
+        configurarTooltips();
+
         // Configurar tema inicial
         configurarTemaInicial();
 
@@ -287,6 +290,47 @@ public class VentanaController {
         // Actualizar descripción inicial
         actualizarDescripcionMetodo();
         actualizarCamposSegunMetodo();
+    }
+
+    /**
+     * Configura todos los tooltips de la interfaz.
+     */
+    private void configurarTooltips() {
+        // Tooltips de los botones
+        btnSubirArchivo.setTooltip(new Tooltip(Mensajes.obtener("tooltip.btn.subir")));
+        btnVaciarEntrada.setTooltip(new Tooltip(Mensajes.obtener("tooltip.btn.vaciar.entrada")));
+        btnCopiar.setTooltip(new Tooltip(Mensajes.obtener("tooltip.btn.copiar")));
+        btnDescargar.setTooltip(new Tooltip(Mensajes.obtener("tooltip.btn.descargar")));
+        btnVaciarSalida.setTooltip(new Tooltip(Mensajes.obtener("tooltip.btn.vaciar.salida")));
+
+        // Tooltips de los ComboBox
+        comboModo.setTooltip(new Tooltip(Mensajes.obtener("tooltip.combo.modo")));
+        comboMetodo.setTooltip(new Tooltip(Mensajes.obtener("tooltip.combo.metodo")));
+        comboTipoAes.setTooltip(new Tooltip(Mensajes.obtener("tooltip.combo.tipo.aes")));
+
+        // Tooltips de los campos de texto
+        txtEntrada.setTooltip(new Tooltip(Mensajes.obtener("tooltip.txt.entrada")));
+        txtSalida.setTooltip(new Tooltip(Mensajes.obtener("tooltip.txt.salida")));
+        txtClaveVigenere.setTooltip(new Tooltip(Mensajes.obtener("tooltip.txt.clave.vigenere")));
+        txtPasswordAes.setTooltip(new Tooltip(Mensajes.obtener("tooltip.txt.password.aes")));
+        txtSaltAes.setTooltip(new Tooltip(Mensajes.obtener("tooltip.txt.salt.aes")));
+
+        // Tooltips para el botón de acción (se actualizará dinámicamente según el modo)
+        actualizarTooltipBotonAccion();
+
+        logger.debug("Tooltips configurados");
+    }
+
+    /**
+     * Actualiza el tooltip del botón de acción según el modo seleccionado.
+     */
+    private void actualizarTooltipBotonAccion() {
+        String modo = comboModo.getValue();
+        if (Mensajes.obtener("modo.cifrar").equals(modo)) {
+            btnAccion.setTooltip(new Tooltip(Mensajes.obtener("tooltip.btn.accion.cifrar")));
+        } else {
+            btnAccion.setTooltip(new Tooltip(Mensajes.obtener("tooltip.btn.accion.descifrar")));
+        }
     }
 
     /**
@@ -434,6 +478,9 @@ public class VentanaController {
             vboxSaltAes.setManaged(esDescifrado);
             vboxSaltAes.setVisible(esDescifrado);
         }
+
+        // Actualizar tooltip del botón de acción
+        actualizarTooltipBotonAccion();
 
         logger.debug("Modo cambiado a: {}", modo);
     }
@@ -1283,6 +1330,9 @@ public class VentanaController {
 
         // Limpiar mensaje de estado al cambiar idioma
         lblMensajeEstado.setText("");
+
+        // Actualizar todos los tooltips
+        configurarTooltips();
 
         logger.debug("Textos de la interfaz actualizados");
     }
