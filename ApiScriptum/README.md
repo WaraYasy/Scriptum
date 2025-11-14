@@ -40,10 +40,19 @@ API REST desarrollada con **FastAPI** que proporciona servicios de cifrado y des
 
 ### ⚡ Rendimiento
 
-- **Streaming para archivos grandes** (> 10 MB)
+- **Streaming para archivos grandes** (≥ 10 MB)
 - **Procesamiento asíncrono** con FastAPI
 - **Chunks de 64 KB** para optimizar memoria
-- **Empaquetado binario eficiente** (~30% menos espacio que JSON)
+- **Empaquetado binario eficiente** (~27-30% menos espacio que JSON)
+
+### 📏 Límites
+
+| Cifrado | Textos | Archivos | Streaming |
+|---------|--------|----------|-----------|
+| **AES** | 100 MB | 100 MB | ✅ |
+| **Vigenère** | 100 MB | 500 MB | ✅ |
+
+**Password:** 8-1,000 caracteres
 
 ### 📊 Monitoreo y Logging
 
@@ -360,9 +369,17 @@ Ver [documentación de tests →](tests/README.md)
 
 ---
 
-## 📚 Documentación Técnica
+## 📚 Documentación
 
-### Documentación Interactiva
+### 📖 Para Usuarios
+
+- 🚀 **[Guía Rápida](docs/GUIA_RAPIDA.md)** - Referencia rápida de endpoints y límites
+- 📘 **[Guía Completa del Usuario](docs/GUIA_USUARIO.md)** - Tutorial detallado con ejemplos prácticos
+- 📦 **[Empaquetado de Archivos](docs/EMPAQUETADO_ARCHIVOS.md)** - Formato binario y casos de uso avanzados
+
+### 🔧 Documentación Técnica
+
+#### Documentación Interactiva
 
 Una vez que la API esté ejecutándose:
 
@@ -375,12 +392,11 @@ Una vez que la API esté ejecutándose:
   - Documentación alternativa más visual
   - Mejor para lectura y referencia
 
-### Documentación Adicional
+#### Documentación de Desarrollo
 
-- 📖 **[Sistema de Logging](docs/LOGGING_SISTEMA.md)**: Configuración y uso de logs
-- 📦 **[Empaquetado de Archivos](docs/EMPAQUETADO_ARCHIVOS.md)**: Formato binario de paquetes
-- 🌊 **[Streaming](docs/STREAMING_GUIA.md)**: Manejo de archivos grandes
-- 🚂 **[Deploy en Railway](docs/RAILWAY_DEPLOY.md)**: Guía de despliegue
+- 📝 **[Sistema de Logging](docs/LOGGING_SISTEMA.md)** - Configuración y uso de logs
+- 🌊 **[Streaming](docs/STREAMING_GUIA.md)** - Manejo de archivos grandes
+- 🚂 **[Deploy en Railway](docs/RAILWAY_DEPLOY.md)** - Guía de despliegue
 
 ---
 
@@ -517,7 +533,9 @@ pip install pytest pytest-cov pytest-asyncio
 
 - 🏠 [Proyecto Principal](../README.md)
 - 📱 [ScriptumFX - Aplicación JavaFX](../ScriptumFX/)
-- 📖 [Documentación Completa](docs/)
+- 🚀 [Guía Rápida](docs/GUIA_RAPIDA.md) - Empieza aquí
+- 📖 [Guía del Usuario](docs/GUIA_USUARIO.md) - Tutorial completo
+- 📦 [Documentación Técnica](docs/)
 - 🐛 [Reportar Issues](https://github.com/WaraYasy/Scriptum/issues)
 
 ---
