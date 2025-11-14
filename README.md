@@ -34,7 +34,7 @@ Scriptum permite cifrar y descifrar:
 
 Utilizando algoritmos de cifrado robustos:
 - 🔒 **AES** (Advanced Encryption Standard) - 128, 192 y 256 bits
-- 📝 **Vigenère** - Cifrado clásico mejorado
+- 📝 **Vigenère** - Cifrado clásico mejorado (elimina espacios por seguridad)
 
 ---
 
